@@ -415,3 +415,36 @@ h2,h3{
 .booking-confirm{width:100%;margin:18px 0 5px!important;padding:17px!important;border-radius:15px!important;background:linear-gradient(135deg,#a97c38,#e4c981)!important;color:#181108!important;box-shadow:0 8px 28px rgba(185,144,69,.15);font-size:11px!important;letter-spacing:.16em!important}
 .profile-action-icon svg,.notification .bell svg{width:30px;height:30px;display:block}.profile-action-icon.bell-icon{font-size:0}.notification .bell{font-size:0}.notification .bell svg{width:36px;height:36px}
 @media(max-width:480px){.welcome{padding:24px 21px}.booking-times{grid-template-columns:repeat(2,1fr)}.booking-calendar button{height:39px!important}.booking-picker,.time-picker-card{padding:19px 13px}.booking-section-head{margin-left:3px}}
+/* ================================
+   LOGO I GRIMALDI
+================================ */
+
+.logo-splash img {
+    width: min(420px, 80vw);
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.25));
+}
+
+.mini-logo {
+    display: flex;
+    align-items: center;
+}
+
+.mini-logo img {
+    width: 150px;
+    height: auto;
+    display: block;
+}
+
+@media (max-width: 600px) {
+    .logo-splash img {
+        width: 85vw;
+        max-width: 330px;
+    }
+
+    .mini-logo img {
+        width: 115px;
+    }
+}
