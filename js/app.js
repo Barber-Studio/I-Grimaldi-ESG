@@ -14,13 +14,121 @@ function thirdNav(){showPage(currentUser?.admin?'agendaPage':'appointmentsPage')
 function init(){ $('services').innerHTML=services.map((s,i)=>`<div class="card ${i===0?'selected':''}" data-service="${s[0]}"><b>${s[0]}</b><div class="muted">${money(s[1])}</div></div>`).join(''); $('adminTime').innerHTML=times.map(t=>`<option>${t}</option>`).join(''); $('blockTime').innerHTML+times.map(t=>`<option>${t}</option>`).join(''); $('adminService').innerHTML=serviceOptions(); $('adminDate').value=selectedDate; $('blockDate').value=selectedDate; renderBookingPicker(); }
 setTimeout(()=>{$('splash').classList.add('hidden');if(currentUser){showApp()}else{$('authModal').classList.remove('hidden')}},2200);
 $('loginPin').addEventListener('input',()=>{if($('loginPhone').value.trim()&&$('loginPin').value.length>=4)login()});
-function login(){let u=users().find(x=>x.phone===$('loginPhone').value.trim()&&x.pin===$('loginPin').value);if(!u){$('loginError').textContent='Numero o PIN non corretto';return}currentUser=u;sessionStorage.setItem('grimaldi_user',JSON.stringify(u));$('authModal').classList.add('hidden');showApp();$('notificationModal').classList.remove('hidden')}
+function login(){async function login(){
+  const phone = $("loginPhone").value.trim();
+  const pin = $("loginPin").value.trim();
+
+  if(!phone || !pin){
+    $("loginError").textContent = "Inserisci numero e PIN";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("customers")
+    .select("*")
+    .eq("phone", phone)
+    .eq("pin", pin)
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    $("loginError").textContent = "Errore di connessione";
+    return;
+  }
+
+  if(!data){
+    $("loginError").textContent = "Numero o PIN non corretto";
+    return;
+  }
+
+  currentUser = {
+    id: data.id,
+    name: data.name,
+    surname: data.surname,
+    phone: data.phone,
+    admin: data.is_admin === true
+  };
+
+  sessionStorage.setItem(
+    "grimaldi_user",
+    JSON.stringify(currentUser)
+  );
+
+  $("authModal").classList.add("hidden");
+  showApp();
+}
 function openRegister(){$('authModal').classList.add('hidden');$('registerModal').classList.remove('hidden')}
 function closeRegister(){$('registerModal').classList.add('hidden');$('authModal').classList.remove('hidden')}
-function register(){let name=$('regName').value.trim(),surname=$('regSurname').value.trim(),phone=$('regPhone').value.trim(),pin=$('regPin').value,pin2=$('regPin2').value;if(!name||!surname||!phone||!pin||pin!==pin2){alert('Controlla i dati e la conferma del PIN');return}let a=users();if(a.some(x=>x.phone===phone)){alert('Numero già registrato');return}let u={name,surname,phone,pin,admin:false};a.push(u);set('grimaldi_users',a);currentUser=u;sessionStorage.setItem('grimaldi_user',JSON.stringify(u));$('registerModal').classList.add('hidden');showApp();$('notificationModal').classList.remove('hidden')}
-function showApp(){$('app').classList.remove('hidden');$('thirdLabel').textContent=currentUser.admin?'Agenda':'Appuntamenti';}
-function logout(){sessionStorage.removeItem('grimaldi_user');currentUser=null;$('app').classList.add('hidden');$('loginPhone').value='';$('loginPin').value='';$('authModal').classList.remove('hidden')}
-function createBooking(){
+function register(){async function register(){
+  const name = $("regName").value.trim();
+  const surname = $("regSurname").value.trim();
+  const phone = $("regPhone").value.trim();
+  const pin = $("regPin").value.trim();
+
+  if(!name || !surname || !phone || !pin){
+    alert("Compila tutti i campi");
+    return;
+  }
+
+  if(pin.length < 4){
+    alert("Il PIN deve avere almeno 4 cifre");
+    return;
+  }
+
+  const { data: existingUser, error: checkError } = await supabaseClient
+    .from("customers")
+    .select("id")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  if(checkError){
+    console.error(checkError);
+    alert("Errore di connessione");
+    return;
+  }
+
+  if(existingUser){
+    alert("Questo numero è già registrato. Accedi.");
+    closeRegister();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("customers")
+    .insert({
+      name: name,
+      surname: surname,
+      phone: phone,
+      pin: pin,
+      is_admin: false
+    })
+    .select()
+    .single();
+
+  if(error){
+    console.error(error);
+    alert("Errore durante la registrazione: " + error.message);
+    return;
+  }
+
+  currentUser = {
+    id: data.id,
+    name: data.name,
+    surname: data.surname,
+    phone: data.phone,
+    admin: data.is_admin === true
+  };
+
+  sessionStorage.setItem(
+    "grimaldi_user",
+    JSON.stringify(currentUser)
+  );
+
+  closeRegister();
+  showApp();
+
+  alert("Registrazione completata!");
+}
  async function createBooking(){
   if(!currentUser) return;
 
