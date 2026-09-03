@@ -1471,9 +1471,24 @@ window.loginUser = loginUser;
 
 window.logoutUser = logoutUser;
 
-window.loadUserBookings = loadUserBookings;
+window.loadUserBookings = loadUserBookings;// =========================================
+// LOADING SCREEN
+// =========================================
 
+window.addEventListener("load", function () {
 
+  setTimeout(function () {
+
+    const loadingScreen =
+      document.getElementById("loadingScreen");
+
+    if (loadingScreen) {
+      loadingScreen.classList.add("hidden");
+    }
+
+  }, 1200);
+
+});
 // ========================================
 // FINE APP.JS
 // ========================================
