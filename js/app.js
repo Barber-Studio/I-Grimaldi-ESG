@@ -1398,37 +1398,44 @@ function formatDatabaseDate(date) {
 // NOTIFICHE VISIVE
 // ========================================
 
-function showToast(message) {
+// =========================================
+// TOAST CENTRALE ELEGANTE
+// =========================================
 
-  let toast =
-    document.getElementById("toast");
+function showToast(message, type = "default") {
 
+  const toast = document.getElementById("toast");
 
   if (!toast) {
-
-    toast =
-      document.createElement("div");
-
-
-    toast.id = "toast";
-
-
-    document.body.appendChild(toast);
-
+    console.error("Elemento toast non trovato");
+    return;
   }
-
 
   toast.textContent = message;
 
+  toast.className = "";
 
-  toast.classList.add("show");
+  toast.id = "toast";
 
+  if (type === "success") {
+    toast.classList.add("success");
+  }
 
-  setTimeout(function () {
+  if (type === "error") {
+    toast.classList.add("error");
+  }
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  clearTimeout(window.toastTimeout);
+
+  window.toastTimeout = setTimeout(() => {
 
     toast.classList.remove("show");
 
-  }, 3000);
+  }, 2800);
 
 }
 
