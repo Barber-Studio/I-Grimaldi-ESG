@@ -8,8 +8,8 @@
 // CONFIGURAZIONE SUPABASE
 // ==========================================
 
-const SUPABASE_URL = https://wxcdmtajcasnlohqkgmk.supabase.co;
-const SUPABASE_ANON_KEY = sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP;
+const SUPABASE_URL = "https://wxcdmtajcasnlohqkgmk.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
 
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
@@ -1585,14 +1585,21 @@ async function checkAvailableTimes() {
 // ==========================================
 
 const bookingDateInput =
-  document.getElementById("bookingDate");
+ document.addEventListener("DOMContentLoaded", () => {
 
+  const bookingDateInput =
+    document.getElementById("bookingDate");
 
-if (bookingDateInput) {
+  if (bookingDateInput) {
 
-  bookingDateInput.addEventListener(
-    "change",
-    checkAvailableTimes
+    bookingDateInput.addEventListener(
+      "change",
+      checkAvailableTimes
+    );
+
+  }
+
+});
   );
 
 }
