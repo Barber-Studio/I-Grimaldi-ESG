@@ -1,379 +1,743 @@
-/* =========================================================
-   I GRIMALDI E.S.G.
-   STYLE COMPLETO RESPONSIVE
-   iPHONE + ANDROID + DESKTOP
-========================================================= */
+/* ========================================
+   I GRIMALDI E.S.G. PARRUCCHIERI
+   STYLE.CSS - VERSIONE COMPLETA
+   MOBILE FIRST • IPHONE • ANDROID
+======================================== */
 
-/* =========================
+
+/* ========================================
    RESET
-========================= */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html {
-  width: 100%;
-  min-height: 100%;
-  background: #08090d;
-  overscroll-behavior: none;
-}
-
-body {
-  margin: 0;
-  width: 100%;
-  min-height: 100dvh;
-  background:
-    radial-gradient(
-      circle at top center,
-      rgba(55, 65, 81, 0.16),
-      transparent 35%
-    ),
-    #08090d;
-  color: #f5f5f5;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "SF Pro Text",
-    "Segoe UI",
-    sans-serif;
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-}
-
-input,
-textarea,
-select {
-  outline: none;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-
-/* =========================================================
-   VARIABILI
-========================================================= */
+======================================== */
 
 :root {
 
   --bg: #08090d;
-  --bg-secondary: #101116;
-  --card: rgba(22, 23, 29, 0.96);
+  --bg-soft: #101116;
+  --card: #15161c;
+  --card-light: #1c1d24;
 
-  --text: #f5f5f7;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --gold: #c9a45c;
+  --gold-light: #e4c27b;
+  --gold-dark: #967239;
 
-  --border: rgba(255,255,255,0.09);
-  --border-light: rgba(255,255,255,0.14);
+  --text: #f7f5f0;
+  --text-soft: #a9a8ad;
+  --text-muted: #777780;
 
-  --gold: #d6b36a;
-  --gold-light: #f0d899;
+  --danger: #e25b5b;
+  --success: #4dbd81;
 
-  --success: #4ade80;
-  --danger: #ef4444;
+  --border: rgba(255,255,255,0.08);
 
-  --radius-sm: 14px;
   --radius: 20px;
-  --radius-lg: 28px;
 
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
 
 }
 
 
-/* =========================================================
-   APP CONTAINER
-========================================================= */
+* {
 
-#app {
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+
+}
+
+
+html {
+
   width: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  min-height: 100%;
 
-  display: flex;
-  flex-direction: column;
+  overflow-x: hidden;
 
-  position: relative;
+  background: var(--bg);
+
+  -webkit-text-size-adjust: 100%;
+
+}
+
+
+body {
+
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
 
   overflow-x: hidden;
 
   background:
+
     radial-gradient(
-      circle at 50% -10%,
-      rgba(214,179,106,0.07),
-      transparent 35%
+      circle at 100% 0%,
+      rgba(201,164,92,0.12),
+      transparent 30%
     ),
+
+    radial-gradient(
+      circle at 0% 40%,
+      rgba(201,164,92,0.05),
+      transparent 25%
+    ),
+
     var(--bg);
-}
-
-
-/* =========================================================
-   SPLASH SCREEN
-========================================================= */
-
-#splash,
-.splash {
-  position: fixed;
-  inset: 0;
-
-  width: 100%;
-  height: 100dvh;
-
-  z-index: 99999;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding:
-    calc(24px + var(--safe-top))
-    24px
-    calc(24px + var(--safe-bottom));
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(214,179,106,0.08),
-      transparent 40%
-    ),
-    #08090d;
-
-  transition:
-    opacity 0.45s ease,
-    visibility 0.45s ease;
-}
-
-.splash.hidden,
-#splash.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-
-/* CONTENUTO SPLASH */
-
-.splash-content,
-.splash-inner {
-  width: 100%;
-  max-width: 360px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  animation: splashAppear 0.7s ease both;
-}
-
-@keyframes splashAppear {
-
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-}
-
-
-/* TITOLO */
-
-.splash-title {
-  margin: 0;
 
   color: var(--text);
 
-  font-size: clamp(28px, 8vw, 42px);
-  font-weight: 700;
+  font-family:
 
-  letter-spacing: 0.12em;
+    -apple-system,
+
+    BlinkMacSystemFont,
+
+    "SF Pro Display",
+
+    "SF Pro Text",
+
+    "Segoe UI",
+
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+
 }
 
-.splash-subtitle {
-  margin-top: 10px;
 
-  color: var(--text-secondary);
+button,
+input,
+textarea,
+select {
 
-  font-size: 13px;
+  font: inherit;
 
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
 }
 
 
-/* LOADER */
+button {
 
-.splash-loader,
-.loader {
-  margin-top: 36px;
+  border: none;
 
-  width: 42px;
-  height: 42px;
+  cursor: pointer;
 
-  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
 
-  border: 3px solid rgba(255,255,255,0.08);
-  border-top-color: var(--gold);
-
-  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
+
+button:active {
+
+  transform: scale(0.97);
+
+}
+
+
+a {
+
+  color: inherit;
+
+  text-decoration: none;
+
+}
+
+
+img {
+
+  max-width: 100%;
+
+  display: block;
+
+}
+
+
+/* ========================================
+   APP
+======================================== */
+
+#app {
+
+  width: 100%;
+
+  min-height: 100vh;
+
+  max-width: 100%;
+
+}
+
+
+#app.app-loading {
+
+  opacity: 0;
+
+  pointer-events: none;
+
+}
+
+
+#app.hidden {
+
+  display: none !important;
+
+}
+
+
+/* ========================================
+   PAGINE
+======================================== */
+
+.page {
+
+  display: none;
+
+  width: 100%;
+
+  max-width: 100%;
+
+  min-height: 100vh;
+
+  padding:
+
+    calc(20px + var(--safe-top))
+
+    16px
+
+    calc(110px + var(--safe-bottom));
+
+  animation:
+
+    pageOut 0.25s ease;
+
+}
+
+
+.page.active {
+
+  display: block;
+
+  animation:
+
+    pageIn 0.35s ease;
+
+}
+
+
+@keyframes pageIn {
+
+  from {
+
+    opacity: 0;
+
+    transform: translateY(10px);
+
+  }
 
   to {
-    transform: rotate(360deg);
+
+    opacity: 1;
+
+    transform: translateY(0);
+
   }
 
 }
 
 
-/* =========================================================
-   LOGIN SCREEN
-========================================================= */
+@keyframes pageOut {
 
-#loginScreen,
-.login-screen,
-.auth-screen {
-  width: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  from {
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    opacity: 1;
 
-  padding:
-    max(24px, calc(var(--safe-top) + 24px))
-    20px
-    max(24px, calc(var(--safe-bottom) + 24px));
+  }
 
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(214,179,106,0.08),
-      transparent 32%
-    ),
-    var(--bg);
+  to {
+
+    opacity: 0;
+
+  }
+
 }
 
 
-/* CARD LOGIN */
+/* ========================================
+   CONTENITORE
+======================================== */
 
-.login-container,
-.login-card,
-.auth-card {
+.container,
+.content,
+.main-container {
 
   width: 100%;
-  max-width: 440px;
 
-  margin: auto;
+  max-width: 700px;
 
-  padding: 34px 28px;
-
-  border-radius: var(--radius-lg);
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(29,30,37,0.98),
-      rgba(14,15,19,0.98)
-    );
-
-  border: 1px solid var(--border);
-
-  box-shadow:
-    0 30px 80px rgba(0,0,0,0.45);
+  margin: 0 auto;
 
 }
 
 
-/* BRAND */
+/* ========================================
+   HEADER
+======================================== */
 
-.login-brand,
-.auth-brand {
-  text-align: center;
-  margin-bottom: 34px;
+header,
+.app-header,
+.page-header {
+
+  width: 100%;
+
+  max-width: 700px;
+
+  margin:
+
+    0 auto
+
+    24px;
+
 }
 
-.login-brand small,
-.auth-brand small {
+
+.app-title,
+.brand-name {
+
+  font-size: 28px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.8px;
+
+  color: var(--text);
+
+}
+
+
+.app-subtitle,
+.subtitle {
 
   display: block;
 
+  margin-top: 6px;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  color: var(--text-soft);
+
+}
+
+
+/* ========================================
+   HOME HERO
+======================================== */
+
+.hero,
+.home-hero,
+.welcome-section {
+
+  width: 100%;
+
+  margin-bottom: 24px;
+
+}
+
+
+.hero h1,
+.home-hero h1,
+.welcome-section h1 {
+
+  font-size: clamp(
+    30px,
+    9vw,
+    44px
+  );
+
+  line-height: 1.05;
+
+  letter-spacing: -1.5px;
+
   margin-bottom: 10px;
+
+}
+
+
+.hero p,
+.home-hero p,
+.welcome-section p {
+
+  font-size: 15px;
+
+  line-height: 1.6;
+
+  color: var(--text-soft);
+
+}
+
+
+/* ========================================
+   CARD
+======================================== */
+
+.card,
+.home-card,
+.info-card,
+.profile-card,
+.booking-card,
+.notification-card,
+.install-card {
+
+  width: 100%;
+
+  min-width: 0;
+
+  background:
+
+    linear-gradient(
+      145deg,
+      rgba(28,29,36,0.98),
+      rgba(17,18,23,0.98)
+    );
+
+  border:
+
+    1px solid var(--border);
+
+  border-radius:
+
+    var(--radius);
+
+  padding:
+
+    18px;
+
+  margin-bottom:
+
+    14px;
+
+  box-shadow:
+
+    0 12px 35px
+    rgba(0,0,0,0.22);
+
+}
+
+
+/* ========================================
+   CARD TITOLI
+======================================== */
+
+.card h1,
+.card h2,
+.card h3,
+.home-card h1,
+.home-card h2,
+.home-card h3 {
+
+  color: var(--text);
+
+}
+
+
+.card h2,
+.card h3 {
+
+  font-size: 18px;
+
+  margin-bottom: 8px;
+
+}
+
+
+.card p {
+
+  color: var(--text-soft);
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+}
+
+
+/* ========================================
+   NOTIFICHE HOME
+======================================== */
+
+.notification-card {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+}
+
+
+.notification-card svg {
+
+  width: 34px !important;
+
+  height: 34px !important;
+
+  min-width: 34px !important;
+
+  max-width: 34px !important;
+
+  max-height: 34px !important;
+
+  flex-shrink: 0;
+
+}
+
+
+.notification-card .notification-icon {
+
+  width: 44px;
+
+  height: 44px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background:
+
+    rgba(201,164,92,0.12);
 
   color: var(--gold);
 
-  font-size: 11px;
+}
 
-  letter-spacing: 0.25em;
 
-  text-transform: uppercase;
+.notification-card h2,
+.notification-card h3 {
+
+  margin: 0 0 4px;
+
+  font-size: 16px;
 
 }
 
-.login-brand h1,
-.auth-brand h1 {
+
+.notification-card p {
 
   margin: 0;
 
-  font-size: clamp(30px, 8vw, 40px);
-
-  font-weight: 700;
-
-  letter-spacing: -0.04em;
+  font-size: 13px;
 
 }
 
-.login-brand p,
-.auth-brand p {
 
-  margin: 10px 0 0;
+/* ========================================
+   QUALSIASI ICONA GIGANTE
+======================================== */
 
-  color: var(--text-secondary);
+svg {
+
+  max-width: 100%;
+
+}
+
+
+.notification-section > svg,
+.notifications > svg,
+.home-notification > svg {
+
+  width: 40px !important;
+
+  height: 40px !important;
+
+}
+
+
+/* ========================================
+   BANNER INSTALLAZIONE
+======================================== */
+
+.install-card,
+.install-banner,
+.install-app {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 16px;
+
+  background:
+
+    linear-gradient(
+      135deg,
+      rgba(201,164,92,0.14),
+      rgba(255,255,255,0.03)
+    );
+
+  border:
+
+    1px solid
+    rgba(201,164,92,0.25);
+
+}
+
+
+.install-card svg,
+.install-banner svg,
+.install-app svg {
+
+  width: 28px;
+
+  height: 28px;
+
+  min-width: 28px;
+
+  color: var(--gold);
+
+}
+
+
+.install-card strong,
+.install-banner strong {
 
   font-size: 15px;
 
 }
 
 
-/* =========================================================
+.install-card p,
+.install-banner p {
+
+  margin-top: 3px;
+
+  font-size: 13px;
+
+  color: var(--text-soft);
+
+}
+
+
+/* ========================================
+   BOTTONI GENERALI
+======================================== */
+
+.btn,
+.primary-button,
+button.primary,
+#confirmBooking,
+#loginButton,
+#registerButton {
+
+  width: 100%;
+
+  min-height: 52px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  padding:
+
+    14px
+    20px;
+
+  border-radius: 16px;
+
+  background:
+
+    linear-gradient(
+      135deg,
+      var(--gold-light),
+      var(--gold)
+    );
+
+  color:
+
+    #16120b;
+
+  font-weight: 750;
+
+  font-size: 15px;
+
+  transition:
+
+    transform 0.2s ease,
+    opacity 0.2s ease;
+
+  box-shadow:
+
+    0 8px 24px
+    rgba(201,164,92,0.18);
+
+}
+
+
+.btn:hover,
+.primary-button:hover,
+#confirmBooking:hover,
+#loginButton:hover {
+
+  opacity: 0.95;
+
+}
+
+
+/* ========================================
+   BOTTONI SECONDARI
+======================================== */
+
+.secondary-button,
+.btn-secondary,
+button.secondary {
+
+  width: 100%;
+
+  min-height: 50px;
+
+  padding:
+
+    14px
+    18px;
+
+  border-radius: 16px;
+
+  background:
+
+    rgba(255,255,255,0.06);
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.10);
+
+  color: var(--text);
+
+}
+
+
+/* ========================================
    FORM
-========================================================= */
+======================================== */
 
 .form-group {
+
   width: 100%;
+
   margin-bottom: 16px;
+
 }
+
 
 .form-group label {
 
@@ -381,613 +745,923 @@ img {
 
   margin-bottom: 8px;
 
-  color: var(--text-secondary);
-
   font-size: 13px;
-  font-weight: 500;
+
+  font-weight: 600;
+
+  color: var(--text-soft);
 
 }
 
-input {
+
+input,
+textarea,
+select {
 
   width: 100%;
 
-  min-height: 56px;
+  min-height: 52px;
 
-  padding: 0 17px;
+  padding:
 
-  border-radius: 16px;
+    14px
+    16px;
+
+  border-radius: 15px;
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.09);
+
+  outline: none;
+
+  background:
+
+    rgba(255,255,255,0.05);
 
   color: var(--text);
-
-  background: rgba(255,255,255,0.035);
-
-  border: 1px solid var(--border);
 
   font-size: 16px;
 
   transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
 
-}
-
-input::placeholder {
-  color: #666975;
-}
-
-input:focus {
-
-  border-color: rgba(214,179,106,0.7);
-
-  background: rgba(255,255,255,0.05);
-
-  box-shadow:
-    0 0 0 4px rgba(214,179,106,0.08);
-
-}
-
-
-/* =========================================================
-   BOTTONI
-========================================================= */
-
-.btn,
-button.primary,
-.primary-button,
-.login-button {
-
-  width: 100%;
-
-  min-height: 54px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0 20px;
-
-  border-radius: 16px;
-
-  font-size: 15px;
-  font-weight: 600;
-
-  transition:
-    transform 0.15s ease,
-    opacity 0.2s ease,
+    border 0.2s ease,
     background 0.2s ease;
 
 }
 
-.btn:active,
-button.primary:active,
-.primary-button:active,
-.login-button:active {
 
-  transform: scale(0.98);
+input:focus,
+textarea:focus,
+select:focus {
 
-}
+  border-color:
 
-
-.btn-primary,
-button.primary,
-.primary-button,
-.login-button {
-
-  color: #111;
+    var(--gold);
 
   background:
+
+    rgba(255,255,255,0.07);
+
+}
+
+
+input::placeholder {
+
+  color: #777780;
+
+}
+
+
+/* ========================================
+   LOGIN
+======================================== */
+
+#loginPage {
+
+  display: none;
+
+}
+
+
+#loginPage.active {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 100vh;
+
+}
+
+
+.login-container,
+.login-card {
+
+  width: 100%;
+
+  max-width: 460px;
+
+  margin: auto;
+
+}
+
+
+.login-card {
+
+  padding: 24px;
+
+  border-radius: 28px;
+
+  background:
+
     linear-gradient(
-      135deg,
-      var(--gold-light),
-      var(--gold)
+      145deg,
+      rgba(27,28,35,0.98),
+      rgba(13,14,18,0.98)
     );
 
-  box-shadow:
-    0 10px 30px rgba(214,179,106,0.16);
+  border:
+
+    1px solid var(--border);
 
 }
 
 
-.btn-secondary {
+.login-title {
 
-  color: var(--text);
+  font-size: 28px;
 
-  background: rgba(255,255,255,0.05);
-
-  border: 1px solid var(--border);
-
-}
-
-
-/* LINK REGISTRAZIONE */
-
-.auth-switch,
-.login-switch {
-
-  margin-top: 22px;
+  margin-bottom: 8px;
 
   text-align: center;
 
-  color: var(--text-secondary);
+}
 
-  font-size: 14px;
+
+.login-subtitle {
+
+  text-align: center;
+
+  color: var(--text-soft);
+
+  margin-bottom: 28px;
 
 }
 
-.auth-switch button,
-.login-switch button {
 
-  display: inline;
+/* ========================================
+   SERVIZI
+======================================== */
 
-  width: auto;
-  min-height: auto;
+.services-grid,
+.services-list {
 
-  padding: 0;
+  display: grid;
 
-  background: transparent;
+  grid-template-columns:
+
+    repeat(
+      2,
+      minmax(0,1fr)
+    );
+
+  gap: 10px;
+
+  width: 100%;
+
+}
+
+
+.service-card,
+.service-button,
+[data-service] {
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 100px;
+
+  padding: 14px;
+
+  border-radius: 18px;
+
+  background:
+
+    rgba(255,255,255,0.04);
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.07);
+
+  color: var(--text);
+
+  text-align: left;
+
+  transition:
+
+    border 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+
+}
+
+
+.service-card.selected,
+.service-button.selected,
+[data-service].selected {
+
+  border-color:
+
+    var(--gold);
+
+  background:
+
+    rgba(201,164,92,0.12);
+
+  box-shadow:
+
+    inset 0 0 0 1px
+    rgba(201,164,92,0.18);
+
+}
+
+
+.service-card strong,
+.service-button strong {
+
+  display: block;
+
+  font-size: 15px;
+
+  margin-bottom: 8px;
+
+}
+
+
+.service-price {
 
   color: var(--gold-light);
+
+  font-weight: 700;
+
+}
+
+
+/* ========================================
+   DATA
+======================================== */
+
+.date-section {
+
+  margin-bottom: 20px;
+
+}
+
+
+#bookingDate {
+
+  width: 100%;
+
+}
+
+
+/* ========================================
+   ORARI
+======================================== */
+
+#timeSlots {
+
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+
+    repeat(
+      3,
+      minmax(0,1fr)
+    );
+
+  gap: 10px;
+
+  margin-top: 14px;
+
+}
+
+
+.time-slot {
+
+  width: 100%;
+
+  min-height: 48px;
+
+  padding: 10px 4px;
+
+  border-radius: 14px;
+
+  background:
+
+    rgba(255,255,255,0.05);
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.08);
+
+  color: var(--text);
+
+  font-size: 14px;
 
   font-weight: 600;
 
 }
 
 
-/* =========================================================
-   MAIN APP
-========================================================= */
-
-.main-app,
-#mainApp,
-.app-content {
-
-  width: 100%;
-  min-height: 100dvh;
-
-  display: flex;
-  flex-direction: column;
-
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.header,
-.app-header {
-
-  position: sticky;
-  top: 0;
-
-  z-index: 100;
-
-  width: 100%;
-
-  padding:
-    calc(14px + var(--safe-top))
-    20px
-    14px;
+.time-slot.selected {
 
   background:
-    rgba(8,9,13,0.88);
 
-  backdrop-filter:
-    blur(20px);
+    var(--gold);
 
-  -webkit-backdrop-filter:
-    blur(20px);
+  color:
 
-  border-bottom:
-    1px solid rgba(255,255,255,0.05);
+    #17120a;
+
+  border-color:
+
+    var(--gold);
 
 }
 
-.header-inner {
+
+/* ========================================
+   RIEPILOGO PRENOTAZIONE
+======================================== */
+
+.booking-summary {
 
   width: 100%;
-  max-width: 1200px;
 
-  margin: auto;
+  padding: 18px;
+
+  border-radius: 20px;
+
+  margin-top: 20px;
+
+  margin-bottom: 20px;
+
+  background:
+
+    rgba(255,255,255,0.04);
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.07);
+
+}
+
+
+.summary-row {
 
   display: flex;
-  align-items: center;
+
   justify-content: space-between;
 
-  gap: 12px;
+  gap: 16px;
+
+  padding: 12px 0;
+
+  border-bottom:
+
+    1px solid
+    rgba(255,255,255,0.06);
 
 }
 
 
-/* =========================================================
-   CONTENUTO PRINCIPALE
-========================================================= */
+.summary-row:last-child {
 
-.main-content,
-.content,
-.page-content {
-
-  width: 100%;
-  max-width: 1200px;
-
-  flex: 1;
-
-  margin: 0 auto;
-
-  padding:
-    24px
-    20px
-    calc(110px + var(--safe-bottom));
+  border-bottom: none;
 
 }
 
 
-/* =========================================================
-   PAGE TITLE
-========================================================= */
+.summary-label {
 
-.page-title {
-
-  margin: 0 0 6px;
-
-  font-size: clamp(26px, 7vw, 36px);
-
-  letter-spacing: -0.04em;
-
-}
-
-.page-subtitle {
-
-  margin: 0 0 24px;
-
-  color: var(--text-secondary);
+  color: var(--text-soft);
 
   font-size: 14px;
 
 }
 
 
-/* =========================================================
-   CARDS
-========================================================= */
+.summary-value {
 
-.card,
-.dashboard-card,
-.booking-card {
+  color: var(--text);
+
+  text-align: right;
+
+  font-weight: 600;
+
+  word-break: break-word;
+
+}
+
+
+/* ========================================
+   PRENOTAZIONI
+======================================== */
+
+#bookingsList {
 
   width: 100%;
 
-  padding: 20px;
-
-  border-radius: var(--radius);
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(27,28,34,0.95),
-      rgba(16,17,21,0.95)
-    );
-
-  border:
-    1px solid var(--border);
-
-  box-shadow:
-    0 10px 35px rgba(0,0,0,0.16);
-
 }
 
 
-/* =========================================================
-   GRIGLIE RESPONSIVE
-========================================================= */
+.booking-card {
 
-.grid {
+  display: flex;
 
-  display: grid;
+  align-items: center;
 
-  grid-template-columns:
-    repeat(auto-fit, minmax(240px, 1fr));
-
-  gap: 16px;
-
-}
-
-.services-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(auto-fit, minmax(180px, 1fr));
+  justify-content: space-between;
 
   gap: 14px;
 
 }
 
 
-/* =========================================================
-   SERVIZI
-========================================================= */
+.booking-info {
 
-.service-card {
+  flex: 1;
 
-  min-height: 120px;
-
-  padding: 18px;
-
-  border-radius: 18px;
-
-  background: rgba(255,255,255,0.035);
-
-  border: 1px solid var(--border);
-
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease;
+  min-width: 0;
 
 }
 
-.service-card:active {
-  transform: scale(0.98);
+
+.booking-info strong {
+
+  display: block;
+
+  font-size: 17px;
+
+  margin-bottom: 8px;
+
 }
 
-.service-card.selected {
 
-  border-color:
-    rgba(214,179,106,0.8);
+.booking-detail {
+
+  color: var(--text-soft);
+
+  font-size: 14px;
+
+  margin-top: 4px;
+
+}
+
+
+.booking-price {
+
+  color: var(--gold-light);
+
+  font-weight: 700;
+
+  margin-top: 8px;
+
+}
+
+
+.cancel-booking {
+
+  flex-shrink: 0;
+
+  padding:
+
+    10px
+    14px;
+
+  border-radius: 12px;
 
   background:
-    rgba(214,179,106,0.07);
 
-}
+    rgba(226,91,91,0.12);
 
+  color:
 
-/* =========================================================
-   PRENOTAZIONI
-========================================================= */
-
-.booking-list {
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-
-}
-
-.booking-item {
-
-  width: 100%;
-
-  padding: 17px;
-
-  border-radius: 18px;
-
-  background:
-    rgba(255,255,255,0.035);
+    #f07070;
 
   border:
-    1px solid var(--border);
+
+    1px solid
+    rgba(226,91,91,0.20);
 
 }
 
 
-/* =========================================================
-   TABELLE RESPONSIVE
-========================================================= */
+/* ========================================
+   EMPTY STATE
+======================================== */
 
-.table-wrapper {
+.empty-state {
 
   width: 100%;
 
-  overflow-x: auto;
+  text-align: center;
 
-  -webkit-overflow-scrolling: touch;
+  padding:
 
-  border-radius: 18px;
+    40px
+    20px;
 
-}
+  border-radius: 22px;
 
-table {
+  background:
 
-  width: 100%;
+    rgba(255,255,255,0.03);
 
-  min-width: 650px;
+  border:
 
-  border-collapse: collapse;
-
-}
-
-th,
-td {
-
-  padding: 15px;
-
-  text-align: left;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.06);
-
-}
-
-th {
-
-  color: var(--text-secondary);
-
-  font-size: 12px;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.08em;
+    1px dashed
+    rgba(255,255,255,0.10);
 
 }
 
 
-/* =========================================================
+.empty-state h3 {
+
+  font-size: 18px;
+
+  margin-bottom: 8px;
+
+}
+
+
+.empty-state p {
+
+  color: var(--text-soft);
+
+  font-size: 14px;
+
+}
+
+
+/* ========================================
    BOTTOM NAVIGATION
-========================================================= */
+======================================== */
 
 .bottom-nav,
 .bottom-navigation,
-.mobile-nav {
+nav.bottom-nav {
 
   position: fixed;
 
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 50%;
 
-  z-index: 1000;
+  bottom:
 
-  width: 100%;
+    calc(
+      10px +
+      var(--safe-bottom)
+    );
+
+  transform:
+
+    translateX(-50%);
+
+  width:
+
+    calc(100% - 24px);
+
+  max-width:
+
+    650px;
+
+  min-height: 68px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-around;
 
   padding:
-    10px
-    10px
-    calc(10px + var(--safe-bottom));
+
+    8px;
+
+  z-index: 100;
+
+  border-radius: 22px;
 
   background:
-    rgba(14,15,19,0.96);
+
+    rgba(22,23,29,0.94);
 
   backdrop-filter:
+
     blur(20px);
 
   -webkit-backdrop-filter:
+
     blur(20px);
 
-  border-top:
-    1px solid var(--border);
+  border:
+
+    1px solid
+    rgba(255,255,255,0.09);
+
+  box-shadow:
+
+    0 15px 45px
+    rgba(0,0,0,0.35);
 
 }
 
 
 .bottom-nav button,
-.bottom-navigation button,
-.mobile-nav button {
+.bottom-navigation button {
 
   flex: 1;
 
-  min-height: 48px;
+  min-width: 0;
+
+  min-height: 52px;
 
   display: flex;
+
   flex-direction: column;
 
   align-items: center;
+
   justify-content: center;
 
-  gap: 4px;
+  gap: 3px;
 
-  padding: 5px;
+  background:
 
-  background: transparent;
+    transparent;
 
-  color: var(--text-muted);
+  color:
+
+    var(--text-muted);
+
+  border-radius: 15px;
 
   font-size: 11px;
 
+  padding: 5px;
+
 }
+
+
+.bottom-nav button svg,
+.bottom-navigation button svg {
+
+  width: 21px;
+
+  height: 21px;
+
+}
+
 
 .bottom-nav button.active,
-.bottom-navigation button.active,
-.mobile-nav button.active {
+.bottom-navigation button.active {
 
-  color: var(--gold-light);
+  color:
+
+    var(--gold-light);
+
+  background:
+
+    rgba(201,164,92,0.12);
 
 }
 
 
-/* =========================================================
-   MODAL OVERLAY
-========================================================= */
+/* ========================================
+   TOAST POPUP CENTRALE
+======================================== */
 
-.modal-overlay,
-.popup-overlay {
+#toast,
+.toast {
+
+  position: fixed;
+
+  left: 50%;
+
+  top: 50%;
+
+  z-index: 9999;
+
+  width:
+
+    calc(100% - 48px);
+
+  max-width: 380px;
+
+  padding:
+
+    18px
+    22px;
+
+  border-radius: 20px;
+
+  text-align: center;
+
+  font-size: 15px;
+
+  font-weight: 650;
+
+  line-height: 1.4;
+
+  color: var(--text);
+
+  background:
+
+    rgba(28,29,35,0.98);
+
+  border:
+
+    1px solid
+    rgba(255,255,255,0.12);
+
+  box-shadow:
+
+    0 25px 70px
+    rgba(0,0,0,0.50);
+
+  backdrop-filter:
+
+    blur(25px);
+
+  -webkit-backdrop-filter:
+
+    blur(25px);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform:
+
+    translate(
+      -50%,
+      calc(-50% + 25px)
+    )
+    scale(0.94);
+
+  transition:
+
+    opacity 0.25s ease,
+    transform 0.30s cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
+
+}
+
+
+#toast.show,
+.toast.show {
+
+  opacity: 1;
+
+  transform:
+
+    translate(
+      -50%,
+      -50%
+    )
+    scale(1);
+
+}
+
+
+#toast.success,
+.toast.success {
+
+  border-color:
+
+    rgba(77,189,129,0.45);
+
+}
+
+
+#toast.error,
+.toast.error {
+
+  border-color:
+
+    rgba(226,91,91,0.45);
+
+}
+
+
+/* ========================================
+   OVERLAY POPUP
+======================================== */
+
+#toast.show::before,
+.toast.show::before {
+
+  content: "";
+
+  position: fixed;
+
+  inset: -200vh;
+
+  z-index: -1;
+
+  background:
+
+    rgba(0,0,0,0.20);
+
+}
+
+
+/* ========================================
+   SPLASH SCREEN
+======================================== */
+
+#splash,
+#loadingScreen {
 
   position: fixed;
 
   inset: 0;
+
+  width: 100%;
+
+  height: 100%;
 
   z-index: 10000;
 
   display: flex;
 
   align-items: center;
+
   justify-content: center;
 
   padding:
-    calc(20px + var(--safe-top))
-    20px
-    calc(20px + var(--safe-bottom));
+
+    24px;
 
   background:
-    rgba(0,0,0,0.68);
 
-  backdrop-filter:
-    blur(8px);
+    radial-gradient(
+      circle at center,
+      rgba(201,164,92,0.10),
+      transparent 35%
+    ),
 
-  -webkit-backdrop-filter:
-    blur(8px);
+    #08090d;
+
+  transition:
+
+    opacity 0.5s ease,
+    visibility 0.5s ease;
 
 }
 
 
-/* =========================================================
-   POPUP CENTRALE ELEGANTE
-========================================================= */
+#splash.hidden,
+#loadingScreen.hidden {
 
-.modal,
-.popup,
-.custom-popup {
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+}
+
+
+#splash.fade-out {
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+}
+
+
+.splash-content,
+.loading-content {
 
   width: 100%;
 
-  max-width: 400px;
-
-  max-height:
-    calc(100dvh - 40px);
-
-  overflow-y: auto;
-
-  padding: 28px 24px;
-
-  border-radius: 26px;
+  max-width: 420px;
 
   text-align: center;
 
-  color: var(--text);
-
-  background:
-    linear-gradient(
-      145deg,
-      #24252c,
-      #111217
-    );
-
-  border:
-    1px solid rgba(255,255,255,0.11);
-
-  box-shadow:
-    0 30px 100px rgba(0,0,0,0.6);
-
   animation:
-    popupAppear 0.25s ease both;
+
+    splashIn 0.8s ease;
 
 }
 
 
-@keyframes popupAppear {
+@keyframes splashIn {
 
   from {
 
     opacity: 0;
 
     transform:
-      scale(0.94)
+
       translateY(12px);
 
   }
@@ -997,7 +1671,7 @@ th {
     opacity: 1;
 
     transform:
-      scale(1)
+
       translateY(0);
 
   }
@@ -1005,442 +1679,390 @@ th {
 }
 
 
-.modal h2,
-.popup h2 {
+.splash-title,
+.loading-title {
 
-  margin: 0 0 10px;
+  font-family:
 
-  font-size: 24px;
+    Georgia,
+    "Times New Roman",
+    serif;
 
-}
+  font-size:
 
-.modal p,
-.popup p {
-
-  margin: 0 0 22px;
-
-  color: var(--text-secondary);
-
-  line-height: 1.55;
-
-}
-
-
-/* =========================================================
-   TOAST
-   CENTRATO E NON IN BASSO
-========================================================= */
-
-#toast,
-.toast {
-
-  position: fixed;
-
-  left: 50%;
-  top: 50%;
-
-  z-index: 999999;
-
-  width:
-    min(
-      calc(100% - 40px),
-      380px
+    clamp(
+      34px,
+      10vw,
+      54px
     );
 
-  padding: 20px 22px;
+  font-weight: 400;
 
-  border-radius: 22px;
+  letter-spacing:
 
-  text-align: center;
+    2px;
 
-  color: #fff;
+  color:
+
+    var(--gold-light);
+
+  text-shadow:
+
+    0 0 30px
+    rgba(201,164,92,0.12);
+
+}
+
+
+.splash-subtitle,
+.loading-subtitle {
+
+  margin-top: 10px;
+
+  font-size: 11px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 4px;
+
+  color: var(--text-muted);
+
+}
+
+
+.loading-line {
+
+  width: 100%;
+
+  max-width: 170px;
+
+  height: 2px;
+
+  margin:
+
+    32px auto 0;
+
+  overflow: hidden;
 
   background:
-    linear-gradient(
-      145deg,
-      rgba(38,39,46,0.98),
-      rgba(20,21,26,0.98)
-    );
 
-  border:
-    1px solid rgba(255,255,255,0.12);
+    rgba(255,255,255,0.08);
 
-  box-shadow:
-    0 25px 80px rgba(0,0,0,0.65);
-
-  transform:
-    translate(-50%, -50%);
-
-  animation:
-    toastAppear 0.3s ease both;
+  border-radius: 20px;
 
 }
 
-@keyframes toastAppear {
+
+.loading-line::after {
+
+  content: "";
+
+  display: block;
+
+  width: 45%;
+
+  height: 100%;
+
+  background:
+
+    var(--gold);
+
+  border-radius: inherit;
+
+  animation:
+
+    loadingMove
+    1.2s ease-in-out
+    infinite;
+
+}
+
+
+@keyframes loadingMove {
 
   from {
 
-    opacity: 0;
-
     transform:
-      translate(-50%, -45%)
-      scale(0.95);
+      translateX(-120%);
 
   }
 
   to {
 
-    opacity: 1;
-
     transform:
-      translate(-50%, -50%)
-      scale(1);
+      translateX(300%);
 
   }
 
 }
 
 
-/* SUCCESS */
+/* ========================================
+   SEPARATORI
+======================================== */
 
-.toast.success,
-#toast.success {
-
-  border-color:
-    rgba(74,222,128,0.35);
-
-}
-
-
-/* ERROR */
-
-.toast.error,
-#toast.error {
-
-  border-color:
-    rgba(239,68,68,0.4);
-
-}
-
-
-/* =========================================================
-   LOADING OVERLAY
-========================================================= */
-
-.loading-overlay {
-
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 99990;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background:
-    rgba(8,9,13,0.8);
-
-  backdrop-filter:
-    blur(8px);
-
-}
-
-
-.loading-box {
+.divider {
 
   width: 100%;
 
-  max-width: 300px;
-
-  padding: 30px 24px;
-
-  text-align: center;
-
-  border-radius: 24px;
-
-  background:
-    #16171c;
-
-  border:
-    1px solid var(--border);
-
-}
-
-
-.loading-spinner {
-
-  width: 38px;
-  height: 38px;
+  height: 1px;
 
   margin:
-    0 auto 18px;
 
-  border-radius: 50%;
-
-  border:
-    3px solid rgba(255,255,255,0.1);
-
-  border-top-color:
-    var(--gold);
-
-  animation:
-    spin 0.8s linear infinite;
-
-}
-
-
-/* =========================================================
-   STATUS BADGES
-========================================================= */
-
-.badge {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  padding:
-    6px 10px;
-
-  border-radius: 999px;
-
-  font-size: 12px;
-
-  font-weight: 600;
-
-}
-
-.badge-success {
-
-  color: #86efac;
+    20px 0;
 
   background:
-    rgba(34,197,94,0.1);
 
-}
-
-.badge-danger {
-
-  color: #fca5a5;
-
-  background:
-    rgba(239,68,68,0.1);
+    rgba(255,255,255,0.07);
 
 }
 
 
-/* =========================================================
-   EMPTY STATES
-========================================================= */
+/* ========================================
+   TESTI
+======================================== */
 
-.empty-state {
+h1,
+h2,
+h3,
+h4 {
 
-  width: 100%;
+  line-height: 1.2;
 
-  padding:
-    60px 20px;
+}
+
+
+p {
+
+  line-height: 1.5;
+
+}
+
+
+.text-gold {
+
+  color: var(--gold-light);
+
+}
+
+
+.text-muted {
+
+  color: var(--text-muted);
+
+}
+
+
+.text-center {
 
   text-align: center;
 
-  color: var(--text-secondary);
-
-}
-
-.empty-state h3 {
-
-  margin: 0 0 8px;
-
-  color: var(--text);
-
 }
 
 
-/* =========================================================
-   DESKTOP
-========================================================= */
+/* ========================================
+   SCROLLBAR DESKTOP
+======================================== */
 
-@media (min-width: 768px) {
+::-webkit-scrollbar {
 
-  .main-content,
-  .content,
-  .page-content {
-
-    padding:
-      32px
-      32px
-      50px;
-
-  }
-
-  .bottom-nav,
-  .bottom-navigation,
-  .mobile-nav {
-
-    display: none;
-
-  }
+  width: 6px;
 
 }
 
 
-/* =========================================================
-   MOBILE
-========================================================= */
+::-webkit-scrollbar-track {
 
-@media (max-width: 767px) {
+  background:
 
-  .login-container,
-  .login-card,
-  .auth-card {
-
-    padding:
-      30px 20px;
-
-    border-radius:
-      24px;
-
-  }
-
-
-  .main-content,
-  .content,
-  .page-content {
-
-    padding:
-      20px
-      16px
-      calc(100px + var(--safe-bottom));
-
-  }
-
-
-  .header,
-  .app-header {
-
-    padding-left: 16px;
-    padding-right: 16px;
-
-  }
-
-
-  .card,
-  .dashboard-card,
-  .booking-card {
-
-    padding: 16px;
-
-    border-radius: 18px;
-
-  }
-
-
-  .grid,
-  .services-grid {
-
-    grid-template-columns: 1fr;
-
-  }
-
-
-  .modal,
-  .popup,
-  .custom-popup {
-
-    padding:
-      24px 20px;
-
-    border-radius: 24px;
-
-  }
+    var(--bg);
 
 }
 
 
-/* =========================================================
-   iPHONE PICCOLI
-========================================================= */
+::-webkit-scrollbar-thumb {
+
+  background:
+
+    rgba(201,164,92,0.35);
+
+  border-radius: 20px;
+
+}
+
+
+/* ========================================
+   IPHONE PICCOLI
+======================================== */
 
 @media (max-width: 380px) {
 
-  .login-container,
-  .login-card,
-  .auth-card {
+  .page {
 
-    padding:
-      24px 16px;
+    padding-left: 12px;
 
-  }
-
-  input {
-
-    min-height: 52px;
+    padding-right: 12px;
 
   }
 
-  .login-brand h1,
-  .auth-brand h1 {
 
-    font-size: 28px;
+  .services-grid,
+  .services-list {
+
+    gap: 8px;
+
+  }
+
+
+  .service-card,
+  .service-button,
+  [data-service] {
+
+    min-height: 90px;
+
+    padding: 12px;
+
+  }
+
+
+  #timeSlots {
+
+    grid-template-columns:
+
+      repeat(
+        3,
+        minmax(0,1fr)
+      );
+
+    gap: 7px;
+
+  }
+
+
+  .time-slot {
+
+    min-height: 44px;
+
+    font-size: 13px;
+
+  }
+
+
+  .booking-card {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+  }
+
+
+  .cancel-booking {
+
+    width: 100%;
 
   }
 
 }
 
 
-/* =========================================================
-   LANDSCAPE MOBILE
-========================================================= */
+/* ========================================
+   TABLET
+======================================== */
 
-@media (max-height: 600px) and (orientation: landscape) {
+@media (min-width: 700px) {
 
-  #loginScreen,
-  .login-screen,
-  .auth-screen {
+  .page {
 
-    align-items: flex-start;
+    padding-left: 28px;
 
-    overflow-y: auto;
+    padding-right: 28px;
 
-    padding-top: 30px;
+  }
+
+
+  .services-grid,
+  .services-list {
+
+    grid-template-columns:
+
+      repeat(
+        3,
+        minmax(0,1fr)
+      );
+
+  }
+
+
+  #timeSlots {
+
+    grid-template-columns:
+
+      repeat(
+        4,
+        minmax(0,1fr)
+      );
 
   }
 
 }
 
 
-/* =========================================================
-   NASCONDI ELEMENTI CON HIDDEN
-========================================================= */
+/* ========================================
+   DESKTOP
+======================================== */
 
-.hidden {
-  display: none !important;
+@media (min-width: 1000px) {
+
+  .page {
+
+    padding-top: 40px;
+
+  }
+
+
+  .container,
+  .content,
+  .main-container {
+
+    max-width: 900px;
+
+  }
+
+
+  .services-grid,
+  .services-list {
+
+    grid-template-columns:
+
+      repeat(
+        3,
+        minmax(0,1fr)
+      );
+
+  }
+
 }
 
 
-/* =========================================================
-   ACCESSIBILITA
-========================================================= */
+/* ========================================
+   DISPOSITIVI TOUCH
+======================================== */
 
-button:focus-visible,
-input:focus-visible {
+@media (hover: none) {
 
-  outline:
-    2px solid var(--gold);
+  button:hover {
 
-  outline-offset:
-    2px;
+    opacity: 1;
+
+  }
 
 }
 
 
-/* =========================================================
-   ANIMAZIONI RIDOTTE
-========================================================= */
+/* ========================================
+   RIDUZIONE ANIMAZIONI
+======================================== */
 
 @media (prefers-reduced-motion: reduce) {
 
@@ -1449,11 +2071,22 @@ input:focus-visible {
   *::after {
 
     animation-duration:
+
       0.01ms !important;
 
+    animation-iteration-count:
+
+      1 !important;
+
     transition-duration:
+
       0.01ms !important;
 
   }
 
 }
+
+
+/* ========================================
+   FINE STYLE.CSS
+======================================== */
