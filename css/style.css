@@ -1,72 +1,49 @@
-/* =========================================
+/* =========================================================
    I GRIMALDI E.S.G.
-   STYLE COMPLETO - VERSIONE PREMIUM
-========================================= */
+   STYLE COMPLETO RESPONSIVE
+   iPHONE + ANDROID + DESKTOP
+========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
-
-:root {
-  --bg: #09090b;
-  --bg-soft: #111114;
-  --card: rgba(20, 20, 24, 0.88);
-  --card-light: rgba(30, 30, 35, 0.92);
-
-  --text: #f5f5f7;
-  --text-soft: #a1a1aa;
-  --text-muted: #71717a;
-
-  --gold: #d4af72;
-  --gold-light: #efd39b;
-
-  --border: rgba(255,255,255,0.10);
-  --border-light: rgba(255,255,255,0.16);
-
-  --success: #4ade80;
-  --danger: #ef4444;
-
-  --shadow:
-    0 20px 60px rgba(0,0,0,.55);
-
-  --radius: 22px;
-}
-
-/* =========================================
+/* =========================
    RESET
-========================================= */
+========================= */
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
 html {
+  width: 100%;
   min-height: 100%;
-  background: #09090b;
+  background: #08090d;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  min-height: 100vh;
-
+  width: 100%;
+  min-height: 100dvh;
   background:
     radial-gradient(
-      circle at 50% -20%,
-      rgba(212,175,114,.12),
+      circle at top center,
+      rgba(55, 65, 81, 0.16),
       transparent 35%
     ),
-    #09090b;
-
-  color: var(--text);
-
+    #08090d;
+  color: #f5f5f5;
   font-family:
-    "DM Sans",
+    Inter,
     -apple-system,
     BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
     "Segoe UI",
     sans-serif;
-
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 button,
@@ -77,151 +54,147 @@ textarea {
 }
 
 button {
+  border: none;
   cursor: pointer;
 }
 
+input,
+textarea,
+select {
+  outline: none;
+}
 
-/* =========================================
-   APP
-========================================= */
-
-.app {
-  min-height: 100vh;
-  width: 100%;
+img {
+  max-width: 100%;
+  display: block;
 }
 
 
-/* =========================================
-   LOADING SCREEN
-========================================= */
+/* =========================================================
+   VARIABILI
+========================================================= */
 
-#loadingScreen {
+:root {
+
+  --bg: #08090d;
+  --bg-secondary: #101116;
+  --card: rgba(22, 23, 29, 0.96);
+
+  --text: #f5f5f7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+
+  --border: rgba(255,255,255,0.09);
+  --border-light: rgba(255,255,255,0.14);
+
+  --gold: #d6b36a;
+  --gold-light: #f0d899;
+
+  --success: #4ade80;
+  --danger: #ef4444;
+
+  --radius-sm: 14px;
+  --radius: 20px;
+  --radius-lg: 28px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+}
+
+
+/* =========================================================
+   APP CONTAINER
+========================================================= */
+
+#app {
+  width: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+
+  display: flex;
+  flex-direction: column;
+
+  position: relative;
+
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(214,179,106,0.07),
+      transparent 35%
+    ),
+    var(--bg);
+}
+
+
+/* =========================================================
+   SPLASH SCREEN
+========================================================= */
+
+#splash,
+.splash {
   position: fixed;
-
   inset: 0;
 
   width: 100%;
-  height: 100%;
+  height: 100dvh;
 
   z-index: 99999;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
+
+  padding:
+    calc(24px + var(--safe-top))
+    24px
+    calc(24px + var(--safe-bottom));
 
   background:
     radial-gradient(
       circle at center,
-      rgba(212,175,114,.08),
-      transparent 30%
+      rgba(214,179,106,0.08),
+      transparent 40%
     ),
-    #09090b;
+    #08090d;
 
   transition:
-    opacity .7s ease,
-    visibility .7s ease;
+    opacity 0.45s ease,
+    visibility 0.45s ease;
 }
 
-#loadingScreen.hidden {
+.splash.hidden,
+#splash.hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-.loading-content {
+
+/* CONTENUTO SPLASH */
+
+.splash-content,
+.splash-inner {
+  width: 100%;
+  max-width: 360px;
+
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
   justify-content: center;
 
   text-align: center;
 
-  animation: loadingEntrance 1s ease forwards;
+  animation: splashAppear 0.7s ease both;
 }
 
-.loading-logo {
-  font-family: "Playfair Display", serif;
-
-  font-size: clamp(32px, 8vw, 52px);
-
-  letter-spacing: 6px;
-
-  font-weight: 600;
-
-  color: white;
-
-  margin-bottom: 14px;
-
-  text-transform: uppercase;
-}
-
-.loading-subtitle {
-  color: var(--gold);
-
-  letter-spacing: 4px;
-
-  font-size: 11px;
-
-  text-transform: uppercase;
-
-  margin-bottom: 45px;
-}
-
-.loading-line {
-  width: 180px;
-
-  height: 1px;
-
-  background: rgba(255,255,255,.12);
-
-  position: relative;
-
-  overflow: hidden;
-}
-
-.loading-line::after {
-  content: "";
-
-  position: absolute;
-
-  left: -50%;
-
-  top: 0;
-
-  width: 50%;
-
-  height: 100%;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--gold),
-    transparent
-  );
-
-  animation: loadingMove 1.4s infinite ease-in-out;
-}
-
-@keyframes loadingMove {
-
-  0% {
-    left: -50%;
-  }
-
-  100% {
-    left: 100%;
-  }
-
-}
-
-@keyframes loadingEntrance {
+@keyframes splashAppear {
 
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(12px);
   }
 
   to {
@@ -232,743 +205,790 @@ button {
 }
 
 
-/* =========================================
-   AUTH / LOGIN
-========================================= */
+/* TITOLO */
 
+.splash-title {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+}
+
+.splash-subtitle {
+  margin-top: 10px;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+
+/* LOADER */
+
+.splash-loader,
+.loader {
+  margin-top: 36px;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  border: 3px solid rgba(255,255,255,0.08);
+  border-top-color: var(--gold);
+
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+
+  to {
+    transform: rotate(360deg);
+  }
+
+}
+
+
+/* =========================================================
+   LOGIN SCREEN
+========================================================= */
+
+#loginScreen,
+.login-screen,
 .auth-screen {
-  min-height: 100vh;
+  width: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 
   display: flex;
-
   align-items: center;
   justify-content: center;
 
   padding:
-    40px
-    20px;
+    max(24px, calc(var(--safe-top) + 24px))
+    20px
+    max(24px, calc(var(--safe-bottom) + 24px));
 
   background:
     radial-gradient(
-      circle at 50% 0%,
-      rgba(212,175,114,.10),
-      transparent 35%
-    );
-}
-
-.auth-container {
-  width: 100%;
-
-  max-width: 440px;
-
-  animation: authEntrance .7s ease;
-}
-
-.auth-brand {
-  text-align: center;
-
-  margin-bottom: 42px;
-}
-
-.auth-brand-small {
-  color: var(--gold);
-
-  font-size: 11px;
-
-  letter-spacing: 4px;
-
-  text-transform: uppercase;
-
-  margin-bottom: 14px;
-}
-
-.auth-brand h1 {
-  margin: 0;
-
-  font-family: "Playfair Display", serif;
-
-  font-size: clamp(34px, 9vw, 52px);
-
-  font-weight: 600;
-
-  letter-spacing: 1px;
-}
-
-.auth-brand p {
-  color: var(--text-soft);
-
-  margin-top: 12px;
-
-  font-size: 14px;
+      circle at top,
+      rgba(214,179,106,0.08),
+      transparent 32%
+    ),
+    var(--bg);
 }
 
 
 /* CARD LOGIN */
 
+.login-container,
+.login-card,
 .auth-card {
+
+  width: 100%;
+  max-width: 440px;
+
+  margin: auto;
+
+  padding: 34px 28px;
+
+  border-radius: var(--radius-lg);
+
   background:
     linear-gradient(
       145deg,
-      rgba(28,28,32,.96),
-      rgba(15,15,18,.96)
+      rgba(29,30,37,0.98),
+      rgba(14,15,19,0.98)
     );
 
-  border:
-    1px solid var(--border);
-
-  border-radius: 28px;
-
-  padding: 32px 26px;
+  border: 1px solid var(--border);
 
   box-shadow:
-    0 25px 70px rgba(0,0,0,.45);
+    0 30px 80px rgba(0,0,0,0.45);
+
 }
 
 
-/* =========================================
-   TITOLI
-========================================= */
+/* BRAND */
 
-.auth-title {
-  margin: 0 0 8px;
-
-  font-size: 28px;
-
-  font-weight: 600;
+.login-brand,
+.auth-brand {
+  text-align: center;
+  margin-bottom: 34px;
 }
 
-.auth-description {
-  margin: 0 0 28px;
+.login-brand small,
+.auth-brand small {
 
-  color: var(--text-soft);
+  display: block;
 
-  font-size: 14px;
+  margin-bottom: 10px;
 
-  line-height: 1.6;
+  color: var(--gold);
+
+  font-size: 11px;
+
+  letter-spacing: 0.25em;
+
+  text-transform: uppercase;
+
+}
+
+.login-brand h1,
+.auth-brand h1 {
+
+  margin: 0;
+
+  font-size: clamp(30px, 8vw, 40px);
+
+  font-weight: 700;
+
+  letter-spacing: -0.04em;
+
+}
+
+.login-brand p,
+.auth-brand p {
+
+  margin: 10px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 15px;
+
 }
 
 
-/* =========================================
-   INPUT
-========================================= */
+/* =========================================================
+   FORM
+========================================================= */
 
-.input-group {
+.form-group {
+  width: 100%;
   margin-bottom: 16px;
 }
 
-.input-label {
+.form-group label {
+
   display: block;
 
   margin-bottom: 8px;
 
-  font-size: 12px;
+  color: var(--text-secondary);
 
-  color: var(--text-soft);
-
+  font-size: 13px;
   font-weight: 500;
+
 }
 
-.auth-input {
+input {
+
   width: 100%;
 
-  height: 58px;
+  min-height: 56px;
 
-  padding: 0 18px;
+  padding: 0 17px;
 
   border-radius: 16px;
 
-  border:
-    1px solid rgba(255,255,255,.10);
+  color: var(--text);
 
-  background:
-    rgba(255,255,255,.035);
+  background: rgba(255,255,255,0.035);
 
-  color: white;
-
-  outline: none;
+  border: 1px solid var(--border);
 
   font-size: 16px;
 
   transition:
-    border .25s ease,
-    background .25s ease,
-    box-shadow .25s ease;
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+
 }
 
-.auth-input::placeholder {
-  color: #777780;
+input::placeholder {
+  color: #666975;
 }
 
-.auth-input:focus {
+input:focus {
 
-  border-color:
-    rgba(212,175,114,.65);
+  border-color: rgba(214,179,106,0.7);
 
-  background:
-    rgba(255,255,255,.055);
+  background: rgba(255,255,255,0.05);
 
   box-shadow:
-    0 0 0 4px rgba(212,175,114,.07);
+    0 0 0 4px rgba(214,179,106,0.08);
+
 }
 
 
-/* =========================================
+/* =========================================================
    BOTTONI
-========================================= */
+========================================================= */
 
-.auth-button {
+.btn,
+button.primary,
+.primary-button,
+.login-button {
+
   width: 100%;
 
-  height: 58px;
+  min-height: 54px;
 
-  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  border: none;
+  padding: 0 20px;
 
   border-radius: 16px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.2s ease,
+    background 0.2s ease;
+
+}
+
+.btn:active,
+button.primary:active,
+.primary-button:active,
+.login-button:active {
+
+  transform: scale(0.98);
+
+}
+
+
+.btn-primary,
+button.primary,
+.primary-button,
+.login-button {
+
+  color: #111;
 
   background:
     linear-gradient(
       135deg,
-      #d4af72,
-      #b88945
+      var(--gold-light),
+      var(--gold)
     );
 
-  color: #111;
-
-  font-weight: 700;
-
-  font-size: 15px;
-
-  letter-spacing: .3px;
-
-  transition:
-    transform .2s ease,
-    box-shadow .2s ease,
-    opacity .2s ease;
-}
-
-.auth-button:hover {
-  transform: translateY(-2px);
-
   box-shadow:
-    0 12px 30px rgba(212,175,114,.20);
-}
+    0 10px 30px rgba(214,179,106,0.16);
 
-.auth-button:active {
-  transform: scale(.98);
-}
-
-.auth-button:disabled {
-  opacity: .55;
-  cursor: not-allowed;
 }
 
 
-/* =========================================
-   REGISTRAZIONE LINK
-========================================= */
+.btn-secondary {
 
-.auth-switch {
+  color: var(--text);
+
+  background: rgba(255,255,255,0.05);
+
+  border: 1px solid var(--border);
+
+}
+
+
+/* LINK REGISTRAZIONE */
+
+.auth-switch,
+.login-switch {
+
+  margin-top: 22px;
+
   text-align: center;
 
-  margin-top: 24px;
-
-  color: var(--text-soft);
+  color: var(--text-secondary);
 
   font-size: 14px;
+
 }
 
-.auth-switch button {
+.auth-switch button,
+.login-switch button {
+
+  display: inline;
+
+  width: auto;
+  min-height: auto;
+
+  padding: 0;
 
   background: transparent;
-
-  border: none;
 
   color: var(--gold-light);
 
   font-weight: 600;
 
-  padding: 4px;
-
-  font-size: inherit;
 }
 
 
-/* =========================================
-   POPUP OVERLAY
-========================================= */
+/* =========================================================
+   MAIN APP
+========================================================= */
 
-.modal-overlay {
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 5000;
-
-  display: none;
-
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background:
-    rgba(0,0,0,.72);
-
-  backdrop-filter:
-    blur(12px);
-
-  -webkit-backdrop-filter:
-    blur(12px);
-}
-
-.modal-overlay.active {
-  display: flex;
-
-  animation: overlayIn .25s ease;
-}
-
-
-/* =========================================
-   POPUP ELEGANTE CENTRALE
-========================================= */
-
-.modal {
+.main-app,
+#mainApp,
+.app-content {
 
   width: 100%;
-
-  max-width: 430px;
-
-  max-height: 90vh;
-
-  overflow-y: auto;
-
-  background:
-    linear-gradient(
-      145deg,
-      #1b1b20,
-      #101014
-    );
-
-  border:
-    1px solid rgba(255,255,255,.12);
-
-  border-radius: 26px;
-
-  padding: 28px 24px;
-
-  box-shadow:
-    0 30px 100px rgba(0,0,0,.75);
-
-  animation: modalIn .35s cubic-bezier(.2,.8,.2,1);
-}
-
-
-/* ICONA POPUP */
-
-.modal-icon {
-
-  width: 54px;
-
-  height: 54px;
-
-  border-radius: 18px;
+  min-height: 100dvh;
 
   display: flex;
+  flex-direction: column;
 
-  align-items: center;
-  justify-content: center;
-
-  margin: 0 auto 20px;
-
-  background:
-    rgba(212,175,114,.10);
-
-  border:
-    1px solid rgba(212,175,114,.22);
-
-  color: var(--gold);
-
-  font-size: 22px;
 }
 
 
-/* TESTI POPUP */
-
-.modal h2 {
-
-  margin: 0;
-
-  text-align: center;
-
-  font-size: 24px;
-
-  font-weight: 600;
-}
-
-.modal p {
-
-  color: var(--text-soft);
-
-  text-align: center;
-
-  line-height: 1.6;
-
-  font-size: 14px;
-
-  margin:
-    12px
-    0
-    24px;
-}
-
-
-/* BOTTONI MODAL */
-
-.modal-actions {
-
-  display: flex;
-
-  gap: 10px;
-
-  margin-top: 24px;
-}
-
-.modal-actions button {
-
-  flex: 1;
-
-  min-height: 50px;
-
-  border-radius: 14px;
-
-  padding: 0 16px;
-
-  font-weight: 600;
-
-  border:
-    1px solid var(--border);
-
-  background:
-    rgba(255,255,255,.05);
-
-  color: white;
-}
-
-.modal-actions .primary {
-
-  border: none;
-
-  background:
-    linear-gradient(
-      135deg,
-      #d4af72,
-      #b88945
-    );
-
-  color: #111;
-}
-
-
-/* =========================================
-   TOAST CENTRALE
-========================================= */
-
-#toast {
-
-  position: fixed;
-
-  top: 50%;
-
-  left: 50%;
-
-  z-index: 10000;
-
-  transform:
-    translate(-50%, -50%)
-    scale(.92);
-
-  width:
-    min(90vw, 380px);
-
-  padding:
-    18px
-    22px;
-
-  border-radius: 20px;
-
-  background:
-    rgba(24,24,28,.96);
-
-  border:
-    1px solid rgba(255,255,255,.13);
-
-  box-shadow:
-    0 25px 80px rgba(0,0,0,.65);
-
-  color: white;
-
-  text-align: center;
-
-  font-size: 15px;
-
-  line-height: 1.5;
-
-  opacity: 0;
-
-  visibility: hidden;
-
-  transition:
-    opacity .3s ease,
-    transform .3s cubic-bezier(.2,.8,.2,1),
-    visibility .3s;
-}
-
-#toast.show {
-
-  opacity: 1;
-
-  visibility: visible;
-
-  transform:
-    translate(-50%, -50%)
-    scale(1);
-}
-
-#toast.success {
-  border-color:
-    rgba(74,222,128,.35);
-}
-
-#toast.error {
-  border-color:
-    rgba(239,68,68,.35);
-}
-
-
-/* =========================================
-   DASHBOARD
-========================================= */
-
-.dashboard {
-
-  min-height: 100vh;
-
-  padding-bottom: 100px;
-}
-
-
-/* HEADER */
-
-.header {
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header,
+.app-header {
 
   position: sticky;
-
   top: 0;
 
   z-index: 100;
 
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  padding:
-    18px
-    20px;
-
-  background:
-    rgba(9,9,11,.85);
-
-  backdrop-filter:
-    blur(18px);
-
-  -webkit-backdrop-filter:
-    blur(18px);
-
-  border-bottom:
-    1px solid var(--border);
-}
-
-.header-title {
-
-  font-family:
-    "Playfair Display",
-    serif;
-
-  font-size: 22px;
-
-  letter-spacing: 1px;
-}
-
-
-/* CONTENUTO */
-
-.container {
-
   width: 100%;
 
-  max-width: 1100px;
+  padding:
+    calc(14px + var(--safe-top))
+    20px
+    14px;
+
+  background:
+    rgba(8,9,13,0.88);
+
+  backdrop-filter:
+    blur(20px);
+
+  -webkit-backdrop-filter:
+    blur(20px);
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.05);
+
+}
+
+.header-inner {
+
+  width: 100%;
+  max-width: 1200px;
+
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+}
+
+
+/* =========================================================
+   CONTENUTO PRINCIPALE
+========================================================= */
+
+.main-content,
+.content,
+.page-content {
+
+  width: 100%;
+  max-width: 1200px;
+
+  flex: 1;
 
   margin: 0 auto;
 
   padding:
-    25px
-    18px;
+    24px
+    20px
+    calc(110px + var(--safe-bottom));
+
 }
 
 
-/* CARDS */
+/* =========================================================
+   PAGE TITLE
+========================================================= */
 
-.card {
+.page-title {
 
-  background:
-    var(--card);
+  margin: 0 0 6px;
 
-  border:
-    1px solid var(--border);
+  font-size: clamp(26px, 7vw, 36px);
 
-  border-radius:
-    var(--radius);
+  letter-spacing: -0.04em;
 
-  padding:
-    20px;
-
-  margin-bottom:
-    16px;
-
-  box-shadow:
-    0 10px 35px rgba(0,0,0,.18);
 }
 
-.card-title {
+.page-subtitle {
 
-  margin: 0 0 16px;
+  margin: 0 0 24px;
 
-  font-size: 17px;
+  color: var(--text-secondary);
 
-  font-weight: 600;
+  font-size: 14px;
+
 }
 
 
-/* =========================================
-   BUTTON GENERICO
-========================================= */
+/* =========================================================
+   CARDS
+========================================================= */
 
-.btn {
-
-  min-height: 46px;
-
-  padding:
-    0
-    18px;
-
-  border-radius: 14px;
-
-  border:
-    1px solid var(--border);
-
-  background:
-    rgba(255,255,255,.05);
-
-  color: white;
-
-  font-weight: 600;
-
-  transition:
-    .2s ease;
-}
-
-.btn:active {
-  transform: scale(.97);
-}
-
-.btn-primary {
-
-  border: none;
-
-  background:
-    linear-gradient(
-      135deg,
-      #d4af72,
-      #b88945
-    );
-
-  color: #111;
-}
-
-.btn-danger {
-
-  border-color:
-    rgba(239,68,68,.25);
-
-  color:
-    #ff8585;
-}
-
-
-/* =========================================
-   PRENOTAZIONI
-========================================= */
-
+.card,
+.dashboard-card,
 .booking-card {
 
-  position: relative;
+  width: 100%;
 
-  overflow: hidden;
+  padding: 20px;
+
+  border-radius: var(--radius);
 
   background:
     linear-gradient(
       145deg,
-      rgba(28,28,33,.95),
-      rgba(16,16,19,.95)
+      rgba(27,28,34,0.95),
+      rgba(16,17,21,0.95)
     );
 
   border:
     1px solid var(--border);
 
-  border-radius: 20px;
+  box-shadow:
+    0 10px 35px rgba(0,0,0,0.16);
+
+}
+
+
+/* =========================================================
+   GRIGLIE RESPONSIVE
+========================================================= */
+
+.grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(240px, 1fr));
+
+  gap: 16px;
+
+}
+
+.services-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(180px, 1fr));
+
+  gap: 14px;
+
+}
+
+
+/* =========================================================
+   SERVIZI
+========================================================= */
+
+.service-card {
+
+  min-height: 120px;
 
   padding: 18px;
 
-  margin-bottom: 12px;
+  border-radius: 18px;
+
+  background: rgba(255,255,255,0.035);
+
+  border: 1px solid var(--border);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+
 }
 
-.booking-card::before {
+.service-card:active {
+  transform: scale(0.98);
+}
 
-  content: "";
+.service-card.selected {
 
-  position: absolute;
-
-  left: 0;
-
-  top: 15%;
-
-  bottom: 15%;
-
-  width: 3px;
+  border-color:
+    rgba(214,179,106,0.8);
 
   background:
-    var(--gold);
+    rgba(214,179,106,0.07);
 
-  border-radius: 0 4px 4px 0;
 }
 
 
-/* =========================================
-   ANIMAZIONI
-========================================= */
+/* =========================================================
+   PRENOTAZIONI
+========================================================= */
 
-@keyframes authEntrance {
+.booking-list {
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+}
+
+.booking-item {
+
+  width: 100%;
+
+  padding: 17px;
+
+  border-radius: 18px;
+
+  background:
+    rgba(255,255,255,0.035);
+
+  border:
+    1px solid var(--border);
+
+}
+
+
+/* =========================================================
+   TABELLE RESPONSIVE
+========================================================= */
+
+.table-wrapper {
+
+  width: 100%;
+
+  overflow-x: auto;
+
+  -webkit-overflow-scrolling: touch;
+
+  border-radius: 18px;
+
+}
+
+table {
+
+  width: 100%;
+
+  min-width: 650px;
+
+  border-collapse: collapse;
+
+}
+
+th,
+td {
+
+  padding: 15px;
+
+  text-align: left;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.06);
+
+}
+
+th {
+
+  color: var(--text-secondary);
+
+  font-size: 12px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
+
+}
+
+
+/* =========================================================
+   BOTTOM NAVIGATION
+========================================================= */
+
+.bottom-nav,
+.bottom-navigation,
+.mobile-nav {
+
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  z-index: 1000;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  padding:
+    10px
+    10px
+    calc(10px + var(--safe-bottom));
+
+  background:
+    rgba(14,15,19,0.96);
+
+  backdrop-filter:
+    blur(20px);
+
+  -webkit-backdrop-filter:
+    blur(20px);
+
+  border-top:
+    1px solid var(--border);
+
+}
+
+
+.bottom-nav button,
+.bottom-navigation button,
+.mobile-nav button {
+
+  flex: 1;
+
+  min-height: 48px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 5px;
+
+  background: transparent;
+
+  color: var(--text-muted);
+
+  font-size: 11px;
+
+}
+
+.bottom-nav button.active,
+.bottom-navigation button.active,
+.mobile-nav button.active {
+
+  color: var(--gold-light);
+
+}
+
+
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+
+.modal-overlay,
+.popup-overlay {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 10000;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    calc(20px + var(--safe-top))
+    20px
+    calc(20px + var(--safe-bottom));
+
+  background:
+    rgba(0,0,0,0.68);
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+
+}
+
+
+/* =========================================================
+   POPUP CENTRALE ELEGANTE
+========================================================= */
+
+.modal,
+.popup,
+.custom-popup {
+
+  width: 100%;
+
+  max-width: 400px;
+
+  max-height:
+    calc(100dvh - 40px);
+
+  overflow-y: auto;
+
+  padding: 28px 24px;
+
+  border-radius: 26px;
+
+  text-align: center;
+
+  color: var(--text);
+
+  background:
+    linear-gradient(
+      145deg,
+      #24252c,
+      #111217
+    );
+
+  border:
+    1px solid rgba(255,255,255,0.11);
+
+  box-shadow:
+    0 30px 100px rgba(0,0,0,0.6);
+
+  animation:
+    popupAppear 0.25s ease both;
+
+}
+
+
+@keyframes popupAppear {
 
   from {
 
     opacity: 0;
 
     transform:
-      translateY(20px);
+      scale(0.94)
+      translateY(12px);
 
   }
 
@@ -977,33 +997,94 @@ button {
     opacity: 1;
 
     transform:
+      scale(1)
       translateY(0);
 
   }
 
 }
 
-@keyframes overlayIn {
 
-  from {
-    opacity: 0;
-  }
+.modal h2,
+.popup h2 {
 
-  to {
-    opacity: 1;
-  }
+  margin: 0 0 10px;
+
+  font-size: 24px;
 
 }
 
-@keyframes modalIn {
+.modal p,
+.popup p {
+
+  margin: 0 0 22px;
+
+  color: var(--text-secondary);
+
+  line-height: 1.55;
+
+}
+
+
+/* =========================================================
+   TOAST
+   CENTRATO E NON IN BASSO
+========================================================= */
+
+#toast,
+.toast {
+
+  position: fixed;
+
+  left: 50%;
+  top: 50%;
+
+  z-index: 999999;
+
+  width:
+    min(
+      calc(100% - 40px),
+      380px
+    );
+
+  padding: 20px 22px;
+
+  border-radius: 22px;
+
+  text-align: center;
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(38,39,46,0.98),
+      rgba(20,21,26,0.98)
+    );
+
+  border:
+    1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,0.65);
+
+  transform:
+    translate(-50%, -50%);
+
+  animation:
+    toastAppear 0.3s ease both;
+
+}
+
+@keyframes toastAppear {
 
   from {
 
     opacity: 0;
 
     transform:
-      translateY(25px)
-      scale(.96);
+      translate(-50%, -45%)
+      scale(0.95);
 
   }
 
@@ -1012,7 +1093,7 @@ button {
     opacity: 1;
 
     transform:
-      translateY(0)
+      translate(-50%, -50%)
       scale(1);
 
   }
@@ -1020,156 +1101,359 @@ button {
 }
 
 
-/* =========================================
-   MOBILE IPHONE
-========================================= */
+/* SUCCESS */
 
-@media (max-width: 600px) {
+.toast.success,
+#toast.success {
 
-  body {
-    padding-bottom:
-      env(safe-area-inset-bottom);
-  }
+  border-color:
+    rgba(74,222,128,0.35);
 
-  .auth-screen {
+}
 
-    min-height:
-      100dvh;
+
+/* ERROR */
+
+.toast.error,
+#toast.error {
+
+  border-color:
+    rgba(239,68,68,0.4);
+
+}
+
+
+/* =========================================================
+   LOADING OVERLAY
+========================================================= */
+
+.loading-overlay {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 99990;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(8,9,13,0.8);
+
+  backdrop-filter:
+    blur(8px);
+
+}
+
+
+.loading-box {
+
+  width: 100%;
+
+  max-width: 300px;
+
+  padding: 30px 24px;
+
+  text-align: center;
+
+  border-radius: 24px;
+
+  background:
+    #16171c;
+
+  border:
+    1px solid var(--border);
+
+}
+
+
+.loading-spinner {
+
+  width: 38px;
+  height: 38px;
+
+  margin:
+    0 auto 18px;
+
+  border-radius: 50%;
+
+  border:
+    3px solid rgba(255,255,255,0.1);
+
+  border-top-color:
+    var(--gold);
+
+  animation:
+    spin 0.8s linear infinite;
+
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.badge {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  padding:
+    6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+}
+
+.badge-success {
+
+  color: #86efac;
+
+  background:
+    rgba(34,197,94,0.1);
+
+}
+
+.badge-danger {
+
+  color: #fca5a5;
+
+  background:
+    rgba(239,68,68,0.1);
+
+}
+
+
+/* =========================================================
+   EMPTY STATES
+========================================================= */
+
+.empty-state {
+
+  width: 100%;
+
+  padding:
+    60px 20px;
+
+  text-align: center;
+
+  color: var(--text-secondary);
+
+}
+
+.empty-state h3 {
+
+  margin: 0 0 8px;
+
+  color: var(--text);
+
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width: 768px) {
+
+  .main-content,
+  .content,
+  .page-content {
 
     padding:
-      24px
-      16px;
+      32px
+      32px
+      50px;
 
-    align-items:
-      center;
   }
 
-  .auth-container {
+  .bottom-nav,
+  .bottom-navigation,
+  .mobile-nav {
 
-    max-width:
-      100%;
-  }
+    display: none;
 
-  .auth-brand {
-
-    margin-bottom:
-      28px;
-  }
-
-  .auth-brand h1 {
-
-    font-size:
-      38px;
-  }
-
-  .auth-card {
-
-    padding:
-      25px
-      18px;
-
-    border-radius:
-      24px;
-  }
-
-  .auth-title {
-
-    font-size:
-      25px;
-  }
-
-  .auth-input {
-
-    height:
-      56px;
-
-    font-size:
-      16px;
-  }
-
-  .auth-button {
-
-    height:
-      56px;
-  }
-
-  .modal-overlay {
-
-    padding:
-      16px;
-
-    align-items:
-      center;
-  }
-
-  .modal {
-
-    padding:
-      25px
-      18px;
-
-    border-radius:
-      24px;
-  }
-
-  .modal-actions {
-
-    flex-direction:
-      column;
-  }
-
-  .modal-actions button {
-
-    width:
-      100%;
-    flex: none;
   }
 
 }
 
 
-/* =========================================
-   IPHONE PICCOLO
-========================================= */
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+
+  .login-container,
+  .login-card,
+  .auth-card {
+
+    padding:
+      30px 20px;
+
+    border-radius:
+      24px;
+
+  }
+
+
+  .main-content,
+  .content,
+  .page-content {
+
+    padding:
+      20px
+      16px
+      calc(100px + var(--safe-bottom));
+
+  }
+
+
+  .header,
+  .app-header {
+
+    padding-left: 16px;
+    padding-right: 16px;
+
+  }
+
+
+  .card,
+  .dashboard-card,
+  .booking-card {
+
+    padding: 16px;
+
+    border-radius: 18px;
+
+  }
+
+
+  .grid,
+  .services-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+
+  .modal,
+  .popup,
+  .custom-popup {
+
+    padding:
+      24px 20px;
+
+    border-radius: 24px;
+
+  }
+
+}
+
+
+/* =========================================================
+   iPHONE PICCOLI
+========================================================= */
 
 @media (max-width: 380px) {
 
-  .auth-brand h1 {
-    font-size: 32px;
-  }
-
+  .login-container,
+  .login-card,
   .auth-card {
-    padding: 20px 16px;
+
+    padding:
+      24px 16px;
+
+  }
+
+  input {
+
+    min-height: 52px;
+
+  }
+
+  .login-brand h1,
+  .auth-brand h1 {
+
+    font-size: 28px;
+
   }
 
 }
 
 
-/* =========================================
-   SCROLLBAR
-========================================= */
+/* =========================================================
+   LANDSCAPE MOBILE
+========================================================= */
 
-::-webkit-scrollbar {
-  width: 5px;
+@media (max-height: 600px) and (orientation: landscape) {
+
+  #loginScreen,
+  .login-screen,
+  .auth-screen {
+
+    align-items: flex-start;
+
+    overflow-y: auto;
+
+    padding-top: 30px;
+
+  }
+
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
 
-::-webkit-scrollbar-thumb {
-
-  background:
-    rgba(255,255,255,.15);
-
-  border-radius: 10px;
-}
-
-
-/* =========================================
-   NASCONDI ELEMENTI
-========================================= */
+/* =========================================================
+   NASCONDI ELEMENTI CON HIDDEN
+========================================================= */
 
 .hidden {
   display: none !important;
+}
+
+
+/* =========================================================
+   ACCESSIBILITA
+========================================================= */
+
+button:focus-visible,
+input:focus-visible {
+
+  outline:
+    2px solid var(--gold);
+
+  outline-offset:
+    2px;
+
+}
+
+
+/* =========================================================
+   ANIMAZIONI RIDOTTE
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+
+    animation-duration:
+      0.01ms !important;
+
+    transition-duration:
+      0.01ms !important;
+
+  }
+
 }
