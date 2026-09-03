@@ -1584,16 +1584,12 @@ async function checkAvailableTimes() {
 // CAMBIO DATA
 // ==========================================
 
-const bookingDateInput =
- document.addEventListener("DOMContentLoaded", () => {
 
-  const bookingDateInput =
-    const bookingDateInput = document.getElementById("bookingDate");
+ const bookingDateInput = document.getElementById("bookingDate");
 
 if (bookingDateInput) {
   bookingDateInput.addEventListener("change", checkAvailableTimes);
 }
-
 
 // ==========================================
 // ESPOSIZIONE FUNZIONI HTML
