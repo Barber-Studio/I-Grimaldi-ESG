@@ -21,14 +21,84 @@ function register(){let name=$('regName').value.trim(),surname=$('regSurname').v
 function showApp(){$('app').classList.remove('hidden');$('thirdLabel').textContent=currentUser.admin?'Agenda':'Appuntamenti';}
 function logout(){sessionStorage.removeItem('grimaldi_user');currentUser=null;$('app').classList.add('hidden');$('loginPhone').value='';$('loginPin').value='';$('authModal').classList.remove('hidden')}
 function createBooking(){
- if(!currentUser)return;
- let service=$('services').querySelector('.selected')?.dataset.service||services[0][0];
- if(!bookingDate){alert('Seleziona una data');return}
- if(!bookingTime){alert('Seleziona un orario');return}
- let blocked=blocks().some(x=>x.date===bookingDate&&(x.time===bookingTime||x.time==='ALL'));
- let occupied=bookings().some(x=>x.date===bookingDate&&x.time===bookingTime);
- if(blocked||occupied){alert('Questo orario non è più disponibile');renderBookingPicker();return}
- let b=bookings();b.push({id:Date.now(),user:currentUser.phone,name:currentUser.name+' '+currentUser.surname,phone:currentUser.phone,service,date:bookingDate,time:bookingTime,price:services.find(x=>x[0]===service)?.[1]||0});set('grimaldi_bookings',b);alert('Prenotazione confermata');bookingTime='';showPage('appointmentsPage')
+ async function createBooking(){
+  if(!currentUser) return;
+
+  let service = $("services").querySelector(".selected")?.dataset.service || services[0][0];
+
+  if(!bookingDate){
+    alert("Seleziona una data");
+    return;
+  }
+
+  if(!bookingTime){
+    alert("Seleziona un orario");
+    return;
+  }
+
+  let blocked = blocks().some(x =>
+    x.date === bookingDate &&
+    (x.time === bookingTime || x.time === "ALL")
+  );
+
+  let occupied = bookings().some(x =>
+    x.date === bookingDate &&
+    x.time === bookingTime
+  );
+
+  if(blocked || occupied){
+    alert("Questo orario non è più disponibile");
+    renderBookingPicker();
+    return;
+  }
+
+  const serviceData = services.find(x => x[0] === service);
+  const price = serviceData ? serviceData[1] : 0;
+
+  const { data, error } = await supabaseClient
+    .from("bookings")
+    .insert({
+      customer_name: currentUser.name,
+      customer_surname: currentUser.surname || "",
+      customer_phone: currentUser.phone,
+      service: service,
+      booking_date: bookingDate,
+      booking_time: bookingTime,
+      price: price,
+      status: "confirmed"
+    })
+    .select()
+    .single();
+
+  if(error){
+    console.error(error);
+    alert("Errore nel salvataggio della prenotazione: " + error.message);
+    return;
+  }
+
+  let b = bookings();
+
+  b.push({
+    id: data.id,
+    user: currentUser.phone,
+    name: currentUser.name + " " + (currentUser.surname || ""),
+    phone: currentUser.phone,
+    service: service,
+    date: bookingDate,
+    time: bookingTime,
+    price: price,
+    status: "confirmed"
+  });
+
+  set("bookings", b);
+
+  alert("Prenotazione effettuata con successo!");
+
+  bookingTime = "";
+  renderBookingPicker();
+
+  showPage(currentUser.admin ? "agendaPage" : "appointmentsPage");
+}
 }
 function changeBookingMonth(n){bookingCalendarDate.setMonth(bookingCalendarDate.getMonth()+n);renderBookingPicker()}
 function renderBookingPicker(){
