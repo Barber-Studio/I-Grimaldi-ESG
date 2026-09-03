@@ -1600,7 +1600,7 @@ const bookingDateInput =
   }
 
 });
-  );
+
 
 }
 
