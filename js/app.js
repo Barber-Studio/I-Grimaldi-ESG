@@ -1602,8 +1602,6 @@ const bookingDateInput =
 });
 
 
-}
-
 
 // ==========================================
 // ESPOSIZIONE FUNZIONI HTML
