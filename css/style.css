@@ -446,5 +446,57 @@ h2,h3{
 
     .mini-logo img {
         width: 115px;
+     /* ========================================
+   SPLASH SOLO TESTO - I GRIMALDI
+======================================== */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #090909;
+}
+
+.splash img,
+.splash .logo-splash,
+.splash-logo {
+  display: none !important;
+}
+
+.splash-text {
+  text-align: center;
+  animation: splashFade 0.8s ease;
+}
+
+.splash-title {
+  font-size: clamp(42px, 9vw, 90px);
+  font-weight: 800;
+  letter-spacing: 5px;
+  color: #d4af37;
+  text-transform: uppercase;
+}
+
+.splash-subtitle {
+  margin-top: 10px;
+  font-size: clamp(14px, 2.5vw, 24px);
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: #ffffff;
+}
+
+@keyframes splashFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
     }
 }
