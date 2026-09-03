@@ -1588,19 +1588,11 @@ const bookingDateInput =
  document.addEventListener("DOMContentLoaded", () => {
 
   const bookingDateInput =
-    document.getElementById("bookingDate");
+    const bookingDateInput = document.getElementById("bookingDate");
 
-  if (bookingDateInput) {
-
-    bookingDateInput.addEventListener(
-      "change",
-      checkAvailableTimes
-    );
-
-  }
-
-});
-
+if (bookingDateInput) {
+  bookingDateInput.addEventListener("change", checkAvailableTimes);
+}
 
 
 // ==========================================
