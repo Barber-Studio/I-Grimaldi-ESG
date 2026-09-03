@@ -11,7 +11,7 @@ let currentUser = null;
 let selectedDate = new Date();
 let selectedService = null;
 
-const services = [
+const services = ]
   {
     id: "shampoo_taglio",
     name: "Shampoo + Taglio",
