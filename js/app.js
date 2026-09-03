@@ -64,3 +64,113 @@ function closeNotifications(){$('notificationModal').classList.add('hidden')}
 function showInstall(){$('installModal').classList.remove('hidden')}
 function renderProfile(){$('profileContent').innerHTML=currentUser?`<b>${currentUser.name} ${currentUser.surname}</b><p class="muted">${currentUser.phone}</p>`:''}
 document.addEventListener('DOMContentLoaded',()=>{currentUser=JSON.parse(sessionStorage.getItem('grimaldi_user')||'null');init();});
+// ===============================
+// SUPABASE DATABASE FUNCTIONS
+// ===============================
+
+async function loadCustomersFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("customers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Errore caricamento clienti:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function loadBookingsFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("bookings")
+    .select("*")
+    .order("booking_date", { ascending: true });
+
+  if (error) {
+    console.error("Errore caricamento prenotazioni:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function loadBlockedDaysFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from("blocked_days")
+    .select("*")
+    .order("blocked_date", { ascending: true });
+
+  if (error) {
+    console.error("Errore caricamento giorni bloccati:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+async function saveCustomerToSupabase(customer) {
+  const { data, error } = await supabaseClient
+    .from("customers")
+    .upsert(
+      {
+        phone: customer.phone,
+        name: customer.name,
+        surname: customer.surname || "",
+        pin: customer.pin,
+        is_admin: customer.isAdmin || false
+      },
+      {
+        onConflict: "phone"
+      }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Errore salvataggio cliente:", error);
+    return null;
+  }
+
+  return data;
+}
+
+async function saveBookingToSupabase(booking) {
+  const { data, error } = await supabaseClient
+    .from("bookings")
+    .insert({
+      customer_name: booking.name,
+      customer_surname: booking.surname || "",
+      customer_phone: booking.phone,
+      service: booking.service,
+      booking_date: booking.date,
+      booking_time: booking.time,
+      price: booking.price || 0,
+      status: booking.status || "confirmed"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Errore salvataggio prenotazione:", error);
+    alert("Errore nel salvataggio della prenotazione");
+    return null;
+  }
+
+  return data;
+}
+
+async function deleteBookingFromSupabase(id) {
+  const { error } = await supabaseClient
+    .from("bookings")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Errore eliminazione prenotazione:", error);
+    return false;
+  }
+
+  return true;
+}
