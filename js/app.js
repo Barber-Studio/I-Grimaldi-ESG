@@ -17,14 +17,23 @@ const SUPABASE_KEY =
 let supabaseClient = null;
 
 try {
+
   if (typeof supabase !== "undefined") {
+
     supabaseClient = supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
+
   }
+
 } catch (error) {
-  console.error("Errore inizializzazione Supabase:", error);
+
+  console.error(
+    "Errore inizializzazione Supabase:",
+    error
+  );
+
 }
 
 
@@ -42,48 +51,64 @@ let selectedTime = null;
 
 let currentBookingId = null;
 
+let toastTimeout = null;
+
 
 // ========================================
 // SERVIZI
 // ========================================
 
 const services = [
+
   {
     id: "shampoo_taglio",
     name: "Shampoo + Taglio",
     price: 20,
     duration: 30
   },
+
   {
     id: "barba_5",
     name: "Barba",
     price: 5,
     duration: 15
   },
+
   {
     id: "barba_10",
     name: "Barba",
     price: 10,
     duration: 30
   },
+
   {
     id: "colore",
     name: "Colore",
     price: 20,
     duration: 45
   },
+
   {
     id: "colore_barba",
     name: "Colore Barba",
     price: 10,
     duration: 30
   },
+
   {
     id: "fiala",
     name: "Fiala",
     price: 5,
     duration: 10
+  },
+
+  {
+    id: "taglio_bambino",
+    name: "Taglio Bambino",
+    price: 15,
+    duration: 30
   }
+
 ];
 
 
@@ -91,11 +116,14 @@ const services = [
 // AVVIO APPLICAZIONE
 // ========================================
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+  "DOMContentLoaded",
+  async function () {
 
-  initializeApp();
+    await initializeApp();
 
-});
+  }
+);
 
 
 // ========================================
@@ -104,9 +132,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
 async function initializeApp() {
 
-  console.log("Avvio applicazione I Grimaldi");
+  console.log(
+    "Avvio applicazione I Grimaldi E.S.G."
+  );
 
-  showSplash();
+
+  // Mostra caricamento iniziale
+
+  showLoading();
+
+
+  // Configurazioni
 
   setupNavigation();
 
@@ -118,49 +154,99 @@ async function initializeApp() {
 
   setupDateControls();
 
+  setupRegisterButtons();
+
+
+  // Carica orari
+
+  loadAvailableTimes();
+
+
+  // Ripristina eventuale login
+
   await restoreSession();
+
+
+  // Piccolo tempo per splash elegante
 
   setTimeout(function () {
 
-    hideSplash();
+    hideLoading();
 
-  }, 1800);
+  }, 1400);
 
 }
 
 
 // ========================================
-// SPLASH SCREEN
+// LOADING / SPLASH SCREEN
 // ========================================
 
-function showSplash() {
+function showLoading() {
 
-  const splash = document.getElementById("splash");
+  const loadingScreen =
+    document.getElementById("loadingScreen");
 
-  const app = document.getElementById("app");
+  const splash =
+    document.getElementById("splash");
+
+  const app =
+    document.getElementById("app");
+
+
+  if (loadingScreen) {
+
+    loadingScreen.classList.remove("hidden");
+
+    loadingScreen.style.display = "flex";
+
+  }
+
 
   if (splash) {
 
-    splash.style.display = "flex";
-
     splash.classList.remove("hidden");
+
+    splash.classList.remove("fade-out");
+
+    splash.style.display = "flex";
 
   }
 
+
   if (app) {
 
-    app.classList.add("hidden");
+    app.classList.add("app-loading");
 
   }
 
 }
 
 
-function hideSplash() {
+function hideLoading() {
 
-  const splash = document.getElementById("splash");
+  const loadingScreen =
+    document.getElementById("loadingScreen");
 
-  const app = document.getElementById("app");
+  const splash =
+    document.getElementById("splash");
+
+  const app =
+    document.getElementById("app");
+
+
+  if (loadingScreen) {
+
+    loadingScreen.classList.add("hidden");
+
+    setTimeout(function () {
+
+      loadingScreen.style.display = "none";
+
+    }, 500);
+
+  }
+
 
   if (splash) {
 
@@ -174,17 +260,34 @@ function hideSplash() {
 
   }
 
+
   if (app) {
 
-    app.classList.remove("hidden");
+    app.classList.remove("app-loading");
 
   }
 
 }
 
 
+// Manteniamo compatibilità vecchie funzioni
+
+function showSplash() {
+
+  showLoading();
+
+}
+
+
+function hideSplash() {
+
+  hideLoading();
+
+}
+
+
 // ========================================
-// NAVIGAZIONE PAGINE
+// NAVIGAZIONE
 // ========================================
 
 function setupNavigation() {
@@ -192,30 +295,43 @@ function setupNavigation() {
   const navButtons =
     document.querySelectorAll("[data-page]");
 
+
   navButtons.forEach(function (button) {
 
-    button.addEventListener("click", function () {
+    button.addEventListener(
+      "click",
+      function (event) {
 
-      const pageId =
-        button.getAttribute("data-page");
+        event.preventDefault();
 
-      if (pageId) {
 
-        showPage(pageId);
+        const pageId =
+          button.getAttribute("data-page");
+
+
+        if (pageId) {
+
+          showPage(pageId);
+
+        }
 
       }
-
-    });
+    );
 
   });
 
 }
 
 
+// ========================================
+// MOSTRA PAGINA
+// ========================================
+
 function showPage(pageId) {
 
   const pages =
     document.querySelectorAll(".page");
+
 
   pages.forEach(function (page) {
 
@@ -223,8 +339,10 @@ function showPage(pageId) {
 
   });
 
+
   const selectedPage =
     document.getElementById(pageId);
+
 
   if (selectedPage) {
 
@@ -232,10 +350,54 @@ function showPage(pageId) {
 
   }
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
+
+  // Aggiorna eventuale stato navigazione
+
+  const navButtons =
+    document.querySelectorAll("[data-page]");
+
+
+  navButtons.forEach(function (button) {
+
+    const buttonPage =
+      button.getAttribute("data-page");
+
+
+    button.classList.remove("active");
+
+
+    if (buttonPage === pageId) {
+
+      button.classList.add("active");
+
+    }
+
   });
+
+
+  // Scroll in alto
+
+  window.scrollTo({
+
+    top: 0,
+
+    behavior: "smooth"
+
+  });
+
+
+  // Carica prenotazioni quando necessario
+
+  if (pageId === "bookingsPage") {
+
+    loadUserBookings();
+
+  }
+
+
+  // Aggiorna interfaccia
+
+  updateUserInterface();
 
 }
 
@@ -249,16 +411,21 @@ function setupServiceButtons() {
   const serviceButtons =
     document.querySelectorAll("[data-service]");
 
+
   serviceButtons.forEach(function (button) {
 
-    button.addEventListener("click", function () {
+    button.addEventListener(
+      "click",
+      function () {
 
-      const serviceId =
-        button.getAttribute("data-service");
+        const serviceId =
+          button.getAttribute("data-service");
 
-      selectService(serviceId);
 
-    });
+        selectService(serviceId);
+
+      }
+    );
 
   });
 
@@ -274,18 +441,25 @@ function selectService(serviceId) {
 
     });
 
+
   if (!service) {
 
-    showToast("Servizio non valido");
+    showToast(
+      "Servizio non valido",
+      "error"
+    );
 
     return;
 
   }
 
+
   selectedService = service;
+
 
   const buttons =
     document.querySelectorAll("[data-service]");
+
 
   buttons.forEach(function (button) {
 
@@ -293,10 +467,14 @@ function selectService(serviceId) {
 
   });
 
+
   const selectedButton =
     document.querySelector(
-      '[data-service="' + serviceId + '"]'
+      '[data-service="' +
+      serviceId +
+      '"]'
     );
+
 
   if (selectedButton) {
 
@@ -304,13 +482,14 @@ function selectService(serviceId) {
 
   }
 
+
   updateBookingSummary();
 
 }
 
 
 // ========================================
-// DATE
+// CONTROLLO DATE
 // ========================================
 
 function setupDateControls() {
@@ -318,38 +497,95 @@ function setupDateControls() {
   const dateInput =
     document.getElementById("bookingDate");
 
-  if (dateInput) {
 
-    const today =
-      new Date().toISOString().split("T")[0];
+  if (!dateInput) {
 
-    dateInput.min = today;
+    return;
+
+  }
+
+
+  const today =
+    getTodayString();
+
+
+  dateInput.min = today;
+
+
+  if (!dateInput.value) {
 
     dateInput.value = today;
 
-    dateInput.addEventListener(
-      "change",
-      function () {
+  }
 
-        selectedDate =
-          new Date(dateInput.value);
 
-        selectedTime = null;
-
-        updateBookingSummary();
-
-        loadAvailableTimes();
-
-      }
+  selectedDate =
+    new Date(
+      dateInput.value +
+      "T12:00:00"
     );
 
-  }
+
+  dateInput.addEventListener(
+    "change",
+    function () {
+
+      selectedDate =
+        new Date(
+          dateInput.value +
+          "T12:00:00"
+        );
+
+
+      selectedTime = null;
+
+
+      updateBookingSummary();
+
+
+      loadAvailableTimes();
+
+    }
+  );
+
+}
+
+
+function getTodayString() {
+
+  const today =
+    new Date();
+
+
+  const year =
+    today.getFullYear();
+
+
+  const month =
+    String(
+      today.getMonth() + 1
+    ).padStart(2, "0");
+
+
+  const day =
+    String(
+      today.getDate()
+    ).padStart(2, "0");
+
+
+  return (
+    year +
+    "-" +
+    month +
+    "-" +
+    day
+  );
 
 }
 
 
 // ========================================
-// ORARI
+// ORARI DISPONIBILI
 // ========================================
 
 async function loadAvailableTimes() {
@@ -357,42 +593,80 @@ async function loadAvailableTimes() {
   const container =
     document.getElementById("timeSlots");
 
+
   if (!container) {
 
     return;
 
   }
 
+
   container.innerHTML =
-    "<p>Caricamento orari...</p>";
+    '<div class="times-loading">' +
+    'Caricamento orari...' +
+    '</div>';
 
-  const times = generateAvailableTimes();
 
-  container.innerHTML = "";
+  try {
 
-  times.forEach(function (time) {
+    const times =
+      generateAvailableTimes();
 
-    const button =
-      document.createElement("button");
 
-    button.type = "button";
+    container.innerHTML = "";
 
-    button.className = "time-slot";
 
-    button.textContent = time;
+    times.forEach(function (time) {
 
-    button.addEventListener(
-      "click",
-      function () {
+      const button =
+        document.createElement("button");
 
-        selectTime(time);
+
+      button.type = "button";
+
+      button.className =
+        "time-slot";
+
+
+      button.textContent =
+        time;
+
+
+      if (selectedTime === time) {
+
+        button.classList.add(
+          "selected"
+        );
 
       }
+
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          selectTime(time);
+
+        }
+      );
+
+
+      container.appendChild(button);
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Errore caricamento orari:",
+      error
     );
 
-    container.appendChild(button);
 
-  });
+    container.innerHTML =
+      "<p>Impossibile caricare gli orari.</p>";
+
+  }
 
 }
 
@@ -400,46 +674,72 @@ async function loadAvailableTimes() {
 function generateAvailableTimes() {
 
   return [
+
     "09:00",
     "09:30",
+
     "10:00",
     "10:30",
+
     "11:00",
     "11:30",
+
     "12:00",
     "12:30",
+
     "15:00",
     "15:30",
+
     "16:00",
     "16:30",
+
     "17:00",
     "17:30",
+
     "18:00",
     "18:30",
+
     "19:00"
+
   ];
 
 }
 
 
+// ========================================
+// SELEZIONE ORARIO
+// ========================================
+
 function selectTime(time) {
 
   selectedTime = time;
 
+
   const buttons =
-    document.querySelectorAll(".time-slot");
+    document.querySelectorAll(
+      ".time-slot"
+    );
+
 
   buttons.forEach(function (button) {
 
-    button.classList.remove("selected");
+    button.classList.remove(
+      "selected"
+    );
 
-    if (button.textContent === time) {
 
-      button.classList.add("selected");
+    if (
+      button.textContent === time
+    ) {
+
+      button.classList.add(
+        "selected"
+      );
 
     }
 
   });
+
 
   updateBookingSummary();
 
@@ -453,16 +753,27 @@ function selectTime(time) {
 function updateBookingSummary() {
 
   const serviceElement =
-    document.getElementById("summaryService");
+    document.getElementById(
+      "summaryService"
+    );
+
 
   const dateElement =
-    document.getElementById("summaryDate");
+    document.getElementById(
+      "summaryDate"
+    );
+
 
   const timeElement =
-    document.getElementById("summaryTime");
+    document.getElementById(
+      "summaryTime"
+    );
+
 
   const priceElement =
-    document.getElementById("summaryPrice");
+    document.getElementById(
+      "summaryPrice"
+    );
 
 
   if (serviceElement) {
@@ -497,7 +808,8 @@ function updateBookingSummary() {
 
     priceElement.textContent =
       selectedService
-        ? "€ " + selectedService.price
+        ? "€ " +
+          selectedService.price
         : "€ 0";
 
   }
@@ -506,13 +818,16 @@ function updateBookingSummary() {
 
 
 // ========================================
-// PRENOTAZIONE
+// BOTTONI PRENOTAZIONE
 // ========================================
 
 function setupBookingButtons() {
 
   const confirmButton =
-    document.getElementById("confirmBooking");
+    document.getElementById(
+      "confirmBooking"
+    );
+
 
   if (confirmButton) {
 
@@ -530,13 +845,19 @@ function setupBookingButtons() {
 }
 
 
+// ========================================
+// CREA PRENOTAZIONE
+// ========================================
+
 async function createBooking() {
 
   if (!currentUser) {
 
     showToast(
-      "Devi effettuare l'accesso prima di prenotare"
+      "Accedi prima di effettuare una prenotazione",
+      "error"
     );
+
 
     showPage("loginPage");
 
@@ -548,7 +869,8 @@ async function createBooking() {
   if (!selectedService) {
 
     showToast(
-      "Seleziona prima un servizio"
+      "Seleziona prima un servizio",
+      "error"
     );
 
     return;
@@ -559,7 +881,8 @@ async function createBooking() {
   if (!selectedDate) {
 
     showToast(
-      "Seleziona una data"
+      "Seleziona una data",
+      "error"
     );
 
     return;
@@ -570,7 +893,8 @@ async function createBooking() {
   if (!selectedTime) {
 
     showToast(
-      "Seleziona un orario"
+      "Seleziona un orario",
+      "error"
     );
 
     return;
@@ -580,21 +904,28 @@ async function createBooking() {
 
   const bookingData = {
 
-    user_id: currentUser.id,
+    user_id:
+      currentUser.id,
 
-    service_id: selectedService.id,
+    service_id:
+      selectedService.id,
 
-    service_name: selectedService.name,
+    service_name:
+      selectedService.name,
 
-    price: selectedService.price,
+    price:
+      selectedService.price,
 
     booking_date:
-      formatDatabaseDate(selectedDate),
+      formatDatabaseDate(
+        selectedDate
+      ),
 
     booking_time:
       selectedTime,
 
-    status: "confirmed"
+    status:
+      "confirmed"
 
   };
 
@@ -610,6 +941,11 @@ async function createBooking() {
     }
 
 
+    showToast(
+      "Sto confermando la prenotazione..."
+    );
+
+
     const result =
       await supabaseClient
         .from("bookings")
@@ -618,8 +954,6 @@ async function createBooking() {
 
 
     if (result.error) {
-
-      console.error(result.error);
 
       throw result.error;
 
@@ -633,18 +967,25 @@ async function createBooking() {
         : null;
 
 
-    showToast(
-      "Prenotazione effettuata con successo!"
-    );
-
-
     resetBooking();
 
 
-    showPage("bookingsPage");
+    showToast(
+      "Prenotazione confermata!",
+      "success"
+    );
 
 
-    loadUserBookings();
+    setTimeout(function () {
+
+      showPage(
+        "bookingsPage"
+      );
+
+
+      loadUserBookings();
+
+    }, 500);
 
 
   } catch (error) {
@@ -654,8 +995,10 @@ async function createBooking() {
       error
     );
 
+
     showToast(
-      "Errore durante la prenotazione"
+      "Errore durante la prenotazione",
+      "error"
     );
 
   }
@@ -679,9 +1022,14 @@ function resetBooking() {
       "[data-service]"
     );
 
-  serviceButtons.forEach(function (button) {
 
-    button.classList.remove("selected");
+  serviceButtons.forEach(function (
+    button
+  ) {
+
+    button.classList.remove(
+      "selected"
+    );
 
   });
 
@@ -691,9 +1039,14 @@ function resetBooking() {
       ".time-slot"
     );
 
-  timeButtons.forEach(function (button) {
 
-    button.classList.remove("selected");
+  timeButtons.forEach(function (
+    button
+  ) {
+
+    button.classList.remove(
+      "selected"
+    );
 
   });
 
@@ -714,6 +1067,7 @@ async function loadUserBookings() {
       "bookingsList"
     );
 
+
   if (!container) {
 
     return;
@@ -724,7 +1078,11 @@ async function loadUserBookings() {
   if (!currentUser) {
 
     container.innerHTML =
-      "<p>Effettua l'accesso per vedere le tue prenotazioni.</p>";
+
+      '<div class="empty-state">' +
+      "<h3>Non hai effettuato l'accesso</h3>" +
+      "<p>Accedi per vedere le tue prenotazioni.</p>" +
+      "</div>";
 
     return;
 
@@ -732,7 +1090,10 @@ async function loadUserBookings() {
 
 
   container.innerHTML =
-    "<p>Caricamento prenotazioni...</p>";
+
+    '<div class="bookings-loading">' +
+    "Caricamento prenotazioni..." +
+    "</div>";
 
 
   try {
@@ -750,7 +1111,10 @@ async function loadUserBookings() {
       await supabaseClient
         .from("bookings")
         .select("*")
-        .eq("user_id", currentUser.id)
+        .eq(
+          "user_id",
+          currentUser.id
+        )
         .order(
           "booking_date",
           {
@@ -773,7 +1137,11 @@ async function loadUserBookings() {
     if (bookings.length === 0) {
 
       container.innerHTML =
-        "<p>Nessuna prenotazione presente.</p>";
+
+        '<div class="empty-state">' +
+        "<h3>Nessuna prenotazione</h3>" +
+        "<p>Non hai ancora prenotazioni.</p>" +
+        "</div>";
 
       return;
 
@@ -783,10 +1151,13 @@ async function loadUserBookings() {
     container.innerHTML = "";
 
 
-    bookings.forEach(function (booking) {
+    bookings.forEach(function (
+      booking
+    ) {
 
       const card =
         document.createElement("div");
+
 
       card.className =
         "booking-card";
@@ -795,34 +1166,61 @@ async function loadUserBookings() {
       const date =
         formatDate(
           new Date(
-            booking.booking_date
+            booking.booking_date +
+            "T12:00:00"
           )
         );
 
 
       card.innerHTML =
+
         '<div class="booking-info">' +
-        '<strong>' +
+
+        "<strong>" +
+
         escapeHtml(
-          booking.service_name || "Servizio"
+          booking.service_name ||
+          "Servizio"
         ) +
+
         "</strong>" +
-        "<p>" +
+
+
+        '<div class="booking-detail">' +
+
         date +
-        " - " +
+
+        "</div>" +
+
+
+        '<div class="booking-detail">' +
+
         escapeHtml(
           booking.booking_time || ""
         ) +
-        "</p>" +
-        "<p>€ " +
+
+        "</div>" +
+
+
+        '<div class="booking-price">' +
+
+        "€ " +
+
         escapeHtml(
           String(
             booking.price || 0
           )
         ) +
-        "</p>" +
+
         "</div>" +
-        '<button class="cancel-booking" type="button">Annulla</button>';
+
+        "</div>" +
+
+        '<button class="cancel-booking" type="button">' +
+
+        "Annulla" +
+
+        "</button>";
 
 
       const cancelButton =
@@ -861,7 +1259,11 @@ async function loadUserBookings() {
 
 
     container.innerHTML =
-      "<p>Impossibile caricare le prenotazioni.</p>";
+
+      '<div class="empty-state">' +
+      "<h3>Errore</h3>" +
+      "<p>Impossibile caricare le prenotazioni.</p>" +
+      "</div>";
 
   }
 
@@ -875,149 +1277,12 @@ async function loadUserBookings() {
 async function cancelBooking(bookingId) {
 
   const confirmed =
-    confirm(
+    window.confirm(
       "Vuoi davvero annullare questa prenotazione?"
     );
 
 
   if (!confirmed) {
-
-    return;
-
-  }
-
-
-  try {
-
-    const result =
-      await supabaseClient
-        .from("bookings")
-        .delete()
-        .eq("id", bookingId);
-
-
-    if (result.error) {
-
-      throw result.error;
-
-    }
-
-
-    showToast(
-      "Prenotazione annullata"
-    );
-
-
-    loadUserBookings();
-
-
-  } catch (error) {
-
-    console.error(
-      "Errore annullamento:",
-      error
-    );
-
-
-    showToast(
-      "Errore durante l'annullamento"
-    );
-
-  }
-
-}
-
-
-// ========================================
-// AUTENTICAZIONE
-// ========================================
-
-function setupAuthButtons() {
-
-  const loginButton =
-    document.getElementById("loginButton");
-
-  const logoutButton =
-    document.getElementById("logoutButton");
-
-
-  if (loginButton) {
-
-    loginButton.addEventListener(
-      "click",
-      function () {
-
-        loginUser();
-
-      }
-    );
-
-  }
-
-
-  if (logoutButton) {
-
-    logoutButton.addEventListener(
-      "click",
-      function () {
-
-        logoutUser();
-
-      }
-    );
-
-  }
-
-}
-
-
-// ========================================
-// LOGIN
-// ========================================
-
-async function loginUser() {
-
-  const phoneInput =
-    document.getElementById("phoneInput");
-
-  const pinInput =
-    document.getElementById("pinInput");
-
-
-  if (!phoneInput || !pinInput) {
-
-    showToast(
-      "Campi login non trovati"
-    );
-
-    return;
-
-  }
-
-
-  const phone =
-    phoneInput.value.trim();
-
-  const pin =
-    pinInput.value.trim();
-
-
-  if (!phone) {
-
-    showToast(
-      "Inserisci il numero di telefono"
-    );
-
-    return;
-
-  }
-
-
-  if (!pin) {
-
-    showToast(
-      "Inserisci il PIN"
-    );
 
     return;
 
@@ -1037,10 +1302,226 @@ async function loginUser() {
 
     const result =
       await supabaseClient
+        .from("bookings")
+        .delete()
+        .eq(
+          "id",
+          bookingId
+        );
+
+
+    if (result.error) {
+
+      throw result.error;
+
+    }
+
+
+    showToast(
+      "Prenotazione annullata",
+      "success"
+    );
+
+
+    loadUserBookings();
+
+
+  } catch (error) {
+
+    console.error(
+      "Errore annullamento:",
+      error
+    );
+
+
+    showToast(
+      "Errore durante l'annullamento",
+      "error"
+    );
+
+  }
+
+}
+
+
+// ========================================
+// AUTENTICAZIONE
+// ========================================
+
+function setupAuthButtons() {
+
+  const loginButton =
+    document.getElementById(
+      "loginButton"
+    );
+
+
+  const logoutButton =
+    document.getElementById(
+      "logoutButton"
+    );
+
+
+  if (loginButton) {
+
+    loginButton.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+
+        loginUser();
+
+      }
+    );
+
+  }
+
+
+  if (logoutButton) {
+
+    logoutButton.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+
+        logoutUser();
+
+      }
+    );
+
+  }
+
+
+  // Login con tasto INVIO
+
+  const pinInput =
+    document.getElementById(
+      "pinInput"
+    );
+
+
+  if (pinInput) {
+
+    pinInput.addEventListener(
+      "keydown",
+      function (event) {
+
+        if (
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+          loginUser();
+
+        }
+
+      }
+    );
+
+  }
+
+}
+
+
+// ========================================
+// LOGIN
+// ========================================
+
+async function loginUser() {
+
+  const phoneInput =
+    document.getElementById(
+      "phoneInput"
+    );
+
+
+  const pinInput =
+    document.getElementById(
+      "pinInput"
+    );
+
+
+  if (!phoneInput || !pinInput) {
+
+    showToast(
+      "Campi login non trovati",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const phone =
+    phoneInput.value.trim();
+
+
+  const pin =
+    pinInput.value.trim();
+
+
+  if (!phone) {
+
+    showToast(
+      "Inserisci il numero di telefono",
+      "error"
+    );
+
+
+    phoneInput.focus();
+
+    return;
+
+  }
+
+
+  if (!pin) {
+
+    showToast(
+      "Inserisci il PIN",
+      "error"
+    );
+
+
+    pinInput.focus();
+
+    return;
+
+  }
+
+
+  try {
+
+    if (!supabaseClient) {
+
+      throw new Error(
+        "Supabase non disponibile"
+      );
+
+    }
+
+
+    showToast(
+      "Accesso in corso..."
+    );
+
+
+    const result =
+      await supabaseClient
         .from("users")
         .select("*")
-        .eq("phone", phone)
-        .eq("pin", pin)
+        .eq(
+          "phone",
+          phone
+        )
+        .eq(
+          "pin",
+          pin
+        )
         .maybeSingle();
 
 
@@ -1054,7 +1535,8 @@ async function loginUser() {
     if (!result.data) {
 
       showToast(
-        "Numero o PIN non corretto"
+        "Numero o PIN non corretto",
+        "error"
       );
 
       return;
@@ -1062,12 +1544,15 @@ async function loginUser() {
     }
 
 
-    currentUser = result.data;
+    currentUser =
+      result.data;
 
 
     localStorage.setItem(
       "grimaldiUser",
-      JSON.stringify(currentUser)
+      JSON.stringify(
+        currentUser
+      )
     );
 
 
@@ -1078,12 +1563,19 @@ async function loginUser() {
       "Bentornato " +
       (
         currentUser.name ||
-        ""
-      )
+        "!"
+      ),
+      "success"
     );
 
 
-    showPage("homePage");
+    setTimeout(function () {
+
+      showPage(
+        "homePage"
+      );
+
+    }, 350);
 
 
   } catch (error) {
@@ -1095,7 +1587,8 @@ async function loginUser() {
 
 
     showToast(
-      "Errore durante il login"
+      "Errore durante il login",
+      "error"
     );
 
   }
@@ -1119,13 +1612,36 @@ async function restoreSession() {
 
     if (!savedUser) {
 
+      updateUserInterface();
+
+      return;
+
+    }
+
+
+    const parsedUser =
+      JSON.parse(savedUser);
+
+
+    if (
+      !parsedUser ||
+      !parsedUser.id
+    ) {
+
+      localStorage.removeItem(
+        "grimaldiUser"
+      );
+
+
+      updateUserInterface();
+
       return;
 
     }
 
 
     currentUser =
-      JSON.parse(savedUser);
+      parsedUser;
 
 
     updateUserInterface();
@@ -1137,6 +1653,17 @@ async function restoreSession() {
       "Errore ripristino sessione:",
       error
     );
+
+
+    localStorage.removeItem(
+      "grimaldiUser"
+    );
+
+
+    currentUser = null;
+
+
+    updateUserInterface();
 
   }
 
@@ -1161,11 +1688,14 @@ function logoutUser() {
 
 
   showToast(
-    "Hai effettuato il logout"
+    "Hai effettuato il logout",
+    "success"
   );
 
 
-  showPage("homePage");
+  showPage(
+    "homePage"
+  );
 
 }
 
@@ -1175,6 +1705,8 @@ function logoutUser() {
 // ========================================
 
 function updateUserInterface() {
+
+  // Nome utente
 
   const userNameElements =
     document.querySelectorAll(
@@ -1202,11 +1734,33 @@ function updateUserInterface() {
   );
 
 
+  // Elementi visibili solo login
+
   const loggedInElements =
     document.querySelectorAll(
       "[data-logged-in]"
     );
 
+
+  loggedInElements.forEach(
+    function (element) {
+
+      if (currentUser) {
+
+        element.style.display = "";
+
+      } else {
+
+        element.style.display =
+          "none";
+
+      }
+
+    }
+  );
+
+
+  // Elementi visibili solo logout
 
   const loggedOutElements =
     document.querySelectorAll(
@@ -1214,34 +1768,131 @@ function updateUserInterface() {
     );
 
 
-  loggedInElements.forEach(
+  loggedOutElements.forEach(
     function (element) {
 
-      element.style.display =
-        currentUser
-          ? ""
-          : "none";
+      if (currentUser) {
+
+        element.style.display =
+          "none";
+
+      } else {
+
+        element.style.display =
+          "";
+
+      }
 
     }
   );
 
 
-  loggedOutElements.forEach(
-    function (element) {
+  // Corpo applicazione
 
-      element.style.display =
-        currentUser
-          ? "none"
-          : "";
-
-    }
+  document.body.classList.toggle(
+    "user-logged-in",
+    !!currentUser
   );
 
 }
 
 
 // ========================================
-// REGISTRAZIONE NUOVO CLIENTE
+// REGISTRAZIONE
+// ========================================
+
+function setupRegisterButtons() {
+
+  const registerButton =
+    document.getElementById(
+      "registerButton"
+    );
+
+
+  if (registerButton) {
+
+    registerButton.addEventListener(
+      "click",
+      function () {
+
+        handleRegistration();
+
+      }
+    );
+
+  }
+
+}
+
+
+// ========================================
+// GESTIONE REGISTRAZIONE
+// ========================================
+
+async function handleRegistration() {
+
+  const nameInput =
+    document.getElementById(
+      "registerName"
+    );
+
+
+  const phoneInput =
+    document.getElementById(
+      "registerPhone"
+    );
+
+
+  const pinInput =
+    document.getElementById(
+      "registerPin"
+    );
+
+
+  if (
+    !nameInput ||
+    !phoneInput ||
+    !pinInput
+  ) {
+
+    return;
+
+  }
+
+
+  const name =
+    nameInput.value.trim();
+
+
+  const phone =
+    phoneInput.value.trim();
+
+
+  const pin =
+    pinInput.value.trim();
+
+
+  const success =
+    await registerUser(
+      name,
+      phone,
+      pin
+    );
+
+
+  if (success) {
+
+    showPage(
+      "homePage"
+    );
+
+  }
+
+}
+
+
+// ========================================
+// CREA NUOVO UTENTE
 // ========================================
 
 async function registerUser(
@@ -1253,7 +1904,8 @@ async function registerUser(
   if (!name || !phone || !pin) {
 
     showToast(
-      "Compila tutti i campi"
+      "Compila tutti i campi",
+      "error"
     );
 
     return false;
@@ -1263,15 +1915,51 @@ async function registerUser(
 
   try {
 
+    if (!supabaseClient) {
+
+      throw new Error(
+        "Supabase non disponibile"
+      );
+
+    }
+
+
+    // Controlla se numero già esistente
+
+    const existing =
+      await supabaseClient
+        .from("users")
+        .select("id")
+        .eq(
+          "phone",
+          phone
+        )
+        .maybeSingle();
+
+
+    if (existing.data) {
+
+      showToast(
+        "Questo numero è già registrato",
+        "error"
+      );
+
+      return false;
+
+    }
+
+
     const result =
       await supabaseClient
         .from("users")
         .insert([
+
           {
             name: name,
             phone: phone,
             pin: pin
           }
+
         ])
         .select()
         .single();
@@ -1290,7 +1978,9 @@ async function registerUser(
 
     localStorage.setItem(
       "grimaldiUser",
-      JSON.stringify(currentUser)
+      JSON.stringify(
+        currentUser
+      )
     );
 
 
@@ -1298,7 +1988,8 @@ async function registerUser(
 
 
     showToast(
-      "Registrazione completata!"
+      "Registrazione completata!",
+      "success"
     );
 
 
@@ -1314,7 +2005,8 @@ async function registerUser(
 
 
     showToast(
-      "Impossibile completare la registrazione"
+      "Impossibile completare la registrazione",
+      "error"
     );
 
 
@@ -1333,12 +2025,17 @@ function formatDate(date) {
 
   if (!(date instanceof Date)) {
 
-    date = new Date(date);
+    date =
+      new Date(date);
 
   }
 
 
-  if (isNaN(date.getTime())) {
+  if (
+    isNaN(
+      date.getTime()
+    )
+  ) {
 
     return "-";
 
@@ -1348,21 +2045,31 @@ function formatDate(date) {
   return date.toLocaleDateString(
     "it-IT",
     {
+
       weekday: "long",
+
       day: "numeric",
+
       month: "long",
+
       year: "numeric"
+
     }
   );
 
 }
 
 
+// ========================================
+// DATA DATABASE
+// ========================================
+
 function formatDatabaseDate(date) {
 
   if (!(date instanceof Date)) {
 
-    date = new Date(date);
+    date =
+      new Date(date);
 
   }
 
@@ -1374,68 +2081,144 @@ function formatDatabaseDate(date) {
   const month =
     String(
       date.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const day =
     String(
       date.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   return (
+
     year +
+
     "-" +
+
     month +
+
     "-" +
+
     day
+
   );
 
 }
 
 
 // ========================================
-// NOTIFICHE VISIVE
+// TOAST CENTRALE ELEGANTE
 // ========================================
 
-// =========================================
-// TOAST CENTRALE ELEGANTE
-// =========================================
+function showToast(
+  message,
+  type = "default"
+) {
 
-function showToast(message, type = "default") {
+  let toast =
+    document.getElementById(
+      "toast"
+    );
 
-  const toast = document.getElementById("toast");
+
+  // Se non esiste lo crea automaticamente
 
   if (!toast) {
-    console.error("Elemento toast non trovato");
-    return;
+
+    toast =
+      document.createElement("div");
+
+
+    toast.id =
+      "toast";
+
+
+    document.body.appendChild(
+      toast
+    );
+
   }
 
-  toast.textContent = message;
 
-  toast.className = "";
+  toast.textContent =
+    message;
 
-  toast.id = "toast";
+
+  // Reset classi
+
+  toast.className =
+    "";
+
+
+  // Classe base
+
+  toast.classList.add(
+    "toast"
+  );
+
 
   if (type === "success") {
-    toast.classList.add("success");
+
+    toast.classList.add(
+      "success"
+    );
+
   }
+
 
   if (type === "error") {
-    toast.classList.add("error");
+
+    toast.classList.add(
+      "error"
+    );
+
   }
 
-  requestAnimationFrame(() => {
-    toast.classList.add("show");
-  });
 
-  clearTimeout(window.toastTimeout);
+  // Mostra
 
-  window.toastTimeout = setTimeout(() => {
+  requestAnimationFrame(
+    function () {
 
-    toast.classList.remove("show");
+      toast.classList.add(
+        "show"
+      );
 
-  }, 2800);
+    }
+  );
+
+
+  // Cancella vecchio timeout
+
+  if (toastTimeout) {
+
+    clearTimeout(
+      toastTimeout
+    );
+
+  }
+
+
+  // Nasconde dopo tempo
+
+  toastTimeout =
+    setTimeout(
+      function () {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      2600
+    );
 
 }
 
@@ -1451,11 +2234,31 @@ function escapeHtml(value) {
 
 
   return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1464,38 +2267,54 @@ function escapeHtml(value) {
 // FUNZIONI GLOBALI
 // ========================================
 
-window.showPage = showPage;
+window.showPage =
+  showPage;
 
-window.selectService = selectService;
 
-window.selectTime = selectTime;
+window.selectService =
+  selectService;
 
-window.createBooking = createBooking;
 
-window.cancelBooking = cancelBooking;
+window.selectTime =
+  selectTime;
 
-window.loginUser = loginUser;
 
-window.logoutUser = logoutUser;
+window.createBooking =
+  createBooking;
 
-window.loadUserBookings = loadUserBookings;// =========================================
-// LOADING SCREEN
-// =========================================
 
-window.addEventListener("load", function () {
+window.cancelBooking =
+  cancelBooking;
 
-  setTimeout(function () {
 
-    const loadingScreen =
-      document.getElementById("loadingScreen");
+window.loginUser =
+  loginUser;
 
-    if (loadingScreen) {
-      loadingScreen.classList.add("hidden");
-    }
 
-  }, 1200);
+window.logoutUser =
+  logoutUser;
 
-});
+
+window.loadUserBookings =
+  loadUserBookings;
+
+
+window.registerUser =
+  registerUser;
+
+
+window.showToast =
+  showToast;
+
+
+window.showLoading =
+  showLoading;
+
+
+window.hideLoading =
+  hideLoading;
+
+
 // ========================================
 // FINE APP.JS
 // ========================================
