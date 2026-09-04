@@ -1,20 +1,14 @@
-I GRIMALDI E.S.G. - VERSIONE FINALE
+I GRIMALDI E.S.G. - VERSIONE FIX V2
 
-CARICAMENTO SU GITHUB:
-1. Estrai questo ZIP.
-2. Apri il tuo repository GitHub.
-3. Elimina i vecchi file index.html, style.css, app.js se presenti.
-4. Carica TUTTI i file di questa cartella.
-5. Fai Commit.
-6. Attendi 1-2 minuti e ricarica il sito.
+Correzioni:
+- Splash perfettamente centrato su mobile e desktop
+- Splash si chiude sempre anche se una funzione JavaScript genera un errore
+- Lo splash non blocca più Accedi, Registrati o altri pulsanti
+- Service Worker aggiornato per eliminare la cache della versione vecchia
+- Mantiene agenda Admin, campanellina, Instagram, TikTok e grafica elegante
 
-IMPORTANTE:
-- Questa versione NON contiene dichiarazioni duplicate di ADMIN_PHONE.
-- L'admin è riconosciuto dal numero: 3791415355.
-- Il listino è quello richiesto: 20, 5, 10, 20, 10, 5 euro.
-- Agenda admin inclusa.
-- Splash incluso.
-- Stelle tricolori incluse.
-- Campione elegante incluso.
-- Icona PWA inclusa.
-- Campanellina notifiche inclusa.
+IMPORTANTE SU GITHUB:
+1. Sostituisci TUTTI i file vecchi con questi.
+2. Fai commit.
+3. Dopo la pubblicazione apri il sito e fai un refresh completo.
+4. Se avevi già installato la vecchia app sulla Home, chiudila e riaprila.

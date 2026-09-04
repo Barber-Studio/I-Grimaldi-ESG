@@ -23,15 +23,38 @@ let selectedTime = null;
 let selectedDate = null;
 let toastTimer = null;
 
-document.addEventListener("DOMContentLoaded", initApp);
+// Avvio robusto: lo splash viene sempre chiuso anche se una singola funzione fallisce.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp, { once: true });
+} else {
+  initApp();
+}
 
 async function initApp() {
-  bindNavigation();
-  bindButtons();
-  renderServices();
-  setupDates();
-  restoreSession();
-  setTimeout(() => document.getElementById("loadingScreen").style.display = "none", 1300);
+  try {
+    bindNavigation();
+    bindButtons();
+    renderServices();
+    setupDates();
+    restoreSession();
+  } catch (error) {
+    console.error("Errore inizializzazione app:", error);
+  } finally {
+    // Lo splash non deve mai bloccare i pulsanti.
+    setTimeout(hideLoadingScreen, 1100);
+    setTimeout(hideLoadingScreen, 2200); // sicurezza extra
+  }
+}
+
+function hideLoadingScreen() {
+  const loading = document.getElementById("loadingScreen");
+  if (!loading) return;
+  loading.classList.add("loading-hidden");
+  loading.setAttribute("aria-hidden", "true");
+  setTimeout(() => {
+    loading.style.display = "none";
+    loading.style.pointerEvents = "none";
+  }, 450);
 }
 
 function bindNavigation() {
@@ -290,4 +313,13 @@ function showToast(message,type="default"){ const t=document.getElementById("toa
 
 window.showPage = showPage;
 
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn)); }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js');
+      registration.update().catch(() => {});
+    } catch (error) {
+      console.warn('Service worker non registrato:', error);
+    }
+  });
+}
