@@ -123,7 +123,7 @@ function openRegister(){closeAuth();document.getElementById("registerModal").cla
 function closeRegister(){document.getElementById("registerModal").classList.add("hidden")}
 
 async function loginUser(){
- const phone=document.getElementById("phoneInput").value.trim(),pin=document.getElementById("pinInput").value.trim();
+ const phone=normalizePhone(document.getElementById("phoneInput").value),pin=document.getElementById("pinInput").value.trim();
  if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}
  try{
   const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();
@@ -132,22 +132,53 @@ async function loginUser(){
  }catch(e){console.error(e);showToast("Errore durante il login","error")}
 }
 
+function normalizePhone(value){
+ return String(value||"").replace(/[^0-9]/g,"");
+}
+
 async function handleRegistration(){
+ const button=document.getElementById("registerButton");
  const name=document.getElementById("registerName").value.trim();
  const surname=document.getElementById("registerSurname").value.trim();
- const phone=document.getElementById("registerPhone").value.trim();
+ const phone=normalizePhone(document.getElementById("registerPhone").value);
  const pin=document.getElementById("registerPin").value.trim();
  const pin2=document.getElementById("registerPin2").value.trim();
+
+ if(!supabaseClient){showToast("Supabase non è collegato","error");return}
  if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}
- if(pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}
+ if(phone.length<8){showToast("Inserisci un numero di telefono valido","error");return}
+ if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}
  if(pin!==pin2){showToast("I PIN non coincidono","error");return}
+
+ button.disabled=true;
+ const original=button.textContent;
+ button.textContent="REGISTRAZIONE IN CORSO...";
+
  try{
-  const {data:existing,error:checkError}=await supabaseClient.from("profiles").select("id").eq("customer_phone",phone).maybeSingle();
-  if(checkError)throw checkError;if(existing){showToast("Numero già registrato","error");return}
   const fullName=`${name} ${surname}`;
-  const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:"customer"}]).select().single();
-  if(error)throw error;currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();showToast("Registrazione completata!","success");
- }catch(e){console.error(e);showToast("Errore durante la registrazione","error")}
+  const {data,error}=await supabaseClient
+   .from("profiles")
+   .insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:"customer"}])
+   .select()
+   .single();
+
+  if(error){
+   if(error.code==="23505") throw new Error("Questo numero è già registrato");
+   throw new Error(error.message||"Errore database");
+  }
+
+  currentUser=data;
+  localStorage.setItem("grimaldiUser",JSON.stringify(data));
+  closeRegister();
+  updateUserInterface();
+  showToast("Registrazione completata!","success");
+ }catch(e){
+  console.error("REGISTRAZIONE:",e);
+  showToast(e.message||"Errore durante la registrazione","error");
+ }finally{
+  button.disabled=false;
+  button.textContent=original;
+ }
 }
 
 async function restoreSession(){
