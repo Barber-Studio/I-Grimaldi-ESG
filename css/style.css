@@ -13,3 +13,47 @@
 
 /* ICONS REALI SOCIAL E CAMPANELLA */
 .contacts .social-link{display:flex!important;align-items:center;gap:14px;text-decoration:none}.social-icon{width:42px;height:42px;min-width:42px;display:flex;align-items:center;justify-content:center;border-radius:14px;border:1px solid rgba(212,175,55,.35);background:rgba(255,255,255,.04)}.social-icon svg{width:24px;height:24px}.instagram-icon{color:#d4af37}.tiktok-icon{color:#fff}.social-link>span:nth-child(2){display:flex;flex-direction:column;flex:1}.social-link em{font-style:normal;opacity:.65;font-size:.82rem;margin-top:3px}.chevron{margin-left:auto;font-size:24px;font-weight:400;opacity:.7}.notification-btn{display:flex!important;align-items:center;gap:14px}.notification-bell{width:42px;height:42px;min-width:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#d4af37;border:1px solid rgba(212,175,55,.4);background:rgba(212,175,55,.08)}.notification-bell svg{width:23px;height:23px}
+
+
+/* ========================================
+   PATCH DEFINITIVA: LOGHI + CAMPANELLA + AGENDA
+======================================== */
+.social-logo svg{
+  width:26px!important;
+  height:26px!important;
+  display:block!important;
+  stroke:currentColor!important;
+  fill:none!important;
+}
+.social-logo.instagram svg rect,
+.social-logo.instagram svg circle{stroke:currentColor!important;fill:none!important}
+.social-logo.tiktok svg path{fill:currentColor!important;stroke:none!important}
+
+.profile-action-icon.bell-icon{
+  width:44px!important;height:44px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:1px solid rgba(201,164,87,.35)!important;
+  border-radius:14px!important;
+  color:#d4af5a!important;
+}
+.profile-action-icon.bell-icon svg{
+  width:23px!important;height:23px!important;display:block!important;
+}
+
+.agenda-booking{
+  display:flex;align-items:center;gap:14px;
+  padding:15px;margin:10px 0;
+  border-radius:16px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(201,164,87,.16);
+}
+.agenda-time{
+  min-width:58px;font-weight:800;color:#d4af5a;font-size:16px;
+}
+.agenda-client{display:flex;flex-direction:column;gap:4px}
+.agenda-client strong{font-size:15px}
+.agenda-client small{opacity:.72}
+.agenda-loading{padding:24px;text-align:center;opacity:.7}
+
+#agendaPage{padding-bottom:100px}
+.admin-nav span{color:#d4af5a!important}
