@@ -10,7 +10,7 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="icon" href="./icon.svg">
-  <link rel="stylesheet" href="./style.css?v=final6">
+  <link rel="stylesheet" href="./style.css?v=agenda-completa">
   <title>I GRIMALDI E.S.G.</title>
 </head>
 <body>
@@ -112,16 +112,47 @@
     </section>
 
     <section id="adminPage" class="page">
-      <div class="page-title"><p>AREA RISERVATA</p><h1>Agenda Admin</h1></div>
+      <div class="page-title"><p>AREA AMMINISTRATORE</p><h1>Agenda</h1></div>
       <div id="adminDenied" class="card hidden"><h3>Accesso riservato</h3><p>Questa sezione è disponibile solo all'amministratore.</p></div>
       <div id="adminContent" class="hidden">
-        <div class="admin-toolbar card">
-          <input id="adminDate" type="date">
-          <button id="adminRefresh" class="secondary-btn">Aggiorna agenda</button>
+        <div class="card agenda-calendar">
+          <div class="agenda-calendar-head">
+            <button type="button" onclick="changeAdminMonth(-1)">‹</button>
+            <strong id="adminMonthTitle"></strong>
+            <button type="button" onclick="changeAdminMonth(1)">›</button>
+          </div>
+          <div class="calendar-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+          <div id="adminCalendarGrid" class="admin-calendar-grid"></div>
         </div>
-        <div id="adminStats" class="admin-stats"></div>
-        <div id="adminAgenda" class="booking-list"></div>
+
+        <div class="admin-stats-grid">
+          <div class="stat-card"><small>APPUNTAMENTI</small><b id="agendaCount">0</b></div>
+          <div class="stat-card"><small>INCASSO PREVISTO</small><b id="agendaRevenue">€ 0</b></div>
+        </div>
+
+        <div class="admin-actions">
+          <button class="secondary-btn" type="button" onclick="openAdminAdd()">＋ Aggiungi cliente</button>
+          <button class="secondary-btn danger-outline" type="button" onclick="openAdminBlock()">◫ Blocca orario/data</button>
+        </div>
+
+        <div class="daily-head">
+          <small>AGENDA GIORNALIERA</small>
+          <h3 id="adminSelectedDateTitle"></h3>
+        </div>
+        <div id="adminAgenda" class="agenda-table"></div>
       </div>
+    </section>
+
+    <section id="profilePage" class="page">
+      <div class="page-title"><p>AREA PERSONALE</p><h1>Profilo</h1></div>
+      <div class="card profile-card">
+        <div class="profile-avatar">G</div>
+        <h3 id="profileName">Ospite</h3>
+        <p id="profilePhone">Accedi per gestire il tuo profilo.</p>
+      </div>
+      <button class="profile-action" type="button" onclick="showPage('contactsPage')"><span class="bell-real">🔔</span><span><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></span><i>›</i></button>
+      <button class="profile-action" type="button" onclick="showToast('Per installare l’app usa “Aggiungi alla schermata Home” da Safari.')"><span>⌂</span><span><b>Installa l’app</b><small>Aggiungila alla schermata Home</small></span><i>›</i></button>
+      <button class="secondary-btn profile-logout" type="button" onclick="logoutUser()">Esci</button>
     </section>
 
     <section id="contactsPage" class="page">
@@ -129,16 +160,16 @@
       <div class="card contact-card">
         <a href="tel:3791415355"><span>☎</span><div><small>TELEFONO</small><strong>379 141 5355</strong></div></a>
         <a class="social-link" href="https://www.instagram.com/igrimaldi21/" target="_blank" rel="noopener">
-          <span class="real-social instagram-icon" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span><div><small>INSTAGRAM</small><strong>@igrimaldi21</strong></div>
+          <span class="real-social instagram-icon" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span><div><small>INSTAGRAM</small><strong>@igrimaldi21</strong></div>
         </a>
         <a class="social-link" href="https://www.tiktok.com/@igrimaldi21" target="_blank" rel="noopener">
-          <span class="real-social tiktok-icon" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.2a4.2 4.2 0 1 1-3.2-4.08V7.4A7 7 0 1 0 16.5 14V8.7c1.1 1 2.4 1.6 3.8 1.7V7.7C17.8 7.5 16 5.7 16 3h-2z" fill="currentColor"/></svg></span><div><small>TIKTOK</small><strong>@igrimaldi21</strong></div>
+          <span class="real-social tiktok-icon" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 3v10.2a4.5 4.5 0 1 1-3.5-4.38V6.3A7 7 0 1 0 17.5 13V8.2c1.1.8 2.4 1.3 3.8 1.35V6.9C18.9 6.75 17 5.2 17 3h-2z"/></svg></span><div><small>TIKTOK</small><strong>@igrimaldi21</strong></div>
         </a>
       </div>
       <div class="card">
-        <h3>🔔 Attiva notifiche</h3>
+        <h3><span class="bell-real"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span> Attiva notifiche</h3>
         <p>Ricevi aggiornamenti sulle tue prenotazioni.</p>
-        <button id="enableNotifications" class="secondary-btn">🔔 ATTIVA NOTIFICHE</button>
+        <button id="enableNotifications" class="secondary-btn"><span class="bell-real"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span> ATTIVA NOTIFICHE</button>
       </div>
     </section>
 
@@ -190,12 +221,35 @@
     </div>
   </div>
 
+  <div id="adminAddModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAdminModal('adminAddModal')"></div>
+    <div class="modal-box elegant-modal">
+      <button class="modal-close" type="button" onclick="closeAdminModal('adminAddModal')">×</button>
+      <div class="modal-kicker">NUOVO APPUNTAMENTO</div><h2>Aggiungi cliente</h2>
+      <input id="adminClientName" placeholder="Nome cliente">
+      <input id="adminClientPhone" type="tel" placeholder="Numero telefono">
+      <select id="adminServiceSelect"></select>
+      <input id="adminAddDate" type="date">
+      <select id="adminAddTime"></select>
+      <button class="primary-btn" type="button" onclick="adminAddBooking()">SALVA APPUNTAMENTO</button>
+    </div>
+  </div>
+  <div id="adminBlockModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAdminModal('adminBlockModal')"></div>
+    <div class="modal-box elegant-modal">
+      <button class="modal-close" type="button" onclick="closeAdminModal('adminBlockModal')">×</button>
+      <div class="modal-kicker">DISPONIBILITÀ</div><h2>Blocca</h2>
+      <input id="adminBlockDate" type="date">
+      <select id="adminBlockTime"><option value="ALL">Intera giornata</option></select>
+      <button class="primary-btn" type="button" onclick="saveAdminBlock()">BLOCCA</button>
+    </div>
+  </div>
   <div id="toast" class="toast"></div>
   <nav class="bottom-nav">
     <button data-page="homePage">⌂<small>Home</small></button>
     <button data-page="bookingPage">✂<small>Prenota</small></button>
-    <button data-page="bookingsPage">▣<small>Prenotazioni</small></button>
-    <button id="bottomAdminBtn" data-page="adminPage" class="admin-only">▦<small>Agenda</small></button>
+    <button id="thirdNavBtn" data-page="bookingsPage">▣<small id="thirdNavLabel">Prenotazioni</small></button>
+    <button data-page="profilePage">◌<small>Profilo</small></button>
   </nav>
 </div>
 
@@ -292,7 +346,7 @@
 })();
 </script>
 
-<script src="./app.js?v=final6"></script>
+<script src="./app.js?v=popup-final"></script>
 
 <script>
 (function(){
@@ -313,28 +367,9 @@
 </script>
 
 
-<script>
-function openLoginModal(){ var e=document.getElementById("loginModal"); if(e)e.classList.remove("hidden"); }
-function openRegisterModal(){ var e=document.getElementById("registerModal"); if(e)e.classList.remove("hidden"); }
-function closeAuthModals(){ ["loginModal","registerModal"].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.add("hidden");}); }
-function switchToRegister(){ closeAuthModals(); openRegisterModal(); }
-function switchToLogin(){ closeAuthModals(); openLoginModal(); }
-async function modalLogin(){
-  var p=document.getElementById("modalPhone"), pin=document.getElementById("modalPin");
-  document.getElementById("phoneInput").value=p?p.value:"";
-  document.getElementById("pinInput").value=pin?pin.value:"";
-  await window.loginUser();
-  if(localStorage.getItem("grimaldiUser")) closeAuthModals();
-}
-async function modalRegister(){
-  var n=document.getElementById("modalRegName"), p=document.getElementById("modalRegPhone"), pin=document.getElementById("modalRegPin");
-  document.getElementById("registerName").value=n?n.value:"";
-  document.getElementById("registerPhone").value=p?p.value:"";
-  document.getElementById("registerPin").value=pin?pin.value:"";
-  await window.registerUser();
-  if(localStorage.getItem("grimaldiUser")) closeAuthModals();
-}
-</script>
 
-</body>
+
+<style>
+.real-social svg{width:28px;height:28px;display:block}.instagram-icon{border:0!important;height:auto!important;line-height:1!important}.tiktok-icon{font-size:0!important}.bell-real{display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;width:22px;height:22px;color:#d9ad58}.bell-real svg{width:22px;height:22px}.info-grid{grid-template-columns:repeat(2,1fr)!important}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}.modal.hidden{display:none!important}.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.modal-box{position:relative;z-index:2;width:min(100%,420px);background:linear-gradient(145deg,#161616,#090909);border:1px solid rgba(217,173,88,.5);border-radius:24px;padding:28px;box-shadow:0 25px 70px rgba(0,0,0,.65)}.modal-box input{margin-top:10px}.elegant-modal h2{font-family:Georgia,'Times New Roman',serif;color:#e0bd6a;font-size:30px;margin:7px 0}.modal-kicker{color:#bfa56a;letter-spacing:2px;font-size:10px}.modal-close{position:absolute;right:14px;top:10px;background:none;border:0;color:#d9ad58;font-size:30px}.modal-link{width:100%;margin-top:12px;background:transparent;border:0;color:#d6d6d6;padding:8px}.modal-link b{color:#d9ad58}.loading-screen .splash-logo-img{display:none!important}
+</style></body>
 </html>
