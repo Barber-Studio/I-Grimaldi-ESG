@@ -1,331 +1,86 @@
-/* =========================================================
+/* =========================================
    I GRIMALDI E.S.G.
-   PREMIUM ELEGANT UI PATCH
-   SOLO GRAFICA - NON MODIFICA LE FUNZIONI
-========================================================= */
-
-/* FONT PREMIUM */
-
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&display=swap');
-
+   PREMIUM MOBILE DESIGN
+========================================= */
 
 :root {
+  --bg: #080808;
+  --bg-soft: #101010;
+  --card: #151515;
+  --card-light: #1b1b1b;
 
-  --gold: #c6a15b;
-  --gold-light: #e4c98d;
-  --gold-dark: #8d6b32;
-
-  --black: #070707;
-  --black-soft: #101010;
-  --dark: #151515;
-
-  --card: rgba(24,24,24,.94);
+  --gold: #c9a45c;
+  --gold-light: #e4c77d;
+  --gold-dark: #947136;
 
   --text: #f5f1e8;
-  --muted: #9c978d;
+  --muted: #a5a096;
 
-  --border: rgba(198,161,91,.22);
+  --green: #008c45;
+  --red: #ce2b37;
 
+  --border: rgba(201, 164, 92, 0.18);
+
+  --serif: "Playfair Display", serif;
+  --logo: "Cinzel", serif;
+  --sans: "DM Sans", sans-serif;
 }
 
 
-/* =========================================================
-   BASE
-========================================================= */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 
 html {
-  background: #070707;
+  background: var(--bg);
 }
+
 
 body {
 
-  font-family: "DM Sans", sans-serif !important;
+  margin: 0;
+
+  min-height: 100vh;
 
   background:
     radial-gradient(
-      circle at top center,
-      rgba(198,161,91,.08),
-      transparent 30%
-    ),
-    #070707 !important;
+      circle at top,
+      #1b1813 0%,
+      #090909 45%,
+      #050505 100%
+    );
 
   color: var(--text);
 
-  letter-spacing: .01em;
+  font-family: var(--sans);
+
+  overflow-x: hidden;
+
+  padding-bottom: 90px;
 
 }
 
 
 button,
 input,
-select,
-textarea {
-
-  font-family: "DM Sans", sans-serif !important;
-
+select {
+  font-family: inherit;
 }
 
 
-h1,
-h2,
-h3,
-.hero h1,
-.auth-logo,
-.loading-logo {
-
-  font-family: "Playfair Display", serif !important;
-
-}
-
-
-h1,
-h2 {
-
-  letter-spacing: .02em;
-
-}
-
-
-/* =========================================================
-   APP GENERALE
-========================================================= */
-
-.app {
-
-  min-height: 100vh;
-
-  background:
-
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(198,161,91,.07),
-      transparent 400px
-    ),
-
-    linear-gradient(
-      180deg,
-      #080808,
-      #0d0d0d 70%,
-      #080808
-    );
-
-}
-
-
-.page {
-
-  padding-bottom: 110px;
-
-}
-
-
-/* =========================================================
-   SPLASH SCREEN
-========================================================= */
+/* =========================================
+   SPLASH
+========================================= */
 
 #loadingScreen {
 
-  background:
+  position: fixed;
 
-    radial-gradient(
-      circle at center,
-      rgba(198,161,91,.08),
-      transparent 45%
-    ),
+  inset: 0;
 
-    #050505 !important;
-
-}
-
-
-.loading-logo {
-
-  font-family: "Playfair Display", serif !important;
-
-  font-size: 42px;
-
-  letter-spacing: .16em;
-
-  color: #e6d3a2;
-
-}
-
-
-.loading-subtitle {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 20px;
-
-  letter-spacing: .45em;
-
-  color: var(--gold);
-
-}
-
-
-.loading-line {
-
-  background:
-
-    linear-gradient(
-      90deg,
-      transparent,
-      var(--gold),
-      transparent
-    ) !important;
-
-  box-shadow:
-
-    0 0 20px rgba(198,161,91,.5);
-
-}
-
-
-/* =========================================================
-   MINI LOGO MENU
-========================================================= */
-
-.mini-logo {
-
-  padding: 20px 22px 18px;
-
-  border-bottom:
-
-    1px solid rgba(198,161,91,.14);
-
-  background:
-
-    linear-gradient(
-      180deg,
-      rgba(15,15,15,.96),
-      rgba(8,8,8,.96)
-    );
-
-}
-
-
-.mini-logo strong {
-
-  display: block;
-
-  font-family: "Playfair Display", serif !important;
-
-  font-size: 20px;
-
-  letter-spacing: .12em;
-
-  color: #e7d5a7;
-
-}
-
-
-.mini-logo small {
-
-  display: block;
-
-  margin-top: 5px;
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 14px;
-
-  letter-spacing: .22em;
-
-  color: var(--gold);
-
-}
-
-
-/* =========================================================
-   HOME HERO
-========================================================= */
-
-.hero {
-
-  position: relative;
-
-  padding:
-
-    52px 22px 38px;
-
-  text-align: center;
-
-  overflow: hidden;
-
-}
-
-
-.hero::before {
-
-  content: "";
-
-  position: absolute;
-
-  width: 350px;
-  height: 350px;
-
-  top: -220px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  border-radius: 50%;
-
-  background:
-
-    radial-gradient(
-      circle,
-      rgba(198,161,91,.16),
-      transparent 68%
-    );
-
-  pointer-events: none;
-
-}
-
-
-.hero-kicker {
-
-  position: relative;
-
-  font-size: 10px;
-
-  letter-spacing: .34em;
-
-  color: var(--gold);
-
-  margin-bottom: 13px;
-
-  font-weight: 600;
-
-}
-
-
-.hero h1 {
-
-  position: relative;
-
-  font-size: clamp(42px, 12vw, 58px);
-
-  margin: 0;
-
-  font-weight: 700;
-
-  letter-spacing: .08em;
-
-  color: #f1e7cf;
-
-  text-shadow:
-
-    0 4px 30px rgba(198,161,91,.12);
-
-}
-
-
-.champion {
-
-  position: relative;
+  z-index: 99999;
 
   display: flex;
 
@@ -333,191 +88,651 @@ h2 {
 
   justify-content: center;
 
-  gap: 13px;
+  background:
+    radial-gradient(
+      circle at center,
+      #1c1913,
+      #070707 70%
+    );
 
-  margin-top: 18px;
-
-}
-
-
-.champion strong {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 16px;
-
-  line-height: 1.05;
-
-  letter-spacing: .13em;
-
-  color: #d8bd7c;
+  transition:
+    opacity .6s ease,
+    visibility .6s ease;
 
 }
 
 
-.champion span {
+#loadingScreen.hidden {
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+}
+
+
+.splash-content {
+
+  width: 100%;
+
+  text-align: center;
+
+  padding: 30px;
+
+}
+
+
+.splash-stars {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 8px;
 
   font-size: 15px;
 
-}
-
-
-/* =========================================================
-   CARD GENERALI
-========================================================= */
-
-.card {
-
-  background:
-
-    linear-gradient(
-      145deg,
-      rgba(28,28,28,.97),
-      rgba(15,15,15,.97)
-    ) !important;
-
-  border:
-
-    1px solid rgba(198,161,91,.16);
-
-  border-radius: 20px !important;
-
-  box-shadow:
-
-    0 12px 40px rgba(0,0,0,.32),
-
-    inset 0 1px 0 rgba(255,255,255,.025);
+  margin-bottom: 20px;
 
 }
 
 
-.card:hover {
+.star-green {
+  color: var(--green);
+}
 
-  border-color:
+.star-white {
+  color: white;
+}
 
-    rgba(198,161,91,.28);
+.star-red {
+  color: var(--red);
+}
+
+
+.splash-small {
+
+  color: var(--gold);
+
+  font-family: var(--logo);
+
+  font-size: 12px;
+
+  letter-spacing: 8px;
+
+  margin-bottom: 12px;
 
 }
 
 
-/* =========================================================
-   PRENOTA ORA
-========================================================= */
+.splash-brand h1 {
 
-.welcome {
+  margin: 0;
 
-  position: relative;
+  font-family: var(--logo);
+
+  font-size: clamp(34px, 10vw, 54px);
+
+  font-weight: 600;
+
+  letter-spacing: 4px;
+
+  color: #f1e6cf;
+
+}
+
+
+.splash-divider {
+
+  width: 55px;
+
+  height: 1px;
+
+  background: var(--gold);
+
+  margin: 20px auto;
+
+}
+
+
+.splash-brand p {
+
+  margin: 0;
+
+  font-family: var(--logo);
+
+  font-size: 10px;
+
+  letter-spacing: 7px;
+
+  color: var(--muted);
+
+}
+
+
+.loading-bar {
+
+  width: 100px;
+
+  height: 2px;
+
+  background: rgba(255,255,255,.08);
+
+  margin: 45px auto 0;
 
   overflow: hidden;
 
-  padding: 24px !important;
+}
+
+
+.loading-bar span {
+
+  display: block;
+
+  width: 45%;
+
+  height: 100%;
+
+  background: var(--gold);
+
+  animation: loadingMove 1.3s infinite ease-in-out;
 
 }
 
 
-.welcome::after {
+@keyframes loadingMove {
 
-  content: "";
+  0% {
+    transform: translateX(-100%);
+  }
 
-  position: absolute;
+  100% {
+    transform: translateX(250%);
+  }
 
-  width: 150px;
-  height: 150px;
+}
 
-  right: -80px;
-  top: -80px;
+
+/* =========================================
+   APP
+========================================= */
+
+.app {
+
+  width: 100%;
+
+  max-width: 600px;
+
+  margin: auto;
+
+  min-height: 100vh;
+
+  padding:
+    env(safe-area-inset-top)
+    16px
+    100px;
+
+}
+
+
+.app.hidden {
+  display: none;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.app-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 10px 4px 22px;
+
+}
+
+
+.header-brand {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+}
+
+
+.mini-stars {
+
+  display: flex;
+
+  gap: 3px;
+
+  font-size: 8px;
+
+  margin-bottom: 3px;
+
+}
+
+
+.mini-logo {
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+.mini-esg {
+
+  font-family: var(--logo);
+
+  color: var(--gold);
+
+  font-size: 8px;
+
+  letter-spacing: 4px;
+
+}
+
+
+.mini-logo strong {
+
+  font-family: var(--logo);
+
+  font-size: 16px;
+
+  letter-spacing: 2px;
+
+  font-weight: 600;
+
+}
+
+
+.mini-logo small {
+
+  color: var(--muted);
+
+  font-size: 7px;
+
+  letter-spacing: 3px;
+
+}
+
+
+.header-profile {
+
+  width: 40px;
+
+  height: 40px;
 
   border-radius: 50%;
 
-  background:
+  border: 1px solid var(--border);
 
-    radial-gradient(
-      circle,
-      rgba(198,161,91,.13),
-      transparent 70%
+  background: #141414;
+
+  color: var(--gold);
+
+  font-size: 22px;
+
+}
+
+
+/* =========================================
+   PAGINE
+========================================= */
+
+.page {
+
+  display: none;
+
+  animation: pageFade .35s ease;
+
+}
+
+
+.page.active {
+
+  display: block;
+
+}
+
+
+@keyframes pageFade {
+
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+
+/* =========================================
+   HOME HERO
+========================================= */
+
+.home-hero {
+
+  text-align: center;
+
+  padding: 25px 10px 32px;
+
+}
+
+
+.hero-stars {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  font-size: 14px;
+
+  margin-bottom: 18px;
+
+}
+
+
+.hero-esg {
+
+  font-family: var(--logo);
+
+  font-size: 11px;
+
+  color: var(--gold);
+
+  letter-spacing: 8px;
+
+  margin-bottom: 10px;
+
+}
+
+
+.home-hero h1 {
+
+  margin: 0;
+
+  font-family: var(--logo);
+
+  font-size: clamp(34px, 10vw, 48px);
+
+  letter-spacing: 3px;
+
+  font-weight: 600;
+
+  color: #f4ead8;
+
+}
+
+
+.hero-line {
+
+  width: 50px;
+
+  height: 1px;
+
+  background: var(--gold);
+
+  margin: 20px auto 15px;
+
+}
+
+
+.hero-subtitle {
+
+  font-family: var(--logo);
+
+  letter-spacing: 6px;
+
+  font-size: 9px;
+
+  color: var(--muted);
+
+}
+
+
+.champion-badge {
+
+  margin: 28px auto 0;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 18px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 30px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(201,164,92,.1),
+      rgba(255,255,255,.02)
     );
 
 }
 
 
-.welcome h2 {
+.champion-badge span {
 
-  font-size: 27px;
-
-  margin-bottom: 7px;
+  color: var(--gold);
 
 }
 
 
-.welcome p {
+.champion-badge div {
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+.champion-badge small {
+
+  font-size: 8px;
+
+  letter-spacing: 2px;
+
+  color: var(--muted);
+
+}
+
+
+.champion-badge strong {
+
+  margin-top: 3px;
+
+  font-family: var(--logo);
+
+  font-size: 10px;
+
+  color: var(--gold-light);
+
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.premium-card {
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(28,28,28,.95),
+      rgba(15,15,15,.95)
+    );
+
+  border: 1px solid var(--border);
+
+  border-radius: 22px;
+
+  padding: 18px;
+
+  box-shadow:
+    0 15px 40px rgba(0,0,0,.22);
+
+}
+
+
+.booking-home-card {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+
+}
+
+
+.section-label {
+
+  color: var(--gold);
+
+  font-size: 9px;
+
+  letter-spacing: 3px;
+
+  font-weight: 600;
+
+  margin-bottom: 8px;
+
+}
+
+
+.booking-home-copy h2 {
+
+  font-family: var(--serif);
+
+  font-size: 23px;
+
+  margin: 0 0 5px;
+
+}
+
+
+.booking-home-copy p {
+
+  margin: 0;
 
   color: var(--muted);
 
   font-size: 13px;
 
-  line-height: 1.6;
+  line-height: 1.5;
 
 }
 
 
-.round-arrow {
+.gold-round-button {
 
-  width: 52px !important;
-  height: 52px !important;
+  min-width: 48px;
 
-  border-radius: 50% !important;
+  height: 48px;
+
+  border: 0;
+
+  border-radius: 50%;
 
   background:
-
     linear-gradient(
       135deg,
-      #d6b86f,
-      #9d7739
-    ) !important;
+      var(--gold-light),
+      var(--gold-dark)
+    );
 
-  color: #080808 !important;
+  color: #080808;
 
-  font-size: 30px !important;
-
-  box-shadow:
-
-    0 8px 25px rgba(198,161,91,.22);
+  font-size: 30px;
 
 }
 
 
-/* =========================================================
-   INFO CARD
-========================================================= */
+/* =========================================
+   INFO HOME
+========================================= */
 
-.info-grid {
+.home-info-grid {
 
-  gap: 13px;
+  display: grid;
+
+  gap: 12px;
 
 }
 
 
 .info-card {
 
-  padding: 20px 16px !important;
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
 
 }
 
 
-.info-card b {
+.info-icon {
 
-  font-family: "Cormorant Garamond", serif !important;
+  width: 42px;
 
-  font-size: 18px;
+  height: 42px;
 
-  color: #eee5d2;
+  border-radius: 14px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: rgba(201,164,92,.12);
+
+  color: var(--gold);
+
+  font-size: 20px;
+
+}
+
+
+.info-card strong {
+
+  font-size: 14px;
 
 }
 
 
 .info-card p {
 
-  margin-top: 5px;
+  margin: 5px 0 0;
 
   font-size: 12px;
 
@@ -528,790 +743,586 @@ h2 {
 }
 
 
-.info-icon {
+/* =========================================
+   SOCIAL
+========================================= */
 
-  width: 44px !important;
-  height: 44px !important;
+.social-card {
+
+  margin-top: 14px;
+
+}
+
+
+.social-row {
 
   display: flex;
+
+  flex-direction: column;
+
+}
+
+
+.social-link {
+
+  display: flex;
+
   align-items: center;
-  justify-content: center;
 
-  border-radius: 14px;
+  gap: 13px;
 
-  background:
+  text-decoration: none;
 
-    rgba(198,161,91,.08);
+  color: var(--text);
 
-  border:
-
-    1px solid rgba(198,161,91,.2);
-
-  color: var(--gold-light);
+  padding: 12px 0;
 
 }
 
 
-/* =========================================================
-   SOCIAL
-========================================================= */
+.social-link strong {
 
-.channels-card {
+  display: block;
 
-  padding: 22px !important;
+  font-size: 14px;
 
 }
 
 
-.section-title {
+.social-link span {
 
-  font-size: 10px;
+  display: block;
 
-  letter-spacing: .25em;
-
-  color: var(--gold);
-
-  font-weight: 700;
-
-}
-
-
-.social-item {
-
-  padding: 13px 0;
-
-}
-
-
-.social-item strong {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 19px;
-
-  color: #f0e9dc;
-
-}
-
-
-.social-item span {
-
-  margin-top: 2px;
-
-  color: var(--muted);
+  margin-top: 3px;
 
   font-size: 12px;
 
-}
-
-
-.social-logo {
-
-  width: 42px !important;
-  height: 42px !important;
-
-  border-radius: 13px !important;
-
-  background:
-
-    rgba(198,161,91,.08) !important;
-
-  border:
-
-    1px solid rgba(198,161,91,.18);
-
-  color: var(--gold-light);
+  color: var(--muted);
 
 }
 
 
 .social-divider {
 
-  background:
+  height: 1px;
 
-    rgba(198,161,91,.12);
-
-}
-
-
-/* =========================================================
-   TITOLI PAGINE
-========================================================= */
-
-.booking-heading,
-.profile-heading {
-
-  padding:
-
-    30px 20px 18px;
+  background: rgba(255,255,255,.06);
 
 }
 
 
-.eyebrow {
-
-  font-size: 10px !important;
-
-  font-weight: 700;
-
-  letter-spacing: .25em;
-
-  color: var(--gold) !important;
-
-}
-
-
-.booking-heading h2,
-.profile-heading h2,
-.agenda-title-row h2 {
-
-  font-family: "Playfair Display", serif !important;
-
-  font-size: 36px !important;
-
-  color: #f0e6d0;
-
-  margin-top: 6px;
-
-}
-
-
-.muted {
-
-  color: var(--muted) !important;
-
-  font-size: 13px;
-
-}
-
-
-/* =========================================================
-   SERVIZI PRENOTAZIONE
-========================================================= */
-
-.booking-services {
-
-  display: grid;
-
-  gap: 11px;
-
-}
-
-
-.booking-service,
-.service-card,
-#services button {
-
-  background:
-
-    linear-gradient(
-      145deg,
-      #1b1b1b,
-      #121212
-    );
-
-  border:
-
-    1px solid rgba(198,161,91,.14);
-
-  border-radius: 17px !important;
-
-  transition:
-
-    transform .2s ease,
-    border .2s ease,
-    background .2s ease;
-
-}
-
-
-.booking-service:hover,
-.service-card:hover,
-#services button:hover {
-
-  transform: translateY(-2px);
-
-  border-color:
-
-    rgba(198,161,91,.42);
-
-}
-
-
-.booking-service.selected,
-.service-card.selected,
-#services button.selected {
-
-  border-color:
-
-    var(--gold) !important;
-
-  background:
-
-    linear-gradient(
-      135deg,
-      rgba(198,161,91,.16),
-      rgba(35,30,20,.95)
-    ) !important;
-
-  box-shadow:
-
-    0 8px 30px rgba(198,161,91,.1);
-
-}
-
-
-.service-name {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 21px;
-
-}
-
-
-.service-price {
-
-  color: var(--gold-light) !important;
-
-  font-weight: 700;
-
-}
-
-
-/* =========================================================
-   CALENDARIO
-========================================================= */
-
-.booking-picker,
-.calendar-card,
-.time-picker-card {
-
-  margin-top: 16px;
-
-  padding: 20px !important;
-
-}
-
-
-.booking-section-head span {
-
-  width: 34px;
-  height: 34px;
-
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background:
-
-    rgba(198,161,91,.12);
-
-  border:
-
-    1px solid rgba(198,161,91,.28);
-
-  color: var(--gold-light);
-
-  font-size: 11px;
-
-  font-weight: 700;
-
-}
-
-
-.booking-section-head b {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 20px;
-
-  color: #eee6d8;
-
-}
-
-
-.booking-section-head small {
-
-  color: var(--muted);
-
-}
-
-
-.booking-month-nav,
-.month-nav {
-
-  margin-top: 22px;
-
-}
-
-
-.booking-month-nav h3,
-.month-nav h3 {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 23px;
-
-  color: #ede4d3;
-
-}
-
-
-.booking-month-nav button,
-.month-nav button {
+.social-icon {
 
   width: 38px;
+
   height: 38px;
 
-  border-radius: 50%;
+  border-radius: 12px;
 
-  border:
+  display: flex;
 
-    1px solid rgba(198,161,91,.2);
+  align-items: center;
 
-  background:
+  justify-content: center;
 
-    rgba(255,255,255,.025);
-
-  color: var(--gold-light);
-
-  font-size: 22px;
+  background: #222;
 
 }
 
 
-.booking-weekdays,
-.weekdays {
+.social-icon svg {
 
-  color: var(--gold);
+  width: 20px;
 
-  font-size: 10px;
+  height: 20px;
 
-  font-weight: 700;
+  fill: none;
 
-}
+  stroke: currentColor;
 
-
-/* =========================================================
-   GIORNI CALENDARIO
-========================================================= */
-
-.booking-calendar button,
-.calendar-grid button {
-
-  border-radius: 12px !important;
-
-  font-size: 13px;
-
-  transition:
-
-    .18s ease;
+  stroke-width: 1.8;
 
 }
 
 
-.booking-calendar button:hover,
-.calendar-grid button:hover {
+.social-icon:not(.instagram-icon) svg {
 
-  background:
+  fill: currentColor;
 
-    rgba(198,161,91,.12);
-
-}
-
-
-.booking-calendar .selected,
-.calendar-grid .selected {
-
-  background:
-
-    linear-gradient(
-      135deg,
-      #d2b66f,
-      #9b7437
-    ) !important;
-
-  color: #080808 !important;
-
-  font-weight: 700;
-
-  box-shadow:
-
-    0 5px 18px rgba(198,161,91,.25);
+  stroke: none;
 
 }
 
 
-/* =========================================================
-   ORARI
-========================================================= */
+.instagram-icon {
 
-.booking-times {
-
-  display: grid;
-
-  grid-template-columns:
-
-    repeat(3, 1fr);
-
-  gap: 10px;
+  color: #e5a4a4;
 
 }
 
 
-.booking-times button,
-.time-slot {
+/* =========================================
+   PAGE HEADINGS
+========================================= */
 
-  min-height: 48px;
+.page-heading {
 
-  border-radius: 13px !important;
+  margin: 8px 0 25px;
 
-  background:
+}
 
-    rgba(255,255,255,.025);
 
-  border:
+.page-heading h2 {
 
-    1px solid rgba(198,161,91,.13);
+  margin: 0;
 
-  color: #ddd7ca;
+  font-family: var(--serif);
+
+  font-size: 32px;
 
   font-weight: 600;
 
 }
 
 
-.booking-times button:hover,
-.time-slot:hover {
-
-  border-color:
-
-    rgba(198,161,91,.45);
-
-  background:
-
-    rgba(198,161,91,.08);
-
-}
-
-
-.booking-times button.selected,
-.time-slot.selected {
-
-  background:
-
-    linear-gradient(
-      135deg,
-      #cfb36d,
-      #987235
-    ) !important;
-
-  color: #090909 !important;
-
-  border-color: transparent !important;
-
-}
-
-
-/* =========================================================
-   BOTTONE CONFERMA
-========================================================= */
-
-.booking-confirm {
-
-  margin:
-
-    24px 16px 20px;
-
-  width:
-
-    calc(100% - 32px);
-
-  min-height: 58px;
-
-  border-radius: 17px !important;
-
-  border: none !important;
-
-  background:
-
-    linear-gradient(
-      135deg,
-      #dfc47e,
-      #a77d3d
-    ) !important;
-
-  color: #080808 !important;
-
-  font-family: "DM Sans", sans-serif !important;
-
-  font-size: 11px;
-
-  letter-spacing: .16em;
-
-  font-weight: 800;
-
-  box-shadow:
-
-    0 12px 35px rgba(198,161,91,.2);
-
-}
-
-
-.booking-confirm:active {
-
-  transform:
-
-    scale(.98);
-
-}
-
-
-/* =========================================================
-   AGENDA ADMIN
-========================================================= */
-
-.agenda-title-row {
-
-  padding:
-
-    30px 20px 10px;
-
-}
-
-
-.agenda-title-row button {
-
-  border-radius: 13px !important;
-
-  background:
-
-    rgba(198,161,91,.1);
-
-  border:
-
-    1px solid rgba(198,161,91,.28);
-
-  color: var(--gold-light);
-
-  font-size: 12px;
-
-  font-weight: 700;
-
-}
-
-
-.agenda-summary {
-
-  display: grid;
-
-  grid-template-columns:
-
-    1fr 1fr;
-
-  padding: 22px !important;
-
-}
-
-
-.agenda-summary > div {
-
-  position: relative;
-
-}
-
-
-.agenda-summary > div:first-child {
-
-  border-right:
-
-    1px solid rgba(198,161,91,.13);
-
-}
-
-
-.agenda-summary span {
-
-  display: block;
-
-  font-size: 9px;
-
-  letter-spacing: .12em;
+.page-heading p {
 
   color: var(--muted);
 
-}
+  margin: 8px 0 0;
 
-
-.agenda-summary b {
-
-  display: block;
-
-  margin-top: 8px;
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 31px;
-
-  color: var(--gold-light);
+  font-size: 14px;
 
 }
 
 
-/* =========================================================
-   AGENDA SLOT
-========================================================= */
+/* =========================================
+   BOOKING
+========================================= */
 
-#agendaSlots {
-
-  padding: 0 16px;
-
-}
-
-
-.agenda-slot {
-
-  background:
-
-    linear-gradient(
-      145deg,
-      #1a1a1a,
-      #111
-    );
-
-  border:
-
-    1px solid rgba(198,161,91,.12);
-
-  border-radius: 15px;
-
-  margin-bottom: 9px;
-
-  padding: 16px;
-
-}
-
-
-.agenda-slot .time {
-
-  color: var(--gold-light);
-
-  font-weight: 700;
-
-}
-
-
-.daily-head {
-
-  padding:
-
-    25px 20px 14px;
-
-}
-
-
-.daily-head span {
-
-  font-size: 9px;
-
-  letter-spacing: .2em;
-
-  color: var(--gold);
-
-}
-
-
-.daily-head h3 {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 25px;
-
-  margin-top: 6px;
-
-}
-
-
-/* =========================================================
-   PROFILO
-========================================================= */
-
-.profile-card {
-
-  padding: 24px !important;
-
-}
-
-
-.profile-card h3 {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  font-size: 25px;
-
-  color: #eee5d5;
-
-}
-
-
-.profile-action {
+.booking-step-title {
 
   display: flex;
 
   align-items: center;
 
-  width: calc(100% - 32px);
+  gap: 12px;
 
-  margin: 12px 16px;
+  margin-bottom: 15px;
 
-  padding: 17px;
+}
 
-  border-radius: 18px !important;
 
-  background:
+.booking-step-title > span {
 
-    linear-gradient(
-      145deg,
-      #1a1a1a,
-      #111
-    );
+  width: 32px;
 
-  border:
+  height: 32px;
 
-    1px solid rgba(198,161,91,.14);
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: rgba(201,164,92,.12);
+
+  border: 1px solid var(--border);
+
+  color: var(--gold);
+
+  font-size: 11px;
+
+}
+
+
+.booking-step-title strong {
+
+  display: block;
+
+  font-size: 14px;
+
+}
+
+
+.booking-step-title small {
+
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+
+}
+
+
+.services-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 10px;
+
+  margin-bottom: 20px;
+
+}
+
+
+.service-card {
+
+  text-align: left;
+
+  padding: 15px;
+
+  border-radius: 17px;
+
+  background: #141414;
+
+  border: 1px solid rgba(255,255,255,.06);
 
   color: var(--text);
 
 }
 
 
-.profile-action b {
+.service-card.selected {
 
-  font-family: "Cormorant Garamond", serif !important;
+  border-color: var(--gold);
 
-  font-size: 19px;
-
-}
-
-
-.profile-action small {
-
-  color: var(--muted);
-
-  margin-top: 3px;
+  background: rgba(201,164,92,.12);
 
 }
 
 
-.profile-action i {
+.service-card strong {
+
+  display: block;
+
+  font-size: 13px;
+
+}
+
+
+.service-card span {
+
+  display: block;
+
+  margin-top: 7px;
 
   color: var(--gold);
 
-  font-size: 23px;
+  font-family: var(--serif);
+
+  font-size: 18px;
+
+}
+
+
+.booking-section {
+
+  margin-bottom: 14px;
+
+}
+
+
+input,
+select {
+
+  width: 100%;
+
+  min-height: 52px;
+
+  padding: 0 15px;
+
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,.1);
+
+  background: #0d0d0d;
+
+  color: var(--text);
+
+  font-size: 15px;
+
+  outline: none;
+
+}
+
+
+input:focus,
+select:focus {
+
+  border-color: var(--gold);
+
+}
+
+
+.time-slots {
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 9px;
+
+}
+
+
+.time-slot {
+
+  padding: 13px 5px;
+
+  border-radius: 12px;
+
+  border: 1px solid rgba(255,255,255,.08);
+
+  background: #101010;
+
+  color: var(--text);
+
+}
+
+
+.time-slot.selected {
+
+  background: var(--gold);
+
+  color: #090909;
+
+  border-color: var(--gold);
+
+}
+
+
+.booking-summary {
+
+  margin: 15px 0;
+
+}
+
+
+.summary-row {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid rgba(255,255,255,.06);
+
+}
+
+
+.summary-row span {
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+}
+
+
+.summary-row strong {
+
+  text-align: right;
+
+  font-size: 13px;
+
+}
+
+
+.summary-price {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  padding-top: 18px;
+
+}
+
+
+.summary-price span {
+
+  font-family: var(--serif);
+
+  font-size: 18px;
+
+}
+
+
+.summary-price strong {
+
+  font-family: var(--serif);
+
+  color: var(--gold);
+
+  font-size: 24px;
+
+}
+
+
+.main-gold-button {
+
+  width: 100%;
+
+  min-height: 54px;
+
+  border: 0;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--gold-light),
+      var(--gold-dark)
+    );
+
+  color: #0b0b0b;
+
+  font-weight: 700;
+
+  font-size: 11px;
+
+  letter-spacing: 1.5px;
+
+}
+
+
+/* =========================================
+   BOOKINGS
+========================================= */
+
+.booking-card {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 17px;
+
+  margin-bottom: 10px;
+
+  background: #151515;
+
+  border: 1px solid var(--border);
+
+  border-radius: 18px;
+
+}
+
+
+.booking-info strong {
+
+  font-family: var(--serif);
+
+  font-size: 18px;
+
+}
+
+
+.booking-detail {
+
+  color: var(--muted);
+
+  font-size: 12px;
+
+  margin-top: 5px;
+
+}
+
+
+.booking-price {
+
+  color: var(--gold);
+
+  margin-top: 8px;
+
+  font-family: var(--serif);
+
+}
+
+
+.cancel-booking {
+
+  padding: 9px 13px;
+
+  border-radius: 10px;
+
+  border: 1px solid #633;
+
+  background: transparent;
+
+  color: #e47a7a;
+
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.profile-card {
+
+  margin-bottom: 14px;
+
+}
+
+
+.profile-name {
+
+  font-family: var(--serif);
+
+  font-size: 25px;
+
+}
+
+
+.profile-phone {
+
+  color: var(--muted);
+
+  margin-top: 7px;
+
+}
+
+
+.profile-action {
+
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  text-align: left;
+
+  gap: 14px;
+
+  padding: 17px;
+
+  margin-bottom: 10px;
+
+  border-radius: 18px;
+
+  background: #151515;
+
+  border: 1px solid rgba(255,255,255,.07);
+
+  color: var(--text);
 
 }
 
@@ -1319,24 +1330,22 @@ h2 {
 .profile-action-icon {
 
   width: 42px;
+
   height: 42px;
 
   display: flex;
 
   align-items: center;
+
   justify-content: center;
 
   border-radius: 13px;
 
-  background:
+  background: rgba(201,164,92,.1);
 
-    rgba(198,161,91,.08);
+  color: var(--gold);
 
-  border:
-
-    1px solid rgba(198,161,91,.16);
-
-  color: var(--gold-light);
+  font-size: 20px;
 
 }
 
@@ -1345,191 +1354,308 @@ h2 {
 
   width: 21px;
 
-  height: 21px;
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
 
 }
 
 
-/* =========================================================
-   LOGOUT
-========================================================= */
+.profile-action strong {
+
+  display: block;
+
+}
+
+
+.profile-action small {
+
+  display: block;
+
+  color: var(--muted);
+
+  margin-top: 3px;
+
+  font-size: 11px;
+
+}
+
+
+.profile-arrow {
+
+  margin-left: auto;
+
+  color: var(--gold);
+
+  font-size: 25px;
+
+}
+
 
 .logout-button {
 
-  width: calc(100% - 32px);
+  width: 100%;
 
-  margin: 28px 16px;
+  margin-top: 18px;
 
-  height: 52px;
+  padding: 15px;
 
-  border-radius: 15px !important;
+  border-radius: 14px;
 
-  background: transparent !important;
+  background: transparent;
 
-  border:
+  border: 1px solid rgba(210,80,80,.35);
 
-    1px solid rgba(180,80,70,.35) !important;
-
-  color:
-
-    #d88980 !important;
+  color: #d87979;
 
 }
 
 
-/* =========================================================
-   BOTTOM NAV
-========================================================= */
+/* =========================================
+   AGENDA
+========================================= */
+
+.agenda-info {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 15px;
+
+  margin-bottom: 12px;
+
+}
+
+
+.agenda-info div {
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+.agenda-info span {
+
+  font-size: 9px;
+
+  color: var(--muted);
+
+  letter-spacing: 1px;
+
+}
+
+
+.agenda-info strong {
+
+  margin-top: 7px;
+
+  font-family: var(--serif);
+
+  color: var(--gold);
+
+  font-size: 24px;
+
+}
+
+
+.admin-actions {
+
+  display: grid;
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+
+}
+
+
+.admin-actions button {
+
+  min-height: 48px;
+
+  border-radius: 12px;
+
+  border: 1px solid var(--border);
+
+  background: #101010;
+
+  color: var(--text);
+
+}
+
+
+/* =========================================
+   NAV
+========================================= */
 
 .bottom-nav {
 
-  background:
+  position: fixed;
 
-    rgba(12,12,12,.94) !important;
+  z-index: 1000;
 
-  backdrop-filter:
+  left: 50%;
 
-    blur(20px);
+  transform: translateX(-50%);
 
-  border-top:
+  bottom: 0;
 
-    1px solid rgba(198,161,91,.13);
+  width: 100%;
 
-  box-shadow:
+  max-width: 600px;
 
-    0 -10px 35px rgba(0,0,0,.4);
+  display: grid;
 
-  padding-bottom:
+  grid-template-columns: repeat(4, 1fr);
 
-    max(8px, env(safe-area-inset-bottom));
+  padding:
+    9px
+    8px
+    calc(9px + env(safe-area-inset-bottom));
+
+  background: rgba(10,10,10,.96);
+
+  backdrop-filter: blur(20px);
+
+  border-top: 1px solid rgba(255,255,255,.06);
 
 }
 
 
 .bottom-nav button {
 
-  color:
+  border: 0;
 
-    #77746e !important;
+  background: transparent;
 
-  transition:
+  color: #777;
 
-    .2s ease;
+  padding: 7px 2px;
 
-}
+  display: flex;
 
+  flex-direction: column;
 
-.bottom-nav button em {
+  align-items: center;
 
-  font-style: normal;
-
-  font-size: 21px;
-
-  transition:
-
-    .2s ease;
-
-}
-
-
-.bottom-nav button span {
-
-  margin-top: 4px;
-
-  font-size: 9px;
-
-  letter-spacing: .03em;
+  gap: 4px;
 
 }
 
 
 .bottom-nav button.active {
 
-  color:
-
-    var(--gold-light) !important;
+  color: var(--gold);
 
 }
 
 
-.bottom-nav button.active em {
+.bottom-nav em {
 
-  text-shadow:
+  font-style: normal;
 
-    0 0 15px rgba(198,161,91,.4);
+  font-size: 20px;
 
 }
 
 
-/* =========================================================
-   MODAL LOGIN REGISTRAZIONE
-========================================================= */
+.bottom-nav span {
+
+  font-size: 9px;
+
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
 
 .modal {
 
-  backdrop-filter:
+  position: fixed;
 
-    blur(12px);
+  inset: 0;
 
-  background:
+  z-index: 5000;
 
-    rgba(0,0,0,.68);
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0,0,0,.75);
+
+  backdrop-filter: blur(8px);
+
+}
+
+
+.modal.hidden {
+
+  display: none;
 
 }
 
 
 .modal-box {
 
-  background:
+  width: 100%;
 
+  max-width: 420px;
+
+  position: relative;
+
+  padding: 27px;
+
+  border-radius: 25px;
+
+  background:
     linear-gradient(
       145deg,
       #1b1b1b,
-      #0e0e0e
-    ) !important;
+      #101010
+    );
 
-  border:
-
-    1px solid rgba(198,161,91,.22);
-
-  border-radius: 24px !important;
+  border: 1px solid var(--border);
 
   box-shadow:
-
-    0 25px 80px rgba(0,0,0,.65);
-
-}
-
-
-.auth-logo {
-
-  font-family: "Playfair Display", serif !important;
-
-  letter-spacing: .1em;
-
-  color: #ead8a9;
-
-}
-
-
-.auth-logo small {
-
-  font-family: "Cormorant Garamond", serif !important;
-
-  color: var(--gold);
-
-  letter-spacing: .25em;
+    0 30px 80px rgba(0,0,0,.6);
 
 }
 
 
 .modal-box h2 {
 
-  font-family: "Playfair Display", serif !important;
+  font-family: var(--serif);
 
-  color: #eee5d3;
+  font-size: 28px;
 
-  font-size: 30px;
+  margin: 0 0 8px;
+
+}
+
+
+.modal-box p {
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+
+  margin-bottom: 20px;
 
 }
 
@@ -1537,428 +1663,198 @@ h2 {
 .modal-box input,
 .modal-box select {
 
-  background:
-
-    rgba(255,255,255,.035) !important;
-
-  border:
-
-    1px solid rgba(198,161,91,.16) !important;
-
-  color:
-
-    #eee !important;
-
-  border-radius:
-
-    13px !important;
-
-  min-height:
-
-    52px;
+  margin-bottom: 10px;
 
 }
 
 
-.modal-box input:focus,
-.modal-box select:focus {
+.modal-close {
 
-  border-color:
+  position: absolute;
 
-    var(--gold) !important;
+  right: 15px;
 
-  box-shadow:
+  top: 12px;
 
-    0 0 0 3px rgba(198,161,91,.08);
+  border: 0;
 
-}
+  background: transparent;
 
+  color: var(--muted);
 
-.modal-box button:not(.close):not(.text-btn) {
-
-  border-radius:
-
-    14px !important;
-
-  background:
-
-    linear-gradient(
-      135deg,
-      #d9bd75,
-      #987035
-    ) !important;
-
-  color:
-
-    #090909 !important;
-
-  font-size:
-
-    11px;
-
-  letter-spacing:
-
-    .12em;
-
-  font-weight:
-
-    800;
+  font-size: 28px;
 
 }
 
 
-.close {
+.modal-brand {
 
-  color:
+  text-align: center;
 
-    var(--gold-light) !important;
-
-}
-
-
-/* =========================================================
-   NOTIFICHE
-========================================================= */
-
-.notification .bell {
-
-  width: 66px;
-  height: 66px;
-
-  margin: 0 auto 18px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background:
-
-    rgba(198,161,91,.09);
-
-  border:
-
-    1px solid rgba(198,161,91,.24);
-
-  color:
-
-    var(--gold-light);
+  margin-bottom: 22px;
 
 }
 
 
-.notification .bell svg {
+.modal-brand > div:not(.mini-stars) {
 
-  width: 30px;
+  color: var(--gold);
 
-  height: 30px;
+  font-family: var(--logo);
 
-}
+  font-size: 9px;
 
-
-.notification p {
-
-  color:
-
-    var(--muted);
-
-  line-height:
-
-    1.6;
+  letter-spacing: 4px;
 
 }
 
 
-/* =========================================================
+.modal-brand strong {
+
+  display: block;
+
+  font-family: var(--logo);
+
+  font-size: 22px;
+
+  letter-spacing: 2px;
+
+}
+
+
+.text-button {
+
+  width: 100%;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  padding-top: 17px;
+
+}
+
+
+.text-button strong {
+
+  color: var(--gold);
+
+}
+
+
+/* =========================================
    TOAST
-========================================================= */
+========================================= */
 
-#toast,
 .toast {
 
-  background:
+  position: fixed;
 
-    rgba(22,22,22,.97) !important;
+  z-index: 999999;
 
-  border:
+  top: 50%;
 
-    1px solid rgba(198,161,91,.25);
+  left: 50%;
 
-  color:
+  transform:
+    translate(-50%, -50%)
+    scale(.92);
 
-    #f3eadb;
+  opacity: 0;
 
-  border-radius:
+  pointer-events: none;
 
-    14px !important;
+  width: calc(100% - 50px);
+
+  max-width: 360px;
+
+  text-align: center;
+
+  padding: 18px 20px;
+
+  border-radius: 18px;
+
+  background: #171717;
+
+  border: 1px solid var(--gold);
+
+  color: var(--text);
 
   box-shadow:
+    0 25px 70px rgba(0,0,0,.7);
 
-    0 12px 40px rgba(0,0,0,.5);
+  transition: .3s ease;
 
-  backdrop-filter:
+}
 
-    blur(20px);
+
+.toast.show {
+
+  opacity: 1;
+
+  transform:
+    translate(-50%, -50%)
+    scale(1);
 
 }
 
 
 .toast.success {
 
-  border-color:
-
-    rgba(100,180,120,.4);
+  border-color: #4b9b65;
 
 }
 
 
 .toast.error {
 
-  border-color:
-
-    rgba(210,90,80,.45);
+  border-color: #bd5757;
 
 }
 
 
-/* =========================================================
-   APPUNTAMENTI CLIENTE
-========================================================= */
+/* =========================================
+   MOBILE EXTRA
+========================================= */
 
-.booking-card {
+@media (max-width: 380px) {
 
-  background:
+  .home-hero h1 {
+    font-size: 31px;
+  }
 
-    linear-gradient(
-      145deg,
-      #1b1b1b,
-      #111
-    );
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
 
-  border:
-
-    1px solid rgba(198,161,91,.14);
-
-  border-radius:
-
-    18px !important;
-
-  margin-bottom:
-
-    12px;
-
-  padding:
-
-    18px;
+  .time-slots {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
 }
 
 
-.booking-card strong {
-
-  font-family:
-
-    "Cormorant Garamond", serif !important;
-
-  font-size:
-
-    23px;
-
-  color:
-
-    #f0e6d4;
-
-}
-
-
-.booking-detail {
-
-  color:
-
-    var(--muted);
-
-  font-size:
-
-    13px;
-
-  margin-top:
-
-    4px;
-
-}
-
-
-.booking-price {
-
-  color:
-
-    var(--gold-light) !important;
-
-  font-weight:
-
-    700;
-
-}
-
-
-.cancel-booking {
-
-  border-radius:
-
-    10px !important;
-
-  border:
-
-    1px solid rgba(200,90,80,.35) !important;
-
-  color:
-
-    #d9867e !important;
-
-  background:
-
-    rgba(180,70,60,.06) !important;
-
-}
-
-
-/* =========================================================
-   SCROLLBAR DESKTOP
-========================================================= */
-
-::-webkit-scrollbar {
-
-  width: 6px;
-
-}
-
-
-::-webkit-scrollbar-track {
-
-  background:
-
-    #090909;
-
-}
-
-
-::-webkit-scrollbar-thumb {
-
-  background:
-
-    rgba(198,161,91,.35);
-
-  border-radius:
-
-    10px;
-
-}
-
-
-/* =========================================================
-   MOBILE OTTIMIZZAZIONE
-========================================================= */
-
-@media (max-width: 480px) {
+@media (min-width: 601px) {
 
   body {
 
-    font-size: 14px;
-
-  }
-
-  .hero {
-
-    padding-top: 45px;
-
-  }
-
-  .hero h1 {
-
-    font-size: 43px;
-
-  }
-
-  .booking-heading h2,
-  .profile-heading h2 {
-
-    font-size: 33px !important;
-
-  }
-
-  .booking-times {
-
-    grid-template-columns:
-      repeat(3, 1fr);
-
-  }
-
-}
-
-
-/* =========================================================
-   IPHONE SAFE AREA
-========================================================= */
-
-@supports (padding: max(0px)) {
-
-  .bottom-nav {
-
-    padding-bottom:
-
-      max(
-        8px,
-        env(safe-area-inset-bottom)
+    background:
+      radial-gradient(
+        circle at center top,
+        #242016,
+        #060606 60%
       );
 
   }
 
-}
+  .app {
 
+    border-left: 1px solid rgba(255,255,255,.04);
 
-/* =========================================================
-   ANIMAZIONI LEGGERE
-========================================================= */
-
-.card,
-.booking-service,
-.profile-action,
-.booking-card {
-
-  animation:
-
-    elegantFade .35s ease both;
-
-}
-
-
-@keyframes elegantFade {
-
-  from {
-
-    opacity: 0;
-
-    transform:
-
-      translateY(5px);
-
-  }
-
-  to {
-
-    opacity: 1;
-
-    transform:
-
-      translateY(0);
+    border-right: 1px solid rgba(255,255,255,.04);
 
   }
 
 }
-
-
-/* =========================================================
-   FINE PATCH GRAFICA I GRIMALDI
-========================================================= */
