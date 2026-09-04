@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0a0c">
   <title>I GRIMALDI E.S.G.</title>
+  <link rel="icon" type="image/jpeg" href="assets_logo.jpg">
+  <link rel="apple-touch-icon" href="assets_logo.jpg">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -65,7 +68,13 @@
 
       <div class="booking-card">
         <div class="step-title"><span>01</span><div><b>Scegli la data</b><small>Seleziona il giorno disponibile</small></div></div>
-        <input id="bookingDate" type="date">
+        <div class="booking-month-nav">
+          <button type="button" id="prevBookingMonth" aria-label="Mese precedente">‹</button>
+          <h3 id="bookingMonthTitle"></h3>
+          <button type="button" id="nextBookingMonth" aria-label="Mese successivo">›</button>
+        </div>
+        <div class="booking-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+        <div id="bookingCalendar" class="booking-calendar"></div>
       </div>
 
       <div class="booking-card">

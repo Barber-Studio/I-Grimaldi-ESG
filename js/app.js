@@ -12,38 +12,55 @@ const services=[
 {id:"fiala",name:"Fiala",price:5,duration:30}
 ];
 const TIMES=["09:00","09:30","10:00","10:30","11:00","11:30","12:00","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
-let currentUser=null,selectedService=null,selectedDate=null,selectedTime=null,toastTimer=null;
+let currentUser=null,selectedService=null,selectedDate=null,selectedTime=null,toastTimer=null,bookingViewDate=new Date();
 
 document.addEventListener("DOMContentLoaded",async()=>{
  renderServices();setupDate();setupEvents();await restoreSession();setTimeout(()=>{const l=document.getElementById("loadingScreen");if(l){l.style.opacity="0";setTimeout(()=>l.remove(),350)}},1200);
 });
 
 function setupEvents(){
- document.getElementById("confirmBooking").onclick=createBooking;
- document.getElementById("loginButton").onclick=loginUser;
- document.getElementById("registerButton").onclick=handleRegistration;
- document.getElementById("bookingDate").addEventListener("change",async e=>{selectedDate=e.target.value;selectedTime=null;await loadAvailableTimes();updateSummary()});
+ const confirm=document.getElementById("confirmBooking"); if(confirm) confirm.onclick=createBooking;
+ const login=document.getElementById("loginButton"); if(login) login.onclick=loginUser;
+ const reg=document.getElementById("registerButton"); if(reg) reg.onclick=handleRegistration;
+ const prev=document.getElementById("prevBookingMonth"),next=document.getElementById("nextBookingMonth");
+ if(prev) prev.onclick=()=>{bookingViewDate.setMonth(bookingViewDate.getMonth()-1);renderBookingCalendar()};
+ if(next) next.onclick=()=>{bookingViewDate.setMonth(bookingViewDate.getMonth()+1);renderBookingCalendar()};
 }
 
-function renderServices(){
- const box=document.getElementById("services");
- box.innerHTML=services.map(s=>`<button class="service-button" data-id="${s.id}"><span class="service-name">${s.name}</span><span class="service-price">€${s.price}</span></button>`).join("");
- box.querySelectorAll("button").forEach(b=>b.onclick=()=>selectService(b.dataset.id));
-}
-
-function selectService(id){
- selectedService=services.find(x=>x.id===id)||null;
- document.querySelectorAll(".service-button").forEach(b=>b.classList.toggle("selected",b.dataset.id===id));
- updateSummary();
+function localDateString(date){
+ const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
+ return `${y}-${m}-${d}`;
 }
 
 function setupDate(){
- const input=document.getElementById("bookingDate");
- const today=new Date();today.setMinutes(today.getMinutes()-today.getTimezoneOffset());
- input.min=today.toISOString().slice(0,10);input.value=input.min;selectedDate=input.value;
+ const today=new Date(); today.setHours(0,0,0,0);
+ selectedDate=localDateString(today);
+ bookingViewDate=new Date(today.getFullYear(),today.getMonth(),1);
+ renderBookingCalendar();
  loadAvailableTimes();
 }
 
+function renderBookingCalendar(){
+ const grid=document.getElementById("bookingCalendar"),title=document.getElementById("bookingMonthTitle");
+ if(!grid||!title)return;
+ const year=bookingViewDate.getFullYear(),month=bookingViewDate.getMonth();
+ title.textContent=new Intl.DateTimeFormat("it-IT",{month:"long",year:"numeric"}).format(bookingViewDate);
+ const first=new Date(year,month,1);
+ const offset=(first.getDay()+6)%7;
+ const days=new Date(year,month+1,0).getDate();
+ const today=localDateString(new Date());
+ let html="";
+ for(let i=0;i<offset;i++) html+='<span class="calendar-empty"></span>';
+ for(let day=1;day<=days;day++){
+   const date=new Date(year,month,day),value=localDateString(date);
+   const past=value<today,selected=value===selectedDate,isToday=value===today;
+   html+=`<button type="button" class="calendar-day ${past?"past":""} ${selected?"selected":""} ${isToday?"today":""}" data-date="${value}" ${past?"disabled":""}>${day}</button>`;
+ }
+ grid.innerHTML=html;
+ grid.querySelectorAll(".calendar-day:not(.past)").forEach(btn=>btn.onclick=async()=>{
+   selectedDate=btn.dataset.date; selectedTime=null; renderBookingCalendar(); await loadAvailableTimes(); updateSummary();
+ });
+}
 async function loadAvailableTimes(){
  const box=document.getElementById("timeSlots");box.innerHTML=TIMES.map(t=>`<button class="time-slot" data-time="${t}">${t}</button>`).join("");
  let busy=[];
