@@ -10,41 +10,30 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="icon" href="./icon.svg">
-  <link rel="stylesheet" href="./style.css?v=final5">
+  <link rel="stylesheet" href="./style.css?v=final6">
   <title>I GRIMALDI E.S.G.</title>
 </head>
 <body>
 <div id="loadingScreen" class="loading-screen">
   <div class="splash">
-    <img class="splash-logo-img" src="./icon.svg?v=final5" alt="I Grimaldi">
+    <img class="splash-logo-img" src="./icon.svg?v=final6" alt="I Grimaldi">
     <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
     <div class="splash-brand">I GRIMALDI</div>
     <div class="splash-esg">E.S.G.</div>
     <div class="splash-line"></div>
     <div class="splash-sub">PARRUCCHIERI</div>
-    <div class="splash-champion">CAMPIONE</div>
+    <div class="splash-champion">10 VOLTE CAMPIONE D’ITALIA</div>
   </div>
 </div>
 
 <div id="app" class="app">
   <header class="topbar">
     <button id="menuBtn" type="button" class="icon-btn" aria-label="Menu" onclick="openMenu()">☰</button>
-    <div class="top-brand" aria-label="I Grimaldi E.S.G.">
-      <img class="top-brand-logo" src="./icon.svg?v=final5" alt="Logo I Grimaldi">
-      <div class="top-logo-text">
-        <strong>I GRIMALDI</strong>
-        <small>E.S.G. PARRUCCHIERI</small>
-      </div>
-    </div>
+<div class="top-spacer" aria-hidden="true"></div>
     <button id="notificationBtn" class="icon-btn notification-bell" aria-label="Notifiche">🔔</button>
   </header>
 
   <aside id="sideMenu" class="side-menu">
-    <div class="menu-brand">
-      <img class="menu-brand-logo" src="./icon.svg?v=final5" alt="I Grimaldi">
-      <div><strong>I GRIMALDI</strong><small>E.S.G. PARRUCCHIERI</small></div>
-    </div>
-
     <div class="menu-head">
       <button id="closeMenu" type="button" class="close-menu" onclick="closeMenu()">×</button>
       <div class="menu-logo">
@@ -53,7 +42,7 @@
         <div class="menu-esg">E.S.G.</div>
         <div class="menu-rule"></div>
         <div class="menu-parr">PARRUCCHIERI</div>
-        <div class="menu-campione">CAMPIONE</div>
+        <div class="menu-campione">10 VOLTE CAMPIONE D’ITALIA</div>
       </div>
     </div>
     <div id="menuUser" class="menu-user">Benvenuto, Ospite</div>
@@ -65,8 +54,8 @@
       <button data-page="contactsPage">☎ <span>Contatti</span></button>
     </nav>
     <div class="menu-bottom">
-      <button id="menuLoginBtn" type="button" onclick="showPage(\'loginPage\'); closeMenu();">Accedi</button>
-      <button id="menuRegisterBtn" type="button" onclick="showPage(\'registerPage\'); closeMenu();">Registrati</button>
+      <button id="menuLoginBtn" type="button" onclick="openLoginModal(); closeMenu();">Accedi</button>
+      <button id="menuRegisterBtn" type="button" onclick="openRegisterModal(); closeMenu();">Registrati</button>
       <button id="logoutButton" class="hidden">Esci</button>
     </div>
   </aside>
@@ -80,7 +69,7 @@
         <div class="esg">E.S.G.</div>
         <div class="gold-line"></div>
         <h2>PARRUCCHIERI</h2>
-        <p class="champion-text">CAMPIONE</p>
+        <p class="champion-text">10 VOLTE CAMPIONE D’ITALIA</p>
       </div>
       <div class="welcome-card">
         <p class="eyebrow">BENVENUTO</p>
@@ -175,6 +164,33 @@
       </div>
     </section>
   </main>
+
+
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAuthModals()"></div>
+    <div class="modal-box elegant-modal">
+      <button class="modal-close" type="button" onclick="closeAuthModals()">×</button>
+      <div class="modal-kicker">AREA CLIENTI</div><h2>Bentornato</h2>
+      <p>Accedi con il tuo numero di telefono e il PIN.</p>
+      <input id="modalPhone" type="tel" placeholder="Numero di telefono" inputmode="tel">
+      <input id="modalPin" type="password" placeholder="PIN" inputmode="numeric">
+      <button class="primary-btn" type="button" onclick="modalLogin()">ACCEDI</button>
+      <button class="modal-link" type="button" onclick="switchToRegister()">Non hai un account? <b>Registrati</b></button>
+    </div>
+  </div>
+  <div id="registerModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeAuthModals()"></div>
+    <div class="modal-box elegant-modal">
+      <button class="modal-close" type="button" onclick="closeAuthModals()">×</button>
+      <div class="modal-kicker">NUOVO CLIENTE</div><h2>Crea il tuo account</h2>
+      <p>Registrati per prenotare e gestire i tuoi appuntamenti.</p>
+      <input id="modalRegName" type="text" placeholder="Nome">
+      <input id="modalRegPhone" type="tel" placeholder="Numero di telefono" inputmode="tel">
+      <input id="modalRegPin" type="password" placeholder="Scegli un PIN (minimo 4)" inputmode="numeric">
+      <button class="primary-btn" type="button" onclick="modalRegister()">REGISTRATI</button>
+      <button class="modal-link" type="button" onclick="switchToLogin()">Hai già un account? <b>Accedi</b></button>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
   <nav class="bottom-nav">
@@ -278,7 +294,7 @@
 })();
 </script>
 
-<script src="./app.js?v=final5"></script>
+<script src="./app.js?v=final6"></script>
 
 <script>
 (function(){
@@ -296,6 +312,26 @@
     window.scrollTo(0,0);
   };
 })();
+</script>
+
+
+<script>
+function openLoginModal(){ document.getElementById('loginModal').classList.remove('hidden'); }
+function openRegisterModal(){ document.getElementById('registerModal').classList.remove('hidden'); }
+function closeAuthModals(){ document.getElementById('loginModal').classList.add('hidden'); document.getElementById('registerModal').classList.add('hidden'); }
+function switchToRegister(){ document.getElementById('loginModal').classList.add('hidden'); openRegisterModal(); }
+function switchToLogin(){ document.getElementById('registerModal').classList.add('hidden'); openLoginModal(); }
+function modalLogin(){
+  document.getElementById('phoneInput').value=document.getElementById('modalPhone').value;
+  document.getElementById('pinInput').value=document.getElementById('modalPin').value;
+  loginUser().then(function(){ if(localStorage.getItem('grimaldiUser')) closeAuthModals(); });
+}
+function modalRegister(){
+  document.getElementById('registerName').value=document.getElementById('modalRegName').value;
+  document.getElementById('registerPhone').value=document.getElementById('modalRegPhone').value;
+  document.getElementById('registerPin').value=document.getElementById('modalRegPin').value;
+  registerUser().then(function(){ if(localStorage.getItem('grimaldiUser')) closeAuthModals(); });
+}
 </script>
 
 </body>
