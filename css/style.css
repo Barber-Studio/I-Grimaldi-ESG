@@ -10,3 +10,6 @@
 .agenda-slot .client-admin small{display:block;color:var(--m);margin-top:4px}
 .agenda-empty{text-align:center;padding:30px 15px;color:var(--m);font-size:12px}
 .admin-badge{color:#0d0d0d;background:var(--g);border-radius:20px;padding:5px 9px;font-size:8px;font-weight:800}
+
+/* ICONS REALI SOCIAL E CAMPANELLA */
+.contacts .social-link{display:flex!important;align-items:center;gap:14px;text-decoration:none}.social-icon{width:42px;height:42px;min-width:42px;display:flex;align-items:center;justify-content:center;border-radius:14px;border:1px solid rgba(212,175,55,.35);background:rgba(255,255,255,.04)}.social-icon svg{width:24px;height:24px}.instagram-icon{color:#d4af37}.tiktok-icon{color:#fff}.social-link>span:nth-child(2){display:flex;flex-direction:column;flex:1}.social-link em{font-style:normal;opacity:.65;font-size:.82rem;margin-top:3px}.chevron{margin-left:auto;font-size:24px;font-weight:400;opacity:.7}.notification-btn{display:flex!important;align-items:center;gap:14px}.notification-bell{width:42px;height:42px;min-width:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#d4af37;border:1px solid rgba(212,175,55,.4);background:rgba(212,175,55,.08)}.notification-bell svg{width:23px;height:23px}
