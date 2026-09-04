@@ -10,12 +10,13 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="icon" href="./icon.svg">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=final5">
   <title>I GRIMALDI E.S.G.</title>
 </head>
 <body>
 <div id="loadingScreen" class="loading-screen">
   <div class="splash">
+    <img class="splash-logo-img" src="./icon.svg?v=final5" alt="I Grimaldi">
     <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
     <div class="splash-brand">I GRIMALDI</div>
     <div class="splash-esg">E.S.G.</div>
@@ -27,17 +28,25 @@
 
 <div id="app" class="app">
   <header class="topbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
-    <div class="top-brand">
-      <div class="mini-stars"><span>✦</span><span>✦</span><span>✦</span></div>
-      <span>I GRIMALDI</span>
+    <button id="menuBtn" type="button" class="icon-btn" aria-label="Menu" onclick="openMenu()">☰</button>
+    <div class="top-brand" aria-label="I Grimaldi E.S.G.">
+      <img class="top-brand-logo" src="./icon.svg?v=final5" alt="Logo I Grimaldi">
+      <div class="top-logo-text">
+        <strong>I GRIMALDI</strong>
+        <small>E.S.G. PARRUCCHIERI</small>
+      </div>
     </div>
     <button id="notificationBtn" class="icon-btn notification-bell" aria-label="Notifiche">🔔</button>
   </header>
 
   <aside id="sideMenu" class="side-menu">
+    <div class="menu-brand">
+      <img class="menu-brand-logo" src="./icon.svg?v=final5" alt="I Grimaldi">
+      <div><strong>I GRIMALDI</strong><small>E.S.G. PARRUCCHIERI</small></div>
+    </div>
+
     <div class="menu-head">
-      <button id="closeMenu" class="close-menu">×</button>
+      <button id="closeMenu" type="button" class="close-menu" onclick="closeMenu()">×</button>
       <div class="menu-logo">
         <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
         <div class="menu-brand">I GRIMALDI</div>
@@ -56,8 +65,8 @@
       <button data-page="contactsPage">☎ <span>Contatti</span></button>
     </nav>
     <div class="menu-bottom">
-      <button id="menuLoginBtn" data-page="loginPage">Accedi</button>
-      <button id="menuRegisterBtn" data-page="registerPage">Registrati</button>
+      <button id="menuLoginBtn" type="button" onclick="showPage(\'loginPage\'); closeMenu();">Accedi</button>
+      <button id="menuRegisterBtn" type="button" onclick="showPage(\'registerPage\'); closeMenu();">Registrati</button>
       <button id="logoutButton" class="hidden">Esci</button>
     </div>
   </aside>
@@ -152,7 +161,7 @@
         <label>Numero di telefono</label><input id="phoneInput" type="tel" placeholder="Es. 3791415355">
         <label>PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="Il tuo PIN">
         <button id="loginButton" class="primary-btn">ACCEDI</button>
-        <p>Non hai un account? <button class="text-btn" data-page="registerPage">Registrati</button></p>
+        <p>Non hai un account? <button class="text-btn" type="button" onclick="showPage(\'registerPage\')">Registrati</button></p>
       </div>
     </section>
 
@@ -176,7 +185,118 @@
   </nav>
 </div>
 
+<script>
+/* FIX DI EMERGENZA: splash e navigazione funzionano anche se uno script esterno fallisce */
+(function () {
+  function hideSplash() {
+    var loading = document.getElementById("loadingScreen");
+    if (!loading) return;
+    loading.classList.add("loading-hidden");
+    loading.style.pointerEvents = "none";
+    setTimeout(function(){ loading.style.display = "none"; }, 500);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(hideSplash, 1200);
+
+    document.querySelectorAll("[data-page]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var id = button.getAttribute("data-page");
+        document.querySelectorAll(".page").forEach(function (page) {
+          page.classList.remove("active");
+        });
+        var target = document.getElementById(id);
+        if (target) {
+          target.classList.add("active");
+          window.scrollTo(0, 0);
+        }
+        var menu = document.getElementById("sideMenu");
+        var overlay = document.getElementById("menuOverlay");
+        if (menu) menu.classList.remove("open");
+        if (overlay) overlay.classList.remove("show");
+      });
+    });
+
+    var menuBtn = document.getElementById("menuBtn");
+    var closeMenu = document.getElementById("closeMenu");
+    var menu = document.getElementById("sideMenu");
+    var overlay = document.getElementById("menuOverlay");
+
+    if (menuBtn && menu) menuBtn.addEventListener("click", function(){ menu.classList.add("open"); if(overlay) overlay.classList.add("show"); });
+    if (closeMenu && menu) closeMenu.addEventListener("click", function(){ menu.classList.remove("open"); if(overlay) overlay.classList.remove("show"); });
+    if (overlay && menu) overlay.addEventListener("click", function(){ menu.classList.remove("open"); overlay.classList.remove("show"); });
+  });
+
+  /* Elimina eventuali vecchi Service Worker che tenevano in cache la versione rotta */
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      registrations.forEach(function(registration) { registration.unregister(); });
+    }).catch(function(){});
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./app.js"></script>
+
+<script>
+(function(){
+  function page(id){
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    var target=document.getElementById(id);
+    if(target){target.classList.add("active"); window.scrollTo({top:0,behavior:"auto"});}
+    close();
+  }
+  function open(){
+    var m=document.getElementById("sideMenu"),o=document.getElementById("menuOverlay");
+    if(m)m.classList.add("open"); if(o)o.classList.add("show");
+  }
+  function close(){
+    var m=document.getElementById("sideMenu"),o=document.getElementById("menuOverlay");
+    if(m)m.classList.remove("open"); if(o)o.classList.remove("show");
+  }
+  window.showPage=page;
+  window.openMenu=open;
+  window.closeMenu=close;
+  document.addEventListener("DOMContentLoaded",function(){
+    document.querySelectorAll("[data-page]").forEach(function(b){
+      b.onclick=function(e){e.preventDefault();page(b.getAttribute("data-page"));};
+    });
+    var menuBtn=document.getElementById("menuBtn");
+    if(menuBtn)menuBtn.onclick=open;
+    var closeBtn=document.getElementById("closeMenu");
+    if(closeBtn)closeBtn.onclick=close;
+    var overlay=document.getElementById("menuOverlay");
+    if(overlay)overlay.onclick=close;
+    setTimeout(function(){
+      var loading=document.getElementById("loadingScreen");
+      if(loading){
+        loading.classList.add("loading-hidden");
+        loading.style.pointerEvents="none";
+        setTimeout(function(){loading.style.display="none";},450);
+      }
+    },1300);
+  });
+})();
+</script>
+
+<script src="./app.js?v=final5"></script>
+
+<script>
+(function(){
+  window.openMenu = window.openMenu || function(){
+    var m=document.getElementById("sideMenu"), o=document.getElementById("menuOverlay");
+    if(m)m.classList.add("open"); if(o)o.classList.add("show");
+  };
+  window.closeMenu = window.closeMenu || function(){
+    var m=document.getElementById("sideMenu"), o=document.getElementById("menuOverlay");
+    if(m)m.classList.remove("open"); if(o)o.classList.remove("show");
+  };
+  window.showPage = window.showPage || function(id){
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    var p=document.getElementById(id); if(p)p.classList.add("active");
+    window.scrollTo(0,0);
+  };
+})();
+</script>
+
 </body>
 </html>

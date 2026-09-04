@@ -16,7 +16,14 @@ const SERVICES = [
 
 const TIMES = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
 
-const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let supabaseClient = null;
+try {
+  if (window.supabase && typeof window.supabase.createClient === "function") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch (error) {
+  console.warn("Supabase non inizializzato:", error);
+}
 let currentUser = null;
 let selectedService = null;
 let selectedTime = null;
@@ -70,13 +77,17 @@ function bindNavigation() {
 }
 
 function bindButtons() {
-  document.getElementById("confirmBooking").onclick = createBooking;
-  document.getElementById("loginButton").onclick = loginUser;
-  document.getElementById("registerButton").onclick = registerUser;
-  document.getElementById("logoutButton").onclick = logoutUser;
-  document.getElementById("adminRefresh").onclick = loadAdminAgenda;
-  document.getElementById("enableNotifications").onclick = enableNotifications;
-  document.getElementById("notificationBtn").onclick = () => showToast("🔔 Le notifiche sono gestibili dalla sezione Contatti.");
+  const setClick = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = fn;
+  };
+  setClick("confirmBooking", createBooking);
+  setClick("loginButton", loginUser);
+  setClick("registerButton", registerUser);
+  setClick("logoutButton", logoutUser);
+  setClick("adminRefresh", loadAdminAgenda);
+  setClick("enableNotifications", enableNotifications);
+  setClick("notificationBtn", () => showToast("🔔 Le notifiche sono gestibili dalla sezione Contatti."));
 }
 
 function openMenu(){ document.getElementById("sideMenu").classList.add("open"); document.getElementById("menuOverlay").classList.add("show"); }
@@ -211,6 +222,7 @@ async function cancelBooking(id) {
 }
 
 async function loginUser() {
+  if (!supabaseClient) return showToast("Connessione al database non disponibile. Riprova tra qualche secondo.","error");
   const phone = normalizePhone(document.getElementById("phoneInput").value);
   const pin = document.getElementById("pinInput").value.trim();
   if (!phone || !pin) return showToast("Inserisci numero e PIN","error");
@@ -225,6 +237,7 @@ async function loginUser() {
 }
 
 async function registerUser() {
+  if (!supabaseClient) return showToast("Connessione al database non disponibile. Riprova tra qualche secondo.","error");
   const name = document.getElementById("registerName").value.trim();
   const phone = normalizePhone(document.getElementById("registerPhone").value);
   const pin = document.getElementById("registerPin").value.trim();
@@ -313,13 +326,3 @@ function showToast(message,type="default"){ const t=document.getElementById("toa
 
 window.showPage = showPage;
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('./sw.js');
-      registration.update().catch(() => {});
-    } catch (error) {
-      console.warn('Service worker non registrato:', error);
-    }
-  });
-}

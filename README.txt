@@ -1,14 +1,25 @@
-I GRIMALDI E.S.G. - VERSIONE FIX V2
+I GRIMALDI E.S.G. - PATCH FINALE
 
-Correzioni:
-- Splash perfettamente centrato su mobile e desktop
-- Splash si chiude sempre anche se una funzione JavaScript genera un errore
-- Lo splash non blocca più Accedi, Registrati o altri pulsanti
-- Service Worker aggiornato per eliminare la cache della versione vecchia
-- Mantiene agenda Admin, campanellina, Instagram, TikTok e grafica elegante
+Questa patch usa il tuo logo già presente nel progetto:
+icon.svg
 
-IMPORTANTE SU GITHUB:
-1. Sostituisci TUTTI i file vecchi con questi.
-2. Fai commit.
-3. Dopo la pubblicazione apri il sito e fai un refresh completo.
-4. Se avevi già installato la vecchia app sulla Home, chiudila e riaprila.
+NON devi creare una nuova cartella assets.
+
+Il file icon.svg viene usato per:
+- logo nello splash
+- logo nella barra superiore
+- logo nel menu laterale
+- favicon del sito
+- icona Apple Touch quando possibile
+
+Correzioni incluse:
+- Accedi e Registrati con click diretto
+- navigazione di emergenza indipendente da app.js
+- splash centrato
+- splash non blocca i click
+- menu funzionante
+- logo reale icon.svg visibile
+- cache forzata su nuova versione dei file
+
+Carica tutti i file di questo ZIP sostituendo quelli vecchi.
+Mantieni icon.svg nella cartella principale insieme a index.html.
