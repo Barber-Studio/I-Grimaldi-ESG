@@ -1,119 +1,2787 @@
-const SUPABASE_URL="https://wxcdmtajcasnlohqkgmk.supabase.co";
-const SUPABASE_KEY="sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+// =============================================
+// I GRIMALDI E.S.G.
+// APP.JS DEFINITIVO
+// =============================================
 
-const SERVICES=[
-{id:"shampoo_taglio",name:"Shampoo + Taglio",price:20},
-{id:"barba_5",name:"Barba",price:5},
-{id:"barba_10",name:"Barba",price:10},
-{id:"colore",name:"Colore",price:20},
-{id:"colore_barba",name:"Colore Barba",price:10},
-{id:"fiala",name:"Fiala",price:5}
+
+// =============================================
+// SUPABASE
+// =============================================
+
+const SUPABASE_URL =
+    "https://wxcdmtajcasnlohqkgmk.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
+
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+// =============================================
+// CONFIGURAZIONE ADMIN
+// =============================================
+
+// INSERISCI QUI IL TUO NUMERO DI TELEFONO ADMIN
+
+const ADMIN_PHONES = [
+    ""
 ];
-const TIMES=["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
-let user=null, profile=null, selectedService=null, selectedDate=null, selectedTime=null;
-let bookingMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-let agendaMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-let agendaDate=today();
-let busyTimes=new Set();
 
-function today(){return new Date().toISOString().slice(0,10)}
-function phoneDigits(v){return String(v||"").replace(/\D/g,"")}
-function authEmail(phone){return phoneDigits(phone)+"@igrimaldi.app"}
-function fmtDate(d){return new Date(d+"T12:00:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
-function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove("show"),2800)}
-function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
-document.addEventListener("DOMContentLoaded",init);
-async function init(){
- renderHomeServices();renderServices();renderBookingCalendar();fillAdminSelects();
- const {data:{session}}=await db.auth.getSession();
- if(session){user=session.user;await loadProfile()}
- document.getElementById("loadingScreen").classList.add("hidden");
- document.getElementById("app").classList.remove("hidden");
- if(!user) document.getElementById("authModal").classList.remove("hidden");
- updateUI();
+// =============================================
+// SERVIZI
+// =============================================
+
+const services = [
+
+    {
+        id: "shampoo_taglio",
+        name: "Shampoo + Taglio",
+        price: 20
+    },
+
+    {
+        id: "barba_5",
+        name: "Barba 5€",
+        price: 5
+    },
+
+    {
+        id: "barba_10",
+        name: "Barba 10€",
+        price: 10
+    },
+
+    {
+        id: "colore",
+        name: "Colore",
+        price: 20
+    },
+
+    {
+        id: "colore_barba",
+        name: "Colore Barba",
+        price: 10
+    },
+
+    {
+        id: "fiala",
+        name: "Fiala",
+        price: 5
+    }
+
+];
+
+
+// =============================================
+// ORARI
+// =============================================
+
+const TIMES = [
+
+    "09:00",
+    "09:30",
+
+    "10:00",
+    "10:30",
+
+    "11:00",
+    "11:30",
+
+    "12:00",
+    "12:30",
+
+    "15:00",
+    "15:30",
+
+    "16:00",
+    "16:30",
+
+    "17:00",
+    "17:30",
+
+    "18:00",
+    "18:30",
+
+    "19:00"
+
+];
+
+
+// =============================================
+// STATO
+// =============================================
+
+let currentUser = null;
+
+let selectedService = null;
+
+let selectedDate = null;
+
+let selectedTime = null;
+
+let bookingMonth = new Date();
+
+let agendaMonth = new Date();
+
+let agendaSelectedDate = new Date();
+
+let busyTimes = [];
+
+let blockedTimes = [];
+
+let toastTimer = null;
+
+
+// =============================================
+// AVVIO
+// =============================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        initialize();
+
+    }
+);
+
+
+async function initialize() {
+
+    renderServices();
+
+    setupAdminForms();
+
+    restoreUser();
+
+    setTimeout(() => {
+
+        hideLoading();
+
+    }, 1300);
+
+
+    selectedDate = new Date();
+
+    renderBookingCalendar();
+
+    updateSelectedDateLabel();
+
+    await loadBusyTimes();
+
 }
 
-function renderHomeServices(){document.getElementById("homeServices").innerHTML=SERVICES.map(s=>`<div class="price-row"><div><b>${s.name}</b></div><b>€${s.price}</b></div>`).join("")}
-function renderServices(){document.getElementById("services").innerHTML=SERVICES.map(s=>`<button class="service-btn ${selectedService?.id===s.id?"selected":""}" onclick="selectService('${s.id}')"><div><b>${s.name}</b><small>Appuntamento dedicato</small></div><b>€${s.price}</b></button>`).join("")}
-function selectService(id){selectedService=SERVICES.find(s=>s.id===id);renderServices();updateSummary()}
-function updateSummary(){document.getElementById("summaryService").textContent=selectedService?selectedService.name:"Non selezionato";document.getElementById("summaryWhen").textContent=selectedDate&&selectedTime?fmtDate(selectedDate)+" · "+selectedTime:"—";document.getElementById("summaryPrice").textContent=selectedService?"€"+selectedService.price:"€0"}
 
-function renderCalendar(target,month,titleId,chosen,onClick){
- document.getElementById(titleId).textContent=month.toLocaleDateString("it-IT",{month:"long",year:"numeric"});
- const first=(new Date(month.getFullYear(),month.getMonth(),1).getDay()+6)%7, days=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
- let html="";for(let i=0;i<first;i++)html+='<button class="calendar-day empty"></button>';
- for(let d=1;d<=days;d++){let ds=`${month.getFullYear()}-${String(month.getMonth()+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;let past=ds<today();html+=`<button ${past?"disabled":""} class="calendar-day ${ds===today()?"today":""} ${ds===chosen?"selected":""}" onclick="${onClick}('${ds}')">${d}</button>`}
- document.getElementById(target).innerHTML=html;
-}
-function renderBookingCalendar(){renderCalendar("bookingCalendar",bookingMonth,"bookingMonthTitle",selectedDate,"chooseDate")}
-function changeBookingMonth(n){bookingMonth=new Date(bookingMonth.getFullYear(),bookingMonth.getMonth()+n,1);if(bookingMonth<new Date(new Date().getFullYear(),new Date().getMonth(),1))bookingMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);renderBookingCalendar()}
-async function chooseDate(ds){selectedDate=ds;selectedTime=null;renderBookingCalendar();document.getElementById("selectedBookingDateLabel").textContent=fmtDate(ds);updateSummary();await loadBusyTimes()}
-async function loadBusyTimes(){busyTimes=new Set();document.getElementById("bookingTimes").innerHTML='<div style="color:#999">Caricamento orari...</div>';if(!selectedDate)return;let q=await db.from("appointments").select("start_time").eq("appointment_date",selectedDate).neq("status","cancelled");if(!q.error)(q.data||[]).forEach(x=>busyTimes.add(String(x.start_time).slice(0,5)));let b=await db.from("blocked_slots").select("start_time,all_day").eq("blocked_date",selectedDate);if(!b.error)(b.data||[]).forEach(x=>{if(x.all_day)TIMES.forEach(t=>busyTimes.add(t));else busyTimes.add(String(x.start_time).slice(0,5))});renderTimes()}
-function renderTimes(){document.getElementById("bookingTimes").innerHTML=TIMES.map(t=>`<button ${busyTimes.has(t)?"disabled":""} class="time-btn ${busyTimes.has(t)?"busy":""} ${selectedTime===t?"selected":""}" onclick="chooseTime('${t}')">${t}</button>`).join("")}
-function chooseTime(t){selectedTime=t;renderTimes();updateSummary()}
+// =============================================
+// LOADING
+// =============================================
 
-async function register(){
- const name=regName.value.trim(),surname=regSurname.value.trim(),phone=phoneDigits(regPhone.value),pin=regPin.value.trim(),pin2=regPin2.value.trim(),err=document.getElementById("registerError");err.textContent="";
- if(!name||!surname||!phone||!pin||!pin2){err.textContent="Compila tutti i campi.";return}
- if(phone.length<8){err.textContent="Inserisci un numero di telefono valido.";return}
- if(!/^\d{4,12}$/.test(pin)){err.textContent="Il PIN deve contenere da 4 a 12 cifre.";return}
- if(pin!==pin2){err.textContent="I due PIN non coincidono.";return}
- try{
-  const {data,error}=await db.auth.signUp({email:authEmail(phone),password:pin,options:{data:{first_name:name,last_name:surname,phone:phone}}});
-  if(error)throw error;
-  if(!data.user)throw new Error("Registrazione non completata.");
-  const uid=data.user.id;
-  const {error:pe}=await db.from("profiles").upsert({id:uid,customer_name:name,customer_surname:surname,customer_phone:phone,role:"customer"},{onConflict:"id"});
-  if(pe && !String(pe.message).includes("row-level security")) console.warn(pe);
-  user=data.user;await loadProfile();closeModal("registerModal");closeModal("authModal");updateUI();toast("Account creato con successo!");
- }catch(e){console.error(e);err.textContent=translateError(e.message)}
-}
-async function login(){
- const phone=phoneDigits(loginPhone.value),pin=loginPin.value.trim(),err=document.getElementById("loginError");err.textContent="";
- if(!phone||!pin){err.textContent="Inserisci numero di telefono e PIN.";return}
- const {data,error}=await db.auth.signInWithPassword({email:authEmail(phone),password:pin});
- if(error){err.textContent="Numero di telefono o PIN non corretti.";return}
- user=data.user;await loadProfile();closeModal("authModal");updateUI();toast("Bentornato!");showPage("homePage");
-}
-function translateError(m){if(String(m).toLowerCase().includes("already registered"))return"Questo numero è già registrato.";if(String(m).toLowerCase().includes("email not confirmed"))return"Account creato: in Supabase devi disattivare la conferma email per questa app.";return m||"Si è verificato un errore durante la registrazione."}
-async function loadProfile(){if(!user)return;let {data,error}=await db.from("profiles").select("*").eq("id",user.id).maybeSingle();if(!data){const md=user.user_metadata||{};await db.from("profiles").upsert({id:user.id,customer_name:md.first_name||"",customer_surname:md.last_name||"",customer_phone:md.phone||phoneDigits(user.email||""),role:"customer"},{onConflict:"id"});let r=await db.from("profiles").select("*").eq("id",user.id).maybeSingle();data=r.data}profile=data||{customer_name:"Cliente",role:"customer"}}
-function isAdmin(){return profile?.role==="admin"}
-function updateUI(){
- const p=document.getElementById("profileContent");if(p)p.innerHTML=user?`<div class="profile-name">${escapeHtml(profile?.customer_name||"Cliente")} ${escapeHtml(profile?.customer_surname||"")}</div><div class="profile-phone">${escapeHtml(profile?.customer_phone||"")}</div>`:`<div class="profile-name">Ospite</div><div class="profile-phone">Accedi per gestire il tuo profilo</div>`;
- document.getElementById("adminEntry").classList.toggle("hidden",!isAdmin());
-}
-async function createBooking(){
- if(!user){document.getElementById("authModal").classList.remove("hidden");return}
- if(!selectedService||!selectedDate||!selectedTime){toast("Completa servizio, data e orario.");return}
- if(busyTimes.has(selectedTime)){toast("Questo orario non è più disponibile.");return}
- const payload={customer_id:user.id,customer_name:(profile?.customer_name||"")+" "+(profile?.customer_surname||""),customer_phone:profile?.customer_phone||"",service_id:selectedService.id,service_name:selectedService.name,price:selectedService.price,appointment_date:selectedDate,start_time:selectedTime,end_time:add30(selectedTime),status:"confirmed"};
- const {error}=await db.from("appointments").insert(payload);
- if(error){console.error(error);toast("Errore prenotazione: "+error.message);return}
- toast("Prenotazione confermata!");selectedService=null;selectedTime=null;renderServices();updateSummary();await loadBusyTimes();showPage("appointmentsPage")
-}
-function add30(t){let [h,m]=t.split(":").map(Number);m+=30;if(m>=60){h++;m-=60}return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")}
-async function loadAppointments(){const box=document.getElementById("myAppointments");if(!user){box.innerHTML="";return}box.innerHTML='<div class="appointment-card">Caricamento...</div>';const {data,error}=await db.from("appointments").select("*").eq("customer_id",user.id).order("appointment_date",{ascending:true});if(error){box.innerHTML='<div class="appointment-card">Impossibile caricare gli appuntamenti.</div>';return}box.innerHTML=(data||[]).length?(data||[]).map(a=>`<div class="appointment-card"><div class="row"><b>${escapeHtml(a.service_name)}</b><b style="color:#e5c676">€${a.price}</b></div><small>${fmtDate(a.appointment_date)} · ${String(a.start_time).slice(0,5)}</small>${a.status!=="cancelled"?`<button class="cancel-btn" onclick="cancelBooking('${a.id}')">Annulla appuntamento</button>`:"<small>Annullato</small>"}</div>`).join(""):'<div class="appointment-card">Non hai ancora appuntamenti.</div>'}
-async function cancelBooking(id){if(!confirm("Vuoi annullare questo appuntamento?"))return;const {error}=await db.from("appointments").update({status:"cancelled"}).eq("id",id);if(error){toast("Errore durante l'annullamento.");return}toast("Appuntamento annullato.");loadAppointments()}
+function hideLoading() {
 
-function showPage(id){if(id==="agendaPage"&&!isAdmin()){toast("Area riservata all'amministratore.");return}document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".bottom-nav button").forEach(x=>x.classList.toggle("nav-active",x.dataset.nav===id));window.scrollTo({top:0,behavior:"smooth"});if(id==="appointmentsPage")loadAppointments();if(id==="agendaPage")loadAgenda()}
-async function logout(){await db.auth.signOut();user=null;profile=null;document.getElementById("authModal").classList.remove("hidden");updateUI();showPage("homePage")}
-function openRegister(){document.getElementById("authModal").classList.add("hidden");document.getElementById("registerModal").classList.remove("hidden")}
-function closeModal(id){document.getElementById(id).classList.add("hidden")}
-function requestNotifications(){document.getElementById("notificationModal").classList.remove("hidden")}
-async function enableNotifications(){if("Notification"in window){let p=await Notification.requestPermission();toast(p==="granted"?"Notifiche attivate!":"Notifiche non autorizzate.")}closeModal("notificationModal")}
-function showInstall(){document.getElementById("installModal").classList.remove("hidden")}
+    const loader =
+        document.getElementById("loadingScreen");
 
-function fillAdminSelects(){adminService.innerHTML=SERVICES.map(s=>`<option value="${s.id}">${s.name} · €${s.price}</option>`).join("");adminTime.innerHTML=TIMES.map(t=>`<option>${t}</option>`).join("");blockTime.innerHTML='<option value="ALL">Intera giornata</option>'+TIMES.map(t=>`<option>${t}</option>`).join("")}
-function openAddClient(){if(!isAdmin())return;adminDate.value=agendaDate;document.getElementById("addModal").classList.remove("hidden")}
-function openBlock(){if(!isAdmin())return;blockDate.value=agendaDate;document.getElementById("blockModal").classList.remove("hidden")}
-async function adminAddBooking(){const s=SERVICES.find(x=>x.id===adminService.value);if(!adminName.value.trim()||!adminDate.value||!s){toast("Compila tutti i campi.");return}const payload={customer_id:null,customer_name:adminName.value.trim(),customer_phone:adminPhone.value.trim(),service_id:s.id,service_name:s.name,price:s.price,appointment_date:adminDate.value,start_time:adminTime.value,end_time:add30(adminTime.value),status:"confirmed"};const {error}=await db.from("appointments").insert(payload);if(error){toast(error.message);return}closeModal("addModal");toast("Appuntamento aggiunto.");loadAgenda()}
-async function saveBlock(){const all=blockTime.value==="ALL";const payload={blocked_date:blockDate.value,start_time:all?null:blockTime.value,all_day:all,created_by:user.id};const {error}=await db.from("blocked_slots").insert(payload);if(error){toast(error.message);return}closeModal("blockModal");toast("Disponibilità bloccata.");loadAgenda()}
-function renderAgendaCalendar(){renderCalendar("agendaCalendar",agendaMonth,"agendaMonthTitle",agendaDate,"chooseAgendaDate")}
-function changeAgendaMonth(n){agendaMonth=new Date(agendaMonth.getFullYear(),agendaMonth.getMonth()+n,1);renderAgendaCalendar()}
-async function chooseAgendaDate(ds){agendaDate=ds;renderAgendaCalendar();await loadAgendaSlots()}
-async function loadAgenda(){renderAgendaCalendar();await loadAgendaSlots()}
-async function loadAgendaSlots(){document.getElementById("agendaSelectedDate").textContent=fmtDate(agendaDate);const {data,error}=await db.from("appointments").select("*").eq("appointment_date",agendaDate).neq("status","cancelled").order("start_time");const list=data||[];agendaCount.textContent=list.length;agendaRevenue.textContent="€"+list.reduce((n,a)=>n+Number(a.price||0),0);const box=document.getElementById("agendaSlots");box.innerHTML=list.length?list.map(a=>`<div class="appointment-card"><div class="row"><b>${String(a.start_time).slice(0,5)} · ${escapeHtml(a.customer_name||"Cliente")}</b><b style="color:#e5c676">€${a.price}</b></div><small>${escapeHtml(a.service_name||"")}${a.customer_phone?" · "+escapeHtml(a.customer_phone):""}</small></div>`).join(""):'<div class="appointment-card">Nessun appuntamento per questo giorno.</div>'}
+    if (!loader) return;
 
-window.showPage=showPage;window.selectService=selectService;window.changeBookingMonth=changeBookingMonth;window.chooseDate=chooseDate;window.chooseTime=chooseTime;window.createBooking=createBooking;window.login=login;window.register=register;window.openRegister=openRegister;window.closeModal=closeModal;window.logout=logout;window.requestNotifications=requestNotifications;window.enableNotifications=enableNotifications;window.showInstall=showInstall;window.changeAgendaMonth=changeAgendaMonth;window.chooseAgendaDate=chooseAgendaDate;window.openAddClient=openAddClient;window.openBlock=openBlock;window.adminAddBooking=adminAddBooking;window.saveBlock=saveBlock;
+
+    loader.style.opacity = "0";
+
+
+    setTimeout(() => {
+
+        loader.style.display = "none";
+
+    }, 600);
+
+}
+
+
+// =============================================
+// UTENTE
+// =============================================
+
+function restoreUser() {
+
+    const saved =
+        localStorage.getItem("igrimaldi_user");
+
+
+    if (!saved) {
+
+        updateProfile();
+
+        return;
+
+    }
+
+
+    try {
+
+        currentUser =
+            JSON.parse(saved);
+
+    } catch {
+
+        currentUser = null;
+
+    }
+
+
+    updateProfile();
+
+}
+
+
+function saveUser() {
+
+    if (!currentUser) {
+
+        localStorage.removeItem(
+            "igrimaldi_user"
+        );
+
+        return;
+
+    }
+
+
+    localStorage.setItem(
+        "igrimaldi_user",
+        JSON.stringify(currentUser)
+    );
+
+}
+
+
+function isAdmin() {
+
+    if (!currentUser) return false;
+
+
+    const phone =
+        normalizePhone(
+            currentUser.phone
+        );
+
+
+    return ADMIN_PHONES
+        .map(normalizePhone)
+        .includes(phone);
+
+}
+
+
+function normalizePhone(phone) {
+
+    return String(phone || "")
+        .replace(/\D/g, "")
+        .replace(/^39/, "");
+
+}
+
+
+// =============================================
+// NAVIGAZIONE
+// =============================================
+
+function showPage(pageId) {
+
+    if (
+        pageId === "appointmentsPage" &&
+        !currentUser
+    ) {
+
+        openLogin();
+
+        return;
+
+    }
+
+
+    if (
+        pageId === "agendaPage" &&
+        !isAdmin()
+    ) {
+
+        showToast(
+            "Area riservata all'amministratore",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    document
+        .querySelectorAll(".page")
+        .forEach(page => {
+
+            page.classList.remove("active");
+
+        });
+
+
+    const page =
+        document.getElementById(pageId);
+
+
+    if (page) {
+
+        page.classList.add("active");
+
+    }
+
+
+    document
+        .querySelectorAll(".nav-button")
+        .forEach(button => {
+
+            button.classList.remove("active");
+
+        });
+
+
+    const nav =
+        document.querySelector(
+            `[data-page="${pageId}"]`
+        );
+
+
+    if (nav) {
+
+        nav.classList.add("active");
+
+    }
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+
+    if (pageId === "appointmentsPage") {
+
+        loadMyAppointments();
+
+    }
+
+
+    if (pageId === "agendaPage") {
+
+        loadAgenda();
+
+    }
+
+
+    if (pageId === "profilePage") {
+
+        updateProfile();
+
+    }
+
+}
+
+
+// =============================================
+// TERZO PULSANTE NAV
+// =============================================
+
+function thirdNav() {
+
+    if (!currentUser) {
+
+        openLogin();
+
+        return;
+
+    }
+
+
+    if (isAdmin()) {
+
+        showPage("agendaPage");
+
+    } else {
+
+        showPage("appointmentsPage");
+
+    }
+
+}
+
+
+// =============================================
+// LOGIN MODAL
+// =============================================
+
+function openLogin() {
+
+    document
+        .getElementById("authModal")
+        .classList.remove("hidden");
+
+}
+
+
+function closeLogin() {
+
+    document
+        .getElementById("authModal")
+        .classList.add("hidden");
+
+}
+
+
+// =============================================
+// REGISTER MODAL
+// =============================================
+
+function openRegister() {
+
+    closeLogin();
+
+    document
+        .getElementById("registerModal")
+        .classList.remove("hidden");
+
+}
+
+
+function closeRegister() {
+
+    document
+        .getElementById("registerModal")
+        .classList.add("hidden");
+
+}
+
+
+// =============================================
+// REGISTRAZIONE
+// =============================================
+
+async function register() {
+
+    const firstName =
+        document
+            .getElementById("regName")
+            .value
+            .trim();
+
+
+    const lastName =
+        document
+            .getElementById("regSurname")
+            .value
+            .trim();
+
+
+    const phone =
+        document
+            .getElementById("regPhone")
+            .value
+            .trim();
+
+
+    const pin =
+        document
+            .getElementById("regPin")
+            .value
+            .trim();
+
+
+    const pin2 =
+        document
+            .getElementById("regPin2")
+            .value
+            .trim();
+
+
+    if (
+        !firstName ||
+        !lastName ||
+        !phone ||
+        !pin ||
+        !pin2
+    ) {
+
+        showToast(
+            "Compila tutti i campi",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!/^\d{4,6}$/.test(pin)) {
+
+        showToast(
+            "Il PIN deve contenere da 4 a 6 numeri",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (pin !== pin2) {
+
+        showToast(
+            "I PIN non coincidono",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const cleanPhone =
+        normalizePhone(phone);
+
+
+    try {
+
+        showToast(
+            "Registrazione in corso..."
+        );
+
+
+        const { data: existing, error: searchError } =
+            await db
+                .from("customers")
+                .select("id")
+                .eq("phone", cleanPhone)
+                .maybeSingle();
+
+
+        if (searchError) {
+
+            throw searchError;
+
+        }
+
+
+        if (existing) {
+
+            showToast(
+                "Questo numero è già registrato",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const { data, error } =
+            await db
+                .from("customers")
+                .insert({
+
+                    first_name: firstName,
+
+                    last_name: lastName,
+
+                    phone: cleanPhone,
+
+                    pin: pin
+
+                })
+                .select()
+                .single();
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        currentUser = data;
+
+        saveUser();
+
+        closeRegister();
+
+        updateProfile();
+
+
+        showToast(
+            "Registrazione completata!",
+            "success"
+        );
+
+
+        setTimeout(() => {
+
+            showPage("homePage");
+
+        }, 500);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        showToast(
+            error.message ||
+            "Errore durante la registrazione",
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// LOGIN
+// =============================================
+
+async function login() {
+
+    const phone =
+        document
+            .getElementById("loginPhone")
+            .value
+            .trim();
+
+
+    const pin =
+        document
+            .getElementById("loginPin")
+            .value
+            .trim();
+
+
+    const errorBox =
+        document.getElementById("loginError");
+
+
+    errorBox.textContent = "";
+
+
+    if (!phone || !pin) {
+
+        errorBox.textContent =
+            "Inserisci numero e PIN.";
+
+        return;
+
+    }
+
+
+    try {
+
+        const cleanPhone =
+            normalizePhone(phone);
+
+
+        const { data, error } =
+            await db
+                .from("customers")
+                .select("*")
+                .eq("phone", cleanPhone)
+                .eq("pin", pin)
+                .maybeSingle();
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        if (!data) {
+
+            errorBox.textContent =
+                "Numero di telefono o PIN non corretti.";
+
+            return;
+
+        }
+
+
+        currentUser = data;
+
+        saveUser();
+
+        closeLogin();
+
+        updateProfile();
+
+
+        showToast(
+            `Bentornato ${data.first_name}!`,
+            "success"
+        );
+
+
+        showPage("homePage");
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        errorBox.textContent =
+            "Errore durante l'accesso.";
+
+    }
+
+}
+
+
+// =============================================
+// LOGOUT
+// =============================================
+
+function logout() {
+
+    currentUser = null;
+
+    saveUser();
+
+    updateProfile();
+
+    showPage("homePage");
+
+    showToast(
+        "Hai effettuato il logout",
+        "success"
+    );
+
+}
+
+
+// =============================================
+// PROFILO
+// =============================================
+
+function updateProfile() {
+
+    const profile =
+        document.getElementById("profileContent");
+
+
+    if (!profile) return;
+
+
+    const adminButton =
+        document.getElementById(
+            "adminAgendaButton"
+        );
+
+
+    const thirdLabel =
+        document.getElementById(
+            "thirdLabel"
+        );
+
+
+    if (!currentUser) {
+
+        profile.innerHTML = `
+
+            <div class="profile-name">
+                Benvenuto
+            </div>
+
+            <div class="profile-phone">
+                Accedi o registrati per gestire
+                i tuoi appuntamenti.
+            </div>
+
+            <button
+            class="main-button"
+            onclick="openLogin()">
+
+                ACCEDI
+
+            </button>
+
+        `;
+
+
+        adminButton?.classList.add("hidden");
+
+
+        if (thirdLabel) {
+
+            thirdLabel.textContent =
+                "Accedi";
+
+        }
+
+
+        return;
+
+    }
+
+
+    profile.innerHTML = `
+
+        <div class="profile-name">
+
+            ${escapeHtml(
+                currentUser.first_name
+            )}
+
+            ${escapeHtml(
+                currentUser.last_name
+            )}
+
+        </div>
+
+        <div class="profile-phone">
+
+            ${escapeHtml(
+                currentUser.phone
+            )}
+
+        </div>
+
+    `;
+
+
+    if (isAdmin()) {
+
+        adminButton?.classList.remove("hidden");
+
+        if (thirdLabel) {
+
+            thirdLabel.textContent =
+                "Agenda";
+
+        }
+
+    } else {
+
+        adminButton?.classList.add("hidden");
+
+        if (thirdLabel) {
+
+            thirdLabel.textContent =
+                "Appuntamenti";
+
+        }
+
+    }
+
+}
+
+
+// =============================================
+// SERVIZI
+// =============================================
+
+function renderServices() {
+
+    const container =
+        document.getElementById("services");
+
+
+    if (!container) return;
+
+
+    container.innerHTML = "";
+
+
+    services.forEach(service => {
+
+        const button =
+            document.createElement("button");
+
+
+        button.className =
+            "service-card";
+
+
+        button.innerHTML = `
+
+            <span class="service-card-name">
+
+                ${service.name}
+
+            </span>
+
+            <span class="service-card-price">
+
+                €${service.price}
+
+            </span>
+
+        `;
+
+
+        button.onclick = () => {
+
+            selectService(service);
+
+        };
+
+
+        container.appendChild(button);
+
+    });
+
+}
+
+
+function selectService(service) {
+
+    selectedService = service;
+
+
+    document
+        .querySelectorAll(".service-card")
+        .forEach(button => {
+
+            button.classList.remove("selected");
+
+        });
+
+
+    const index =
+        services.findIndex(
+            item => item.id === service.id
+        );
+
+
+    const buttons =
+        document.querySelectorAll(
+            ".service-card"
+        );
+
+
+    if (buttons[index]) {
+
+        buttons[index].classList.add(
+            "selected"
+        );
+
+    }
+
+
+    updateSummary();
+
+}
+
+
+// =============================================
+// CALENDARIO PRENOTAZIONE
+// =============================================
+
+function renderBookingCalendar() {
+
+    const title =
+        document.getElementById(
+            "bookingMonthTitle"
+        );
+
+
+    const grid =
+        document.getElementById(
+            "bookingCalendar"
+        );
+
+
+    if (!title || !grid) return;
+
+
+    title.textContent =
+        bookingMonth.toLocaleDateString(
+            "it-IT",
+            {
+                month: "long",
+                year: "numeric"
+            }
+        );
+
+
+    grid.innerHTML = "";
+
+
+    const year =
+        bookingMonth.getFullYear();
+
+
+    const month =
+        bookingMonth.getMonth();
+
+
+    const firstDay =
+        new Date(year, month, 1);
+
+
+    let start =
+        firstDay.getDay() - 1;
+
+
+    if (start < 0) start = 6;
+
+
+    const days =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    const today =
+        startOfDay(new Date());
+
+
+    for (
+        let i = 0;
+        i < start;
+        i++
+    ) {
+
+        const empty =
+            document.createElement("div");
+
+
+        grid.appendChild(empty);
+
+    }
+
+
+    for (
+        let day = 1;
+        day <= days;
+        day++
+    ) {
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+
+        const button =
+            document.createElement("button");
+
+
+        button.className =
+            "calendar-day";
+
+
+        button.textContent = day;
+
+
+        if (
+            startOfDay(date) <
+            today
+        ) {
+
+            button.classList.add(
+                "disabled"
+            );
+
+        }
+
+
+        if (
+            sameDate(
+                date,
+                new Date()
+            )
+        ) {
+
+            button.classList.add(
+                "today"
+            );
+
+        }
+
+
+        if (
+            selectedDate &&
+            sameDate(
+                date,
+                selectedDate
+            )
+        ) {
+
+            button.classList.add(
+                "selected"
+            );
+
+        }
+
+
+        button.onclick =
+            async () => {
+
+                selectedDate = date;
+
+                selectedTime = null;
+
+                renderBookingCalendar();
+
+                updateSelectedDateLabel();
+
+                await loadBusyTimes();
+
+                updateSummary();
+
+            };
+
+
+        grid.appendChild(button);
+
+    }
+
+}
+
+
+function changeBookingMonth(direction) {
+
+    bookingMonth.setMonth(
+        bookingMonth.getMonth() + direction
+    );
+
+
+    const now = new Date();
+
+
+    if (
+        bookingMonth.getFullYear() <
+        now.getFullYear()
+    ) {
+
+        bookingMonth = new Date();
+
+    }
+
+
+    renderBookingCalendar();
+
+}
+
+
+// =============================================
+// DATA SELEZIONATA
+// =============================================
+
+function updateSelectedDateLabel() {
+
+    const label =
+        document.getElementById(
+            "selectedBookingDateLabel"
+        );
+
+
+    if (!label) return;
+
+
+    if (!selectedDate) {
+
+        label.textContent =
+            "Prima scegli una data";
+
+        return;
+
+    }
+
+
+    label.textContent =
+        formatDate(selectedDate);
+
+}
+
+
+// =============================================
+// CARICA ORARI OCCUPATI
+// =============================================
+
+async function loadBusyTimes() {
+
+    if (!selectedDate) return;
+
+
+    const date =
+        dateToDatabase(selectedDate);
+
+
+    busyTimes = [];
+
+    blockedTimes = [];
+
+
+    try {
+
+        const {
+            data: appointments,
+            error
+        } = await db
+            .from("appointments")
+            .select("start_time")
+            .eq(
+                "appointment_date",
+                date
+            )
+            .eq(
+                "status",
+                "confirmed"
+            );
+
+
+        if (error) throw error;
+
+
+        busyTimes =
+            (appointments || [])
+                .map(item =>
+                    String(item.start_time)
+                        .substring(0, 5)
+                );
+
+
+        const {
+            data: blocks,
+            error: blockError
+        } = await db
+            .from("blocked_slots")
+            .select("*")
+            .eq(
+                "blocked_date",
+                date
+            );
+
+
+        if (blockError) throw blockError;
+
+
+        blockedTimes =
+            blocks || [];
+
+
+        renderTimes();
+
+
+    } catch (error) {
+
+        console.error(
+            "Errore orari:",
+            error
+        );
+
+
+        renderTimes();
+
+    }
+
+}
+
+
+// =============================================
+// RENDER ORARI
+// =============================================
+
+function renderTimes() {
+
+    const container =
+        document.getElementById(
+            "bookingTimesElegant"
+        );
+
+
+    if (!container) return;
+
+
+    container.innerHTML = "";
+
+
+    const allDayBlocked =
+        blockedTimes.some(
+            block =>
+                !block.blocked_time
+        );
+
+
+    TIMES.forEach(time => {
+
+        const button =
+            document.createElement("button");
+
+
+        button.className =
+            "time-button";
+
+
+        button.textContent = time;
+
+
+        const isBusy =
+            busyTimes.includes(time);
+
+
+        const isBlocked =
+            allDayBlocked ||
+            blockedTimes.some(block => {
+
+                if (!block.blocked_time) {
+
+                    return false;
+
+                }
+
+
+                return String(
+                    block.blocked_time
+                ).substring(0, 5) === time;
+
+            });
+
+
+        if (isBusy) {
+
+            button.classList.add("busy");
+
+        }
+
+
+        if (isBlocked) {
+
+            button.classList.add("blocked");
+
+        }
+
+
+        if (selectedTime === time) {
+
+            button.classList.add("selected");
+
+        }
+
+
+        if (
+            !isBusy &&
+            !isBlocked
+        ) {
+
+            button.onclick = () => {
+
+                selectedTime = time;
+
+                renderTimes();
+
+                updateSummary();
+
+            };
+
+        }
+
+
+        container.appendChild(button);
+
+    });
+
+}
+
+
+// =============================================
+// SUMMARY
+// =============================================
+
+function updateSummary() {
+
+    const summary =
+        document.getElementById(
+            "bookingSummary"
+        );
+
+
+    if (
+        !selectedService &&
+        !selectedTime
+    ) {
+
+        summary?.classList.add("hidden");
+
+        return;
+
+    }
+
+
+    summary?.classList.remove("hidden");
+
+
+    document.getElementById(
+        "summaryService"
+    ).textContent =
+        selectedService
+            ? selectedService.name
+            : "-";
+
+
+    document.getElementById(
+        "summaryDate"
+    ).textContent =
+        selectedDate
+            ? formatDate(selectedDate)
+            : "-";
+
+
+    document.getElementById(
+        "summaryTime"
+    ).textContent =
+        selectedTime || "-";
+
+
+    document.getElementById(
+        "summaryPrice"
+    ).textContent =
+        selectedService
+            ? `€${selectedService.price}`
+            : "€0";
+
+}
+
+
+// =============================================
+// CREA PRENOTAZIONE
+// =============================================
+
+async function createBooking() {
+
+    if (!currentUser) {
+
+        openLogin();
+
+        showToast(
+            "Accedi prima di prenotare",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!selectedService) {
+
+        showToast(
+            "Seleziona un servizio",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!selectedDate) {
+
+        showToast(
+            "Seleziona una data",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!selectedTime) {
+
+        showToast(
+            "Seleziona un orario",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const appointmentDate =
+            dateToDatabase(selectedDate);
+
+
+        const endTime =
+            addMinutes(
+                selectedTime,
+                30
+            );
+
+
+        const {
+            error
+        } = await db
+            .from("appointments")
+            .insert({
+
+                customer_id:
+                    currentUser.id,
+
+                customer_name:
+                    `${currentUser.first_name} ${currentUser.last_name}`,
+
+                customer_phone:
+                    currentUser.phone,
+
+                service_id:
+                    selectedService.id,
+
+                service_name:
+                    selectedService.name,
+
+                price:
+                    selectedService.price,
+
+                appointment_date:
+                    appointmentDate,
+
+                start_time:
+                    selectedTime,
+
+                end_time:
+                    endTime,
+
+                status:
+                    "confirmed"
+
+            });
+
+
+        if (error) {
+
+            if (
+                error.code === "23505"
+            ) {
+
+                throw new Error(
+                    "Questo orario è stato appena prenotato da un altro cliente."
+                );
+
+            }
+
+
+            throw error;
+
+        }
+
+
+        showToast(
+            "Prenotazione confermata!",
+            "success"
+        );
+
+
+        selectedService = null;
+
+        selectedTime = null;
+
+
+        renderServices();
+
+        updateSummary();
+
+        await loadBusyTimes();
+
+
+        setTimeout(() => {
+
+            showPage(
+                "appointmentsPage"
+            );
+
+        }, 500);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        showToast(
+            error.message ||
+            "Errore durante la prenotazione",
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// APPUNTAMENTI CLIENTE
+// =============================================
+
+async function loadMyAppointments() {
+
+    const container =
+        document.getElementById(
+            "myAppointments"
+        );
+
+
+    if (!currentUser) return;
+
+
+    container.innerHTML =
+        "Caricamento...";
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db
+            .from("appointments")
+            .select("*")
+            .eq(
+                "customer_id",
+                currentUser.id
+            )
+            .order(
+                "appointment_date",
+                {
+                    ascending: true
+                }
+            );
+
+
+        if (error) throw error;
+
+
+        if (!data?.length) {
+
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    <h3>Nessun appuntamento</h3>
+
+                    <p>
+                        Non hai ancora prenotazioni.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML = "";
+
+
+        data.forEach(item => {
+
+            const card =
+                document.createElement("div");
+
+
+            card.className =
+                "appointment-card";
+
+
+            card.innerHTML = `
+
+                <div class="appointment-top">
+
+                    <h3>
+                        ${escapeHtml(
+                            item.service_name
+                        )}
+                    </h3>
+
+                    <span class="appointment-price">
+
+                        €${item.price}
+
+                    </span>
+
+                </div>
+
+
+                <div class="appointment-details">
+
+                    📅
+                    ${formatDatabaseDate(
+                        item.appointment_date
+                    )}
+
+                    <br>
+
+                    ◷
+                    ${String(
+                        item.start_time
+                    ).substring(0, 5)}
+
+                </div>
+
+
+                <button
+                class="cancel-button">
+
+                    ANNULLA APPUNTAMENTO
+
+                </button>
+
+            `;
+
+
+            card
+                .querySelector(".cancel-button")
+                .onclick = () => {
+
+                    cancelAppointment(
+                        item.id
+                    );
+
+                };
+
+
+            container.appendChild(card);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <h3>Errore</h3>
+
+                <p>
+                    Impossibile caricare gli appuntamenti.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+// =============================================
+// CANCELLA
+// =============================================
+
+async function cancelAppointment(id) {
+
+    const confirmDelete =
+        confirm(
+            "Vuoi annullare questo appuntamento?"
+        );
+
+
+    if (!confirmDelete) return;
+
+
+    try {
+
+        const { error } =
+            await db
+                .from("appointments")
+                .delete()
+                .eq("id", id);
+
+
+        if (error) throw error;
+
+
+        showToast(
+            "Appuntamento annullato",
+            "success"
+        );
+
+
+        loadMyAppointments();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Errore durante l'annullamento",
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// AGENDA
+// =============================================
+
+async function loadAgenda() {
+
+    renderAgendaCalendar();
+
+    await loadAgendaDay();
+
+}
+
+
+function renderAgendaCalendar() {
+
+    const title =
+        document.getElementById("monthTitle");
+
+
+    const grid =
+        document.getElementById("calendarGrid");
+
+
+    if (!title || !grid) return;
+
+
+    title.textContent =
+        agendaMonth.toLocaleDateString(
+            "it-IT",
+            {
+                month: "long",
+                year: "numeric"
+            }
+        );
+
+
+    grid.innerHTML = "";
+
+
+    const year =
+        agendaMonth.getFullYear();
+
+    const month =
+        agendaMonth.getMonth();
+
+
+    const first =
+        new Date(year, month, 1);
+
+
+    let start =
+        first.getDay() - 1;
+
+
+    if (start < 0) start = 6;
+
+
+    const totalDays =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    for (
+        let i = 0;
+        i < start;
+        i++
+    ) {
+
+        grid.appendChild(
+            document.createElement("div")
+        );
+
+    }
+
+
+    for (
+        let day = 1;
+        day <= totalDays;
+        day++
+    ) {
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+
+        const button =
+            document.createElement("button");
+
+
+        button.className =
+            "calendar-day";
+
+
+        button.textContent = day;
+
+
+        if (
+            sameDate(
+                date,
+                agendaSelectedDate
+            )
+        ) {
+
+            button.classList.add("selected");
+
+        }
+
+
+        button.onclick =
+            async () => {
+
+                agendaSelectedDate = date;
+
+                renderAgendaCalendar();
+
+                await loadAgendaDay();
+
+            };
+
+
+        grid.appendChild(button);
+
+    }
+
+}
+
+
+function changeMonth(direction) {
+
+    agendaMonth.setMonth(
+        agendaMonth.getMonth() + direction
+    );
+
+
+    renderAgendaCalendar();
+
+}
+
+
+// =============================================
+// GIORNO AGENDA
+// =============================================
+
+async function loadAgendaDay() {
+
+    const date =
+        dateToDatabase(
+            agendaSelectedDate
+        );
+
+
+    document.getElementById(
+        "selectedDateTitle"
+    ).textContent =
+        formatDate(
+            agendaSelectedDate
+        );
+
+
+    const container =
+        document.getElementById(
+            "agendaSlots"
+        );
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db
+            .from("appointments")
+            .select("*")
+            .eq(
+                "appointment_date",
+                date
+            )
+            .eq(
+                "status",
+                "confirmed"
+            )
+            .order(
+                "start_time"
+            );
+
+
+        if (error) throw error;
+
+
+        const count =
+            data?.length || 0;
+
+
+        const revenue =
+            (data || [])
+                .reduce(
+                    (total, item) =>
+                        total +
+                        Number(item.price || 0),
+                    0
+                );
+
+
+        document.getElementById(
+            "agendaCount"
+        ).textContent = count;
+
+
+        document.getElementById(
+            "agendaRevenue"
+        ).textContent =
+            `€${revenue}`;
+
+
+        if (!data?.length) {
+
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    <h3>Agenda libera</h3>
+
+                    <p>
+                        Nessun appuntamento per questo giorno.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML = "";
+
+
+        data.forEach(item => {
+
+            const row =
+                document.createElement("div");
+
+
+            row.className =
+                "agenda-slot";
+
+
+            row.innerHTML = `
+
+                <div class="slot-time">
+
+                    ${String(
+                        item.start_time
+                    ).substring(0,5)}
+
+                </div>
+
+
+                <div class="slot-info">
+
+                    <b>
+
+                        ${escapeHtml(
+                            item.customer_name
+                        )}
+
+                    </b>
+
+                    <span>
+
+                        ${escapeHtml(
+                            item.service_name
+                        )}
+
+                    </span>
+
+                </div>
+
+
+                <div class="slot-price">
+
+                    €${item.price}
+
+                </div>
+
+            `;
+
+
+            container.appendChild(row);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+
+// =============================================
+// ADMIN FORM
+// =============================================
+
+function setupAdminForms() {
+
+    const serviceSelect =
+        document.getElementById(
+            "adminService"
+        );
+
+
+    const timeSelect =
+        document.getElementById(
+            "adminTime"
+        );
+
+
+    const blockSelect =
+        document.getElementById(
+            "blockTime"
+        );
+
+
+    if (serviceSelect) {
+
+        services.forEach(service => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value = service.id;
+
+            option.textContent =
+                `${service.name} - €${service.price}`;
+
+
+            serviceSelect.appendChild(option);
+
+        });
+
+    }
+
+
+    if (timeSelect) {
+
+        TIMES.forEach(time => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value = time;
+
+            option.textContent = time;
+
+
+            timeSelect.appendChild(option);
+
+        });
+
+    }
+
+
+    if (blockSelect) {
+
+        TIMES.forEach(time => {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value = time;
+
+            option.textContent = time;
+
+
+            blockSelect.appendChild(option);
+
+        });
+
+    }
+
+}
+
+
+// =============================================
+// ADD CLIENT
+// =============================================
+
+function openAddClient() {
+
+    document
+        .getElementById("adminDate")
+        .value =
+            dateToDatabase(
+                agendaSelectedDate
+            );
+
+
+    document
+        .getElementById("addModal")
+        .classList.remove("hidden");
+
+}
+
+
+async function adminAddBooking() {
+
+    const name =
+        document
+            .getElementById("adminName")
+            .value
+            .trim();
+
+
+    const phone =
+        document
+            .getElementById("adminPhone")
+            .value
+            .trim();
+
+
+    const serviceId =
+        document
+            .getElementById("adminService")
+            .value;
+
+
+    const date =
+        document
+            .getElementById("adminDate")
+            .value;
+
+
+    const time =
+        document
+            .getElementById("adminTime")
+            .value;
+
+
+    if (!name || !date || !time) {
+
+        showToast(
+            "Compila i campi obbligatori",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const service =
+        services.find(
+            item =>
+                item.id === serviceId
+        );
+
+
+    try {
+
+        const { error } =
+            await db
+                .from("appointments")
+                .insert({
+
+                    customer_id: null,
+
+                    customer_name: name,
+
+                    customer_phone: phone,
+
+                    service_id:
+                        service.id,
+
+                    service_name:
+                        service.name,
+
+                    price:
+                        service.price,
+
+                    appointment_date:
+                        date,
+
+                    start_time:
+                        time,
+
+                    end_time:
+                        addMinutes(time, 30),
+
+                    status:
+                        "confirmed"
+
+                });
+
+
+        if (error) {
+
+            if (
+                error.code === "23505"
+            ) {
+
+                throw new Error(
+                    "Questo orario è già occupato."
+                );
+
+            }
+
+            throw error;
+
+        }
+
+
+        closeModal("addModal");
+
+        showToast(
+            "Appuntamento aggiunto!",
+            "success"
+        );
+
+
+        loadAgendaDay();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// BLOCK
+// =============================================
+
+function openBlock() {
+
+    document
+        .getElementById("blockDate")
+        .value =
+            dateToDatabase(
+                agendaSelectedDate
+            );
+
+
+    document
+        .getElementById("blockModal")
+        .classList.remove("hidden");
+
+}
+
+
+async function saveBlock() {
+
+    const date =
+        document
+            .getElementById("blockDate")
+            .value;
+
+
+    const time =
+        document
+            .getElementById("blockTime")
+            .value;
+
+
+    if (!date) {
+
+        showToast(
+            "Seleziona una data",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const blockTime =
+            time === "ALL"
+                ? null
+                : time;
+
+
+        const { error } =
+            await db
+                .from("blocked_slots")
+                .insert({
+
+                    blocked_date:
+                        date,
+
+                    blocked_time:
+                        blockTime
+
+                });
+
+
+        if (error) throw error;
+
+
+        closeModal("blockModal");
+
+
+        showToast(
+            "Disponibilità bloccata",
+            "success"
+        );
+
+
+        loadAgendaDay();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Errore durante il blocco",
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// MODAL GENERICA
+// =============================================
+
+function closeModal(id) {
+
+    document
+        .getElementById(id)
+        ?.classList.add("hidden");
+
+}
+
+
+// =============================================
+// NOTIFICHE
+// =============================================
+
+async function requestNotifications() {
+
+    if (!("Notification" in window)) {
+
+        showToast(
+            "Le notifiche non sono supportate",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const permission =
+        await Notification.requestPermission();
+
+
+    if (permission === "granted") {
+
+        showToast(
+            "Notifiche attivate!",
+            "success"
+        );
+
+    } else {
+
+        showToast(
+            "Notifiche non autorizzate",
+            "error"
+        );
+
+    }
+
+}
+
+
+// =============================================
+// INSTALL
+// =============================================
+
+function showInstall() {
+
+    document
+        .getElementById("installModal")
+        .classList.remove("hidden");
+
+}
+
+
+// =============================================
+// UTILITIES
+// =============================================
+
+function addMinutes(time, minutes) {
+
+    const [hours, mins] =
+        time.split(":").map(Number);
+
+
+    const date =
+        new Date();
+
+
+    date.setHours(hours, mins + minutes);
+
+
+    return `${String(
+        date.getHours()
+    ).padStart(2,"0")}:${String(
+        date.getMinutes()
+    ).padStart(2,"0")}`;
+
+}
+
+
+function startOfDay(date) {
+
+    const newDate =
+        new Date(date);
+
+
+    newDate.setHours(0,0,0,0);
+
+
+    return newDate;
+
+}
+
+
+function sameDate(a, b) {
+
+    return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+    );
+
+}
+
+
+function dateToDatabase(date) {
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+function formatDate(date) {
+
+    return new Date(
+        date
+    ).toLocaleDateString(
+        "it-IT",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+function formatDatabaseDate(dateString) {
+
+    const parts =
+        String(dateString)
+            .split("-");
+
+
+    if (parts.length !== 3) {
+
+        return dateString;
+
+    }
+
+
+    return new Date(
+        parts[0],
+        Number(parts[1]) - 1,
+        parts[2]
+    ).toLocaleDateString(
+        "it-IT",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+// =============================================
+// TOAST
+// =============================================
+
+function showToast(
+    message,
+    type = "default"
+) {
+
+    const toast =
+        document.getElementById("toast");
+
+
+    if (!toast) return;
+
+
+    toast.textContent = message;
+
+
+    toast.className = "";
+
+
+    if (type === "success") {
+
+        toast.classList.add("success");
+
+    }
+
+
+    if (type === "error") {
+
+        toast.classList.add("error");
+
+    }
+
+
+    toast.classList.add("show");
+
+
+    clearTimeout(toastTimer);
+
+
+    toastTimer =
+        setTimeout(() => {
+
+            toast.classList.remove("show");
+
+        }, 3000);
+
+}
+
+
+// =============================================
+// FUNZIONI GLOBALI
+// =============================================
+
+window.showPage = showPage;
+
+window.thirdNav = thirdNav;
+
+window.openLogin = openLogin;
+
+window.openRegister = openRegister;
+
+window.closeRegister = closeRegister;
+
+window.closeLogin = closeLogin;
+
+window.login = login;
+
+window.register = register;
+
+window.logout = logout;
+
+window.selectService = selectService;
+
+window.changeBookingMonth = changeBookingMonth;
+
+window.createBooking = createBooking;
+
+window.changeMonth = changeMonth;
+
+window.openAddClient = openAddClient;
+
+window.adminAddBooking = adminAddBooking;
+
+window.openBlock = openBlock;
+
+window.saveBlock = saveBlock;
+
+window.closeModal = closeModal;
+
+window.requestNotifications = requestNotifications;
+
+window.showInstall = showInstall;
+
+window.cancelAppointment = cancelAppointment;
