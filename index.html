@@ -1,12 +1,182 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090909"><meta name="apple-mobile-web-app-capable" content="yes"><title>I GRIMALDI E.S.G.</title><link rel="stylesheet" href="css/style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body>
-<div id="loadingScreen" class="loading-screen"><div class="loading-content"><div class="stars"><i>★</i><i>★</i><i>★</i></div><div class="loading-logo">I GRIMALDI</div><div class="loading-subtitle">E.S.G. PARRUCCHIERI</div><div class="loading-line"><b></b></div><p>10 VOLTE CAMPIONE ITALIANO</p></div></div>
-<div id="app" class="app"><header><div class="mini-stars stars"><i>★</i><i>★</i><i>★</i></div><strong>I GRIMALDI</strong><small>10 VOLTE CAMPIONE ITALIANO</small></header>
-<section id="homePage" class="page active"><div class="hero"><div class="stars"><i>★</i><i>★</i><i>★</i></div><span>E.S.G. PARRUCCHIERI</span><h1>I GRIMALDI</h1><h3>10 VOLTE CAMPIONE ITALIANO</h3><p>Eleganza, tradizione e stile.</p></div><button class="book-card" onclick="showPage('bookingPage')"><div><small>IL TUO APPUNTAMENTO</small><h2>Prenota ora</h2><p>Scegli servizio, giorno e orario.</p></div><b>›</b></button><div class="grid"><div class="card"><b>✂ I nostri servizi</b><p>Professionalità e cura per ogni stile.</p></div><div class="card"><b>◷ Orari</b><p>Martedì - Sabato<br>09:00 - 19:30</p></div></div><div class="card contacts"><small>I NOSTRI CANALI</small><a href="https://www.instagram.com/igrimaldi21" target="_blank" rel="noopener" class="social-link"><span class="social-icon instagram-icon" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span><span><b>Instagram</b><em>@igrimaldi21</em></span><strong class="chevron">›</strong></a><a href="https://www.tiktok.com/@igrimaldi21" target="_blank" rel="noopener" class="social-link"><span class="social-icon tiktok-icon" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3v10.2a4.2 4.2 0 1 1-3.3-4.1V6.4A7.3 7.3 0 1 0 17.6 13V8.7c1 .8 2.3 1.3 3.4 1.4V7.3C18.5 7.1 16.9 5.5 16.8 3H15z" fill="currentColor"/></svg></span><span><b>TikTok</b><em>@igrimaldi21</em></span><strong class="chevron">›</strong></a></div></section>
-<section id="bookingPage" class="page"><div class="heading"><small>IL TUO APPUNTAMENTO</small><h2>Prenota</h2><p>Scegli il servizio, la data e l'orario.</p></div><div id="services" class="services"></div><div class="card pad"><b>01 — Scegli la data</b><div class="calnav"><button onclick="changeBookingMonth(-1)">‹</button><h3 id="bookingMonthTitle"></h3><button onclick="changeBookingMonth(1)">›</button></div><div class="week">L M M G V S D</div><div id="bookingCalendar" class="calendar"></div></div><div class="card pad"><b>02 — Scegli l'orario</b><div id="bookingTimesElegant" class="times"></div></div><div class="card summary"><div><span>Servizio</span><b id="summaryService">Non selezionato</b></div><div><span>Data</span><b id="summaryDate">-</b></div><div><span>Orario</span><b id="summaryTime">-</b></div><div><span>Totale</span><b id="summaryPrice">€ 0</b></div></div><button class="primary" onclick="createBooking()">CONFERMA PRENOTAZIONE</button></section>
-<section id="appointmentsPage" class="page"><div class="heading"><small>AREA PERSONALE</small><h2>I miei appuntamenti</h2></div><div id="myAppointments"></div></section>
-<section id="agendaPage" class="page"><div class="heading"><small>AREA AMMINISTRATORE</small><h2>Agenda</h2><p>Gestisci tutti gli appuntamenti.</p></div><div class="card agenda-top"><div><small>APPUNTAMENTI</small><b id="agendaCount">0</b></div><div><small>INCASSO PREVISTO</small><b id="agendaRevenue">€ 0</b></div></div><div class="card pad"><b>Seleziona il giorno</b><input id="agendaDate" type="date" onchange="loadAgenda()" class="agenda-date"></div><div id="agendaSlots"></div></section>
-<section id="profilePage" class="page"><div class="heading"><small>AREA PERSONALE</small><h2>Profilo</h2></div><div id="profileContent" class="card pad"></div><button class="profile-btn notification-btn" onclick="requestNotifications()"><span class="notification-bell" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></span><strong class="chevron">›</strong></button><button class="profile-btn" onclick="showInstall()">⌂ <span><b>Installa l'app</b><small>Aggiungila alla schermata Home</small></span>›</button><button class="logout" onclick="logout()">Esci</button></section>
-<nav><button onclick="showPage('homePage')">⌂<span>Home</span></button><button onclick="showPage('bookingPage')">□<span>Prenota</span></button><button onclick="thirdNav()">◷<span id="thirdLabel">Appuntamenti</span></button><button onclick="showPage('profilePage')">◌<span>Profilo</span></button></nav></div>
-<div id="authModal" class="modal"><div class="modalbox"><div class="modalbrand">I GRIMALDI<small>10 VOLTE CAMPIONE ITALIANO</small></div><h2>Bentornato</h2><input id="loginPhone" placeholder="Numero di telefono"><input id="loginPin" type="password" inputmode="numeric" placeholder="PIN"><button class="primary" onclick="login()">ACCEDI</button><button class="link" onclick="openRegister()">Non hai un account? Registrati</button></div></div>
-<div id="registerModal" class="modal hidden"><div class="modalbox"><button class="x" onclick="closeRegister()">×</button><h2>Crea account</h2><input id="regName" placeholder="Nome"><input id="regSurname" placeholder="Cognome"><input id="regPhone" placeholder="Numero di telefono"><input id="regPin" type="password" placeholder="Scegli un PIN"><input id="regPin2" type="password" placeholder="Conferma PIN"><button class="primary" onclick="register()">CREA ACCOUNT</button></div></div>
-<div id="notificationModal" class="modal hidden"><div class="modalbox"><h2>♧ Attiva notifiche</h2><p>Ricevi conferme e promemoria.</p><button class="primary" onclick="enableNotifications()">ATTIVA</button><button class="link" onclick="closeModal('notificationModal')">Non ora</button></div></div><div id="installModal" class="modal hidden"><div class="modalbox"><button class="x" onclick="closeModal('installModal')">×</button><h2>Installa l'app</h2><p>Su iPhone apri Safari, premi Condividi e scegli Aggiungi alla schermata Home.</p></div></div><div id="toast"></div><script src="js/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="I GRIMALDI">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="icon" href="./icon.svg">
+  <link rel="stylesheet" href="./style.css">
+  <title>I GRIMALDI E.S.G.</title>
+</head>
+<body>
+<div id="loadingScreen" class="loading-screen">
+  <div class="splash">
+    <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
+    <div class="splash-brand">I GRIMALDI</div>
+    <div class="splash-esg">E.S.G.</div>
+    <div class="splash-line"></div>
+    <div class="splash-sub">PARRUCCHIERI</div>
+    <div class="splash-champion">CAMPIONE</div>
+  </div>
+</div>
+
+<div id="app" class="app">
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
+    <div class="top-brand">
+      <div class="mini-stars"><span>✦</span><span>✦</span><span>✦</span></div>
+      <span>I GRIMALDI</span>
+    </div>
+    <button id="notificationBtn" class="icon-btn notification-bell" aria-label="Notifiche">🔔</button>
+  </header>
+
+  <aside id="sideMenu" class="side-menu">
+    <div class="menu-head">
+      <button id="closeMenu" class="close-menu">×</button>
+      <div class="menu-logo">
+        <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
+        <div class="menu-brand">I GRIMALDI</div>
+        <div class="menu-esg">E.S.G.</div>
+        <div class="menu-rule"></div>
+        <div class="menu-parr">PARRUCCHIERI</div>
+        <div class="menu-campione">CAMPIONE</div>
+      </div>
+    </div>
+    <div id="menuUser" class="menu-user">Benvenuto, Ospite</div>
+    <nav class="menu-nav">
+      <button data-page="homePage">⌂ <span>Home</span></button>
+      <button data-page="bookingPage">✂ <span>Prenota</span></button>
+      <button data-page="bookingsPage">▣ <span>Le mie prenotazioni</span></button>
+      <button id="adminMenuButton" data-page="adminPage" class="admin-only">▦ <span>Agenda Admin</span></button>
+      <button data-page="contactsPage">☎ <span>Contatti</span></button>
+    </nav>
+    <div class="menu-bottom">
+      <button id="menuLoginBtn" data-page="loginPage">Accedi</button>
+      <button id="menuRegisterBtn" data-page="registerPage">Registrati</button>
+      <button id="logoutButton" class="hidden">Esci</button>
+    </div>
+  </aside>
+  <div id="menuOverlay" class="menu-overlay"></div>
+
+  <main>
+    <section id="homePage" class="page active">
+      <div class="hero-card">
+        <div class="tricolor-stars"><span class="green">✦</span><span class="white">✦</span><span class="red">✦</span></div>
+        <h1>I GRIMALDI</h1>
+        <div class="esg">E.S.G.</div>
+        <div class="gold-line"></div>
+        <h2>PARRUCCHIERI</h2>
+        <p class="champion-text">CAMPIONE</p>
+      </div>
+      <div class="welcome-card">
+        <p class="eyebrow">BENVENUTO</p>
+        <h2 id="homeWelcome">Il tuo appuntamento, il tuo momento.</h2>
+        <p>Prenota in pochi secondi e gestisci comodamente i tuoi appuntamenti.</p>
+        <button class="primary-btn" data-page="bookingPage">PRENOTA ORA</button>
+      </div>
+      <div class="info-grid">
+        <div><span>✂</span><strong>Servizi</strong><small>Qualità e stile</small></div>
+        <div><span>◷</span><strong>Orari</strong><small>Ogni 30 minuti</small></div>
+        <div><span>★</span><strong>Esperienza</strong><small>Professionalità</small></div>
+      </div>
+    </section>
+
+    <section id="bookingPage" class="page">
+      <div class="page-title"><p>PRENOTAZIONE</p><h1>Scegli il tuo stile</h1></div>
+      <div class="card">
+        <h3>1. Scegli il servizio</h3>
+        <div id="serviceList" class="service-list"></div>
+      </div>
+      <div class="card">
+        <h3>2. Scegli la data</h3>
+        <input id="bookingDate" type="date">
+      </div>
+      <div class="card">
+        <h3>3. Scegli l'orario</h3>
+        <div id="timeSlots" class="time-slots"></div>
+      </div>
+      <div class="summary card">
+        <h3>Riepilogo</h3>
+        <div><span>Servizio</span><b id="summaryService">Non selezionato</b></div>
+        <div><span>Data</span><b id="summaryDate">-</b></div>
+        <div><span>Ora</span><b id="summaryTime">-</b></div>
+        <div class="summary-price"><span>Totale</span><b id="summaryPrice">€ 0</b></div>
+        <button id="confirmBooking" class="primary-btn">CONFERMA PRENOTAZIONE</button>
+      </div>
+    </section>
+
+    <section id="bookingsPage" class="page">
+      <div class="page-title"><p>I TUOI APPUNTAMENTI</p><h1>Le mie prenotazioni</h1></div>
+      <div id="bookingsList" class="booking-list"></div>
+    </section>
+
+    <section id="adminPage" class="page">
+      <div class="page-title"><p>AREA RISERVATA</p><h1>Agenda Admin</h1></div>
+      <div id="adminDenied" class="card hidden"><h3>Accesso riservato</h3><p>Questa sezione è disponibile solo all'amministratore.</p></div>
+      <div id="adminContent" class="hidden">
+        <div class="admin-toolbar card">
+          <input id="adminDate" type="date">
+          <button id="adminRefresh" class="secondary-btn">Aggiorna agenda</button>
+        </div>
+        <div id="adminStats" class="admin-stats"></div>
+        <div id="adminAgenda" class="booking-list"></div>
+      </div>
+    </section>
+
+    <section id="contactsPage" class="page">
+      <div class="page-title"><p>SIAMO QUI PER TE</p><h1>Contatti</h1></div>
+      <div class="card contact-card">
+        <a href="tel:3791415355"><span>☎</span><div><small>TELEFONO</small><strong>379 141 5355</strong></div></a>
+        <a class="social-link" href="https://www.instagram.com/igrimaldi21/" target="_blank" rel="noopener">
+          <span class="real-social instagram-icon">◎</span><div><small>INSTAGRAM</small><strong>@igrimaldi21</strong></div>
+        </a>
+        <a class="social-link" href="https://www.tiktok.com/@igrimaldi21" target="_blank" rel="noopener">
+          <span class="real-social tiktok-icon">♪</span><div><small>TIKTOK</small><strong>@igrimaldi21</strong></div>
+        </a>
+      </div>
+      <div class="card">
+        <h3>🔔 Attiva notifiche</h3>
+        <p>Ricevi aggiornamenti sulle tue prenotazioni.</p>
+        <button id="enableNotifications" class="secondary-btn">🔔 ATTIVA NOTIFICHE</button>
+      </div>
+    </section>
+
+    <section id="loginPage" class="page">
+      <div class="page-title"><p>ACCESSO CLIENTI</p><h1>Bentornato</h1></div>
+      <div class="auth-card card">
+        <label>Numero di telefono</label><input id="phoneInput" type="tel" placeholder="Es. 3791415355">
+        <label>PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="Il tuo PIN">
+        <button id="loginButton" class="primary-btn">ACCEDI</button>
+        <p>Non hai un account? <button class="text-btn" data-page="registerPage">Registrati</button></p>
+      </div>
+    </section>
+
+    <section id="registerPage" class="page">
+      <div class="page-title"><p>NUOVO CLIENTE</p><h1>Crea il tuo account</h1></div>
+      <div class="auth-card card">
+        <label>Nome</label><input id="registerName" type="text" placeholder="Il tuo nome">
+        <label>Numero di telefono</label><input id="registerPhone" type="tel" placeholder="Es. 3791415355">
+        <label>PIN personale</label><input id="registerPin" type="password" inputmode="numeric" placeholder="Minimo 4 caratteri">
+        <button id="registerButton" class="primary-btn">REGISTRATI</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <nav class="bottom-nav">
+    <button data-page="homePage">⌂<small>Home</small></button>
+    <button data-page="bookingPage">✂<small>Prenota</small></button>
+    <button data-page="bookingsPage">▣<small>Prenotazioni</small></button>
+    <button id="bottomAdminBtn" data-page="adminPage" class="admin-only">▦<small>Agenda</small></button>
+  </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app.js"></script>
+</body>
+</html>
