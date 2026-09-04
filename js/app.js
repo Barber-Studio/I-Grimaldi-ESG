@@ -1,4 +1,6 @@
-const SUPABASE_URL='https://wxcdmtajcasnlohqkgmk.supabase.co',SUPABASE_KEY='sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP';let db,currentUser=null,selectedService=null,selectedDate=new Date(),selectedTime=null,bookingMonth=new Date();const services=[['shampoo_taglio','Shampoo + Taglio',20],['barba_5','Barba 5€',5],['barba_10','Barba 10€',10],['colore','Colore',20],['colore_barba','Colore Barba',10],['fiala','Fiala',5]].map(([id,name,price])=>({id,name,price}));const TIMES=['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'];const ADMIN_PHONE='INSERISCI_IL_TUO_NUMERO_ADMIN';
+const ADMIN_PHONE = "3791415355";
+
+const SUPABASE_URL='https://wxcdmtajcasnlohqkgmk.supabase.co',SUPABASE_KEY='sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP';let db,currentUser=null,selectedService=null,selectedDate=new Date(),selectedTime=null,bookingMonth=new Date();const services=[['shampoo_taglio','Shampoo + Taglio',20],['barba_5','Barba 5€',5],['barba_10','Barba 10€',10],['colore','Colore',20],['colore_barba','Colore Barba',10],['fiala','Fiala',5]].map(([id,name,price])=>({id,name,price}));const TIMES=['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00'];
 function isAdmin(){return !!currentUser&&(String(currentUser.is_admin)==='true'||currentUser.role==='admin'||phone(currentUser.phone)===phone(ADMIN_PHONE));}
 document.addEventListener('DOMContentLoaded',async()=>{if(window.supabase)db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);try{currentUser=JSON.parse(localStorage.getItem('igrimaldi_user'))}catch(e){}renderServices();renderCalendar();loadTimes();update();setTimeout(()=>document.getElementById('loadingScreen').classList.add('hide'),1400);setTimeout(()=>document.getElementById('loadingScreen').remove(),2000)});const phone=x=>String(x||'').replace(/\D/g,'');const key=d=>{d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};const fmt=d=>new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(d));function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='appointmentsPage')loadAppointments();if(id==='profilePage')profile();window.scrollTo(0,0)}function renderServices(){let c=document.getElementById('services');c.innerHTML='';services.forEach(s=>{let b=document.createElement('button');b.className='service';b.innerHTML='<b>'+s.name+'</b><span>€ '+s.price+'</span>';b.onclick=()=>{selectedService=s;document.querySelectorAll('.service').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');update()};c.appendChild(b)})}function renderCalendar(){let c=document.getElementById('bookingCalendar'),t=document.getElementById('bookingMonthTitle');t.textContent=bookingMonth.toLocaleDateString('it-IT',{month:'long',year:'numeric'});c.innerHTML='';let f=new Date(bookingMonth.getFullYear(),bookingMonth.getMonth(),1),start=(f.getDay()+6)%7,last=new Date(bookingMonth.getFullYear(),bookingMonth.getMonth()+1,0).getDate();for(let i=0;i<start;i++)c.appendChild(document.createElement('span'));for(let n=1;n<=last;n++){let d=new Date(bookingMonth.getFullYear(),bookingMonth.getMonth(),n,12),b=document.createElement('button');b.className='day';b.textContent=n;if(key(d)<key(new Date()))b.classList.add('disabled');if(key(d)===key(selectedDate))b.classList.add('selected');b.onclick=()=>{if(key(d)<key(new Date()))return;selectedDate=d;selectedTime=null;renderCalendar();loadTimes();update()};c.appendChild(b)}}function changeBookingMonth(n){bookingMonth.setMonth(bookingMonth.getMonth()+n);renderCalendar()}async function loadTimes(){let c=document.getElementById('bookingTimesElegant');c.innerHTML='';let busy=[];if(db){let r=await db.from('appointments').select('start_time').eq('appointment_date',key(selectedDate));if(!r.error)busy=r.data.map(x=>x.start_time)}TIMES.forEach(t=>{let b=document.createElement('button');b.className='time';b.textContent=t;if(busy.includes(t)){b.classList.add('busy');b.disabled=true}if(selectedTime===t)b.classList.add('selected');b.onclick=()=>{selectedTime=t;document.querySelectorAll('.time').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');update()};c.appendChild(b)})}function update(){for(let [id,v] of [['summaryService',selectedService?.name||'Non selezionato'],['summaryDate',fmt(selectedDate)],['summaryTime',selectedTime||'-'],['summaryPrice',selectedService?'€ '+selectedService.price:'€ 0']])document.getElementById(id).textContent=v}function openRegister(){authModal.classList.add('hidden');registerModal.classList.remove('hidden')}function closeRegister(){registerModal.classList.add('hidden');authModal.classList.remove('hidden')}async function login(){let p=phone(loginPhone.value),pin=loginPin.value.trim();if(!p||!pin)return toast('Inserisci numero e PIN');let r=await db.from('customers').select('*').eq('phone',p).eq('pin',pin).maybeSingle();if(r.error||!r.data)return toast('Numero o PIN non corretti');currentUser=r.data;localStorage.setItem('igrimaldi_user',JSON.stringify(currentUser));authModal.classList.add('hidden');toast('Bentornato '+(currentUser.name||''));showPage('homePage')}async function register(){let name=regName.value.trim(),surname=regSurname.value.trim(),p=phone(regPhone.value),a=regPin.value,b=regPin2.value;if(!name||!surname||!p||!a||!b)return toast('Compila tutti i campi');if(a.length<4)return toast('PIN minimo 4 cifre');if(a!==b)return toast('I PIN non coincidono');let ex=await db.from('customers').select('id').eq('phone',p).maybeSingle();if(ex.data)return toast('Numero già registrato');let r=await db.from('customers').insert([{name,surname,phone:p,pin:a}]).select().single();if(r.error)return toast(r.error.message);currentUser=r.data;localStorage.setItem('igrimaldi_user',JSON.stringify(currentUser));registerModal.classList.add('hidden');toast('Account creato');showPage('homePage')}async function createBooking(){if(!currentUser){authModal.classList.remove('hidden');return}if(!selectedService||!selectedTime)return toast('Completa servizio e orario');let r=await db.from('appointments').insert([{customer_id:currentUser.id,customer_name:currentUser.name,customer_phone:currentUser.phone,service_id:selectedService.id,service_name:selectedService.name,price:selectedService.price,appointment_date:key(selectedDate),start_time:selectedTime,status:'confirmed'}]);if(r.error)return toast(r.error.message);toast('Prenotazione confermata');selectedTime=null;loadTimes();showPage('appointmentsPage')}async function loadAppointments(){let c=document.getElementById('myAppointments');if(!currentUser)return;c.innerHTML='Caricamento...';let r=await db.from('appointments').select('*').eq('customer_id',currentUser.id).order('appointment_date');c.innerHTML=r.data?.length?r.data.map(x=>'<div class="card pad"><b>'+x.service_name+'</b><p>'+fmt(x.appointment_date)+' · '+x.start_time+'</p><b>€ '+x.price+'</b></div>').join(''):'<div class="card pad">Nessun appuntamento.</div>'}function profile(){profileContent.innerHTML=currentUser?'<b>'+currentUser.name+' '+(currentUser.surname||'')+'</b><p>'+currentUser.phone+'</p>':'<button class="primary" onclick="authModal.classList.remove(\'hidden\')">ACCEDI</button>'}function logout(){currentUser=null;localStorage.removeItem('igrimaldi_user');showPage('homePage');toast('Logout effettuato')}function thirdNav(){
  if(!currentUser){authModal.classList.remove('hidden');return}
@@ -32,102 +34,141 @@ setInterval(updateAdminNav,500);
 window.loadAgenda=loadAgenda;
 
 
-// ========================================
-// PATCH DEFINITIVA ADMIN + UI
-// ========================================
-const ADMIN_PHONE = "3791415355";
 
-function normalizePhone(phone) {
-  let n = String(phone || "").replace(/\D/g, "");
-  if (n.startsWith("39") && n.length === 12) n = n.slice(2);
-  return n;
+
+// ========================================
+// ADMIN PATCH SICURA
+// ========================================
+
+function normalizeAdminPhone(phone) {
+  let value = String(phone || "").replace(/\D/g, "");
+  if (value.startsWith("39") && value.length === 12) {
+    value = value.substring(2);
+  }
+  return value;
 }
 
-function isAdmin() {
-  return !!currentUser && normalizePhone(currentUser.phone) === ADMIN_PHONE;
+function userIsAdmin() {
+  return !!currentUser &&
+    normalizeAdminPhone(currentUser.phone) === ADMIN_PHONE;
 }
 
 async function loadAdminAgenda() {
   const count = document.getElementById("agendaCount");
   const revenue = document.getElementById("agendaRevenue");
   const slots = document.getElementById("agendaSlots");
-  if (!slots || !supabaseClient) return;
+
+  if (!slots) return;
+
+  if (!supabaseClient) {
+    slots.innerHTML = '<div class="empty-state"><h3>Agenda non disponibile</h3><p>Connessione database non disponibile.</p></div>';
+    return;
+  }
+
+  const date = window.agendaSelectedDate
+    ? formatDatabaseDate(window.agendaSelectedDate)
+    : getTodayString();
 
   slots.innerHTML = '<div class="agenda-loading">Caricamento agenda...</div>';
-  const selected = window.agendaSelectedDate || new Date();
-  const date = formatDatabaseDate(selected);
 
-  const { data, error } = await supabaseClient
-    .from("bookings")
-    .select("*")
-    .eq("booking_date", date)
-    .order("booking_time", { ascending: true });
+  try {
+    const result = await supabaseClient
+      .from("bookings")
+      .select("*")
+      .eq("booking_date", date)
+      .order("booking_time", { ascending: true });
 
-  if (error) {
-    slots.innerHTML = '<div class="empty-state"><h3>Errore agenda</h3><p>Impossibile caricare gli appuntamenti.</p></div>';
-    return;
+    if (result.error) throw result.error;
+
+    const list = result.data || [];
+
+    if (count) count.textContent = String(list.length);
+
+    const total = list.reduce(function(sum, booking) {
+      return sum + Number(booking.price || 0);
+    }, 0);
+
+    if (revenue) revenue.textContent = "€" + total;
+
+    if (list.length === 0) {
+      slots.innerHTML = '<div class="empty-state"><h3>Nessun appuntamento</h3><p>Non ci sono appuntamenti per questa giornata.</p></div>';
+      return;
+    }
+
+    slots.innerHTML = "";
+
+    list.forEach(function(booking) {
+      const item = document.createElement("div");
+      item.className = "agenda-booking";
+
+      const clientName =
+        booking.customer_name ||
+        booking.name ||
+        "Cliente";
+
+      item.innerHTML =
+        '<div class="agenda-time">' + escapeHtml(booking.booking_time || "") + '</div>' +
+        '<div class="agenda-client">' +
+          '<strong>' + escapeHtml(clientName) + '</strong>' +
+          '<small>' + escapeHtml(booking.service_name || "Servizio") +
+          ' · €' + escapeHtml(String(booking.price || 0)) + '</small>' +
+        '</div>';
+
+      slots.appendChild(item);
+    });
+
+  } catch (error) {
+    console.error("Errore agenda:", error);
+    slots.innerHTML = '<div class="empty-state"><h3>Errore</h3><p>Impossibile caricare l’agenda.</p></div>';
   }
-
-  const list = data || [];
-  if (count) count.textContent = list.length;
-  if (revenue) revenue.textContent = "€" + list.reduce((s,b)=>s+Number(b.price||0),0);
-
-  if (!list.length) {
-    slots.innerHTML = '<div class="empty-state"><h3>Nessun appuntamento</h3><p>Non ci sono appuntamenti per questa giornata.</p></div>';
-    return;
-  }
-
-  slots.innerHTML = list.map(b => `
-    <div class="agenda-booking">
-      <div class="agenda-time">${escapeHtml(b.booking_time || "")}</div>
-      <div class="agenda-client">
-        <strong>${escapeHtml(b.customer_name || b.name || b.service_name || "Cliente")}</strong>
-        <small>${escapeHtml(b.service_name || "Servizio")} · €${escapeHtml(String(b.price || 0))}</small>
-      </div>
-    </div>
-  `).join("");
 }
 
 function thirdNav() {
-  if (isAdmin()) {
+  if (userIsAdmin()) {
     showPage("agendaPage");
     loadAdminAgenda();
   } else {
     showPage("appointmentsPage");
-    if (typeof loadMyAppointments === "function") loadMyAppointments();
-    if (typeof loadUserBookings === "function") loadUserBookings();
+
+    if (typeof loadUserBookings === "function") {
+      loadUserBookings();
+    }
   }
 }
 
-const _originalUpdateUI = window.updateUserInterface || (typeof updateUserInterface === "function" ? updateUserInterface : null);
-function updateAdminNavigation() {
+function refreshAdminMenu() {
   const label = document.getElementById("thirdLabel");
-  const third = document.getElementById("thirdNav");
+  const button = document.getElementById("thirdNav");
+
   if (!label) return;
-  if (isAdmin()) {
+
+  if (userIsAdmin()) {
     label.textContent = "Agenda";
-    if (third) third.classList.add("admin-nav");
+    if (button) button.classList.add("admin-nav");
   } else {
     label.textContent = "Appuntamenti";
-    if (third) third.classList.remove("admin-nav");
+    if (button) button.classList.remove("admin-nav");
   }
+}
+
+const originalUpdateUserInterfaceForAdmin =
+  typeof updateUserInterface === "function"
+    ? updateUserInterface
+    : null;
+
+if (originalUpdateUserInterfaceForAdmin) {
+  updateUserInterface = function() {
+    originalUpdateUserInterfaceForAdmin();
+    refreshAdminMenu();
+  };
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  setTimeout(updateAdminNavigation, 300);
-  setTimeout(updateAdminNavigation, 1200);
+  setTimeout(refreshAdminMenu, 100);
+  setTimeout(refreshAdminMenu, 1000);
 });
 
-const _oldShowPage = typeof showPage === "function" ? showPage : null;
-if (_oldShowPage) {
-  showPage = function(pageId) {
-    _oldShowPage(pageId);
-    if (pageId === "agendaPage" && isAdmin()) loadAdminAgenda();
-    updateAdminNavigation();
-  };
-  window.showPage = showPage;
-}
-
 window.thirdNav = thirdNav;
-window.isAdmin = isAdmin;
+window.userIsAdmin = userIsAdmin;
 window.loadAdminAgenda = loadAdminAgenda;
+window.refreshAdminMenu = refreshAdminMenu;
