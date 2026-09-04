@@ -1,25 +1,21 @@
-I GRIMALDI E.S.G. - PATCH FINALE
+I GRIMALDI E.S.G. - PATCH SUPABASE FINALE
 
-Questa patch usa il tuo logo già presente nel progetto:
-icon.svg
+1. Carica tutti i file su GitHub sostituendo quelli vecchi.
+2. Vai in Supabase > SQL Editor.
+3. Apri database.sql, copia tutto e premi RUN.
+4. In Supabase > Authentication > Providers > Email:
+   disattiva Confirm email, perché il login usa telefono + PIN trasformato internamente in email tecnica.
+5. Il numero 3791415355 viene riconosciuto automaticamente come ADMIN.
 
-NON devi creare una nuova cartella assets.
+Registrazione:
+- Nome
+- Cognome
+- Numero di telefono
+- PIN
+- Conferma PIN
 
-Il file icon.svg viene usato per:
-- logo nello splash
-- logo nella barra superiore
-- logo nel menu laterale
-- favicon del sito
-- icona Apple Touch quando possibile
+Admin:
+Home / Prenota / Agenda / Profilo
 
-Correzioni incluse:
-- Accedi e Registrati con click diretto
-- navigazione di emergenza indipendente da app.js
-- splash centrato
-- splash non blocca i click
-- menu funzionante
-- logo reale icon.svg visibile
-- cache forzata su nuova versione dei file
-
-Carica tutti i file di questo ZIP sostituendo quelli vecchi.
-Mantieni icon.svg nella cartella principale insieme a index.html.
+Cliente:
+Home / Prenota / Prenotazioni / Profilo
