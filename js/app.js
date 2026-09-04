@@ -28,7 +28,7 @@ const db = window.supabase.createClient(
 // INSERISCI QUI IL TUO NUMERO DI TELEFONO ADMIN
 
 const ADMIN_PHONES = [
-    ""
+    "3791415355"
 ];
 
 
