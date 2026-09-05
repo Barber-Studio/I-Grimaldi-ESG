@@ -14,3 +14,30 @@
 .calendar-day.past{color:#444;opacity:.4}
 .calendar-empty{aspect-ratio:1}
 @media(max-width:380px){.booking-calendar,.booking-weekdays{gap:4px}.calendar-day{font-size:13px}}
+
+
+/* AGENDA AMMINISTRATORE - senza modificare la grafica esistente */
+.admin-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.admin-stat,.calendar-card{background:rgba(255,255,255,.035);border:1px solid rgba(197,164,91,.16);border-radius:20px;padding:16px}
+.admin-stat small{display:block;color:#928b7d;font-size:10px;letter-spacing:.08em}
+.admin-stat b{display:block;margin-top:7px;font-size:23px;color:#d5b56b;font-family:"Playfair Display",serif}
+.calendar-card{margin:14px 0 12px}
+.agenda-calendar .calendar-day{position:relative}
+.agenda-calendar .calendar-day.has-booking i{position:absolute;right:3px;top:2px;min-width:14px;height:14px;border-radius:8px;background:#c5a45b;color:#111;font-size:8px;font-style:normal;display:grid;place-items:center}
+.admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 22px}
+.admin-actions button{padding:13px 8px;border-radius:14px;background:rgba(197,164,91,.09);border:1px solid rgba(197,164,91,.28);color:#e4c77f;font-weight:700;font-size:12px}
+.agenda-day-title{margin:6px 0 10px}
+.agenda-day-title span{font-size:10px;letter-spacing:.14em;color:#938a7b}
+.agenda-day-title h3{margin:5px 0 0;font-family:"Playfair Display",serif;text-transform:capitalize;font-size:18px}
+.agenda-slots{display:flex;flex-direction:column;gap:8px}
+.agenda-slot{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:10px;padding:13px;border-radius:15px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025)}
+.agenda-slot time{font-weight:700;color:#d7b866}
+.agenda-slot b{display:block;font-size:13px}
+.agenda-slot small{display:block;margin-top:3px;color:#938f87;font-size:11px}
+.agenda-slot>span{font-size:9px;letter-spacing:.08em;padding:5px 7px;border-radius:8px}
+.agenda-slot.free>span{background:rgba(120,180,130,.12);color:#9fcca6}
+.agenda-slot.booked{border-color:rgba(197,164,91,.25)}
+.agenda-slot.booked>span{background:rgba(197,164,91,.13);color:#dfc47e}
+.agenda-slot.blocked{opacity:.68}
+.agenda-slot.blocked>span{background:rgba(190,90,90,.12);color:#df9999}
+@media(max-width:360px){.agenda-slot{grid-template-columns:46px 1fr auto;padding:11px 9px}.agenda-slot>span{font-size:8px;padding:4px}}
