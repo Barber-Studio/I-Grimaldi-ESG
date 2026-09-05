@@ -93,3 +93,16 @@
 
 /* Login persistente PWA: l'utente non vede il popup ad ogni apertura */
 body.session-active #authModal{display:none!important}
+
+
+/* PATCH FINALE: logo Home testuale elegante, nessuna immagine PNG nel menu o nella Home */
+.hero-logo-image{display:none!important}
+.text-logo-home{width:100%;padding:10px 0 8px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:390px}
+.home-stars{display:flex;align-items:center;justify-content:center;gap:16px;font-size:35px;line-height:1;margin-bottom:28px;text-shadow:0 0 18px rgba(255,255,255,.08)}
+.home-stars .star-g{color:#159447}.home-stars .star-w{color:#f4f1e8}.home-stars .star-r{color:#d92532}
+.home-logo-title{font-family:"Cinzel",Georgia,serif;font-size:clamp(38px,10vw,62px);line-height:1.04;letter-spacing:.08em;font-weight:600;color:#e7c36c;text-shadow:0 2px 1px rgba(255,255,255,.12),0 0 18px rgba(199,163,91,.16);white-space:nowrap}
+.home-esg-row{width:100%;max-width:540px;display:flex;align-items:center;gap:16px;margin:24px auto 17px}.home-esg-row span{height:2px;flex:1;background:linear-gradient(90deg,transparent,var(--gold2),var(--gold))}.home-esg-row span:last-child{background:linear-gradient(90deg,var(--gold),var(--gold2),transparent)}
+.home-esg-row b{font-family:"Cinzel",Georgia,serif;font-size:clamp(18px,4.5vw,27px);letter-spacing:.18em;color:var(--gold2);white-space:nowrap}
+.home-logo-sub{font-family:"Cinzel",Georgia,serif;font-size:clamp(16px,4vw,23px);letter-spacing:.36em;color:#d9b663;margin-left:.36em}
+.home-champion{margin-top:30px;font-family:"Cinzel",Georgia,serif;font-size:clamp(10px,2.8vw,14px);font-weight:600;letter-spacing:.18em;color:var(--gold2);padding:11px 18px;border-top:1px solid rgba(199,163,91,.22);border-bottom:1px solid rgba(199,163,91,.22);white-space:nowrap}
+@media(max-width:430px){.text-logo-home{min-height:330px;padding-top:2px}.home-stars{font-size:28px;gap:12px;margin-bottom:22px}.home-logo-title{font-size:38px;letter-spacing:.06em}.home-esg-row{gap:10px;margin:20px auto 14px}.home-logo-sub{font-size:15px;letter-spacing:.28em;margin-left:.28em}.home-champion{font-size:9px;letter-spacing:.12em;margin-top:24px;padding:10px 8px}.hero-card{padding-top:32px}}
