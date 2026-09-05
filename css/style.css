@@ -107,72 +107,129 @@ body.session-active #authModal{display:none!important}
 .home-champion{margin-top:30px;font-family:"Cinzel",Georgia,serif;font-size:clamp(10px,2.8vw,14px);font-weight:600;letter-spacing:.18em;color:var(--gold2);padding:11px 18px;border-top:1px solid rgba(199,163,91,.22);border-bottom:1px solid rgba(199,163,91,.22);white-space:nowrap}
 @media(max-width:430px){.text-logo-home{min-height:330px;padding-top:2px}.home-stars{font-size:28px;gap:12px;margin-bottom:22px}.home-logo-title{font-size:38px;letter-spacing:.06em}.home-esg-row{gap:10px;margin:20px auto 14px}.home-logo-sub{font-size:15px;letter-spacing:.28em;margin-left:.28em}.home-champion{font-size:9px;letter-spacing:.12em;margin-top:24px;padding:10px 8px}.hero-card{padding-top:32px}}
 
-/* PATCH LOGO TIPOGRAFICO FINALE — più elegante, leggibile e coerente */
-.text-logo-home{
-  min-height:370px!important;
-  padding:18px 0 12px!important;
+
+/* PATCH FONT LOGO CORRETTA — sostituisce il blocco precedente senza immagini */
+.brand-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.topbar .brand{font-family:"Cinzel",Georgia,serif!important;font-size:19px!important;font-weight:600!important;letter-spacing:.12em!important;line-height:1.05!important;color:#f0e8d5!important;white-space:nowrap}
+.brand-divider{display:flex;align-items:center;gap:6px;width:142px;margin-top:5px}
+.brand-divider span{height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--gold))}
+.brand-divider span:last-child{background:linear-gradient(90deg,var(--gold),transparent)}
+.brand-divider b{font-family:"Cinzel",Georgia,serif;font-size:7px;letter-spacing:.16em;color:var(--gold2);font-weight:700}
+.topbar .brand-sub{font-family:"Cinzel",Georgia,serif!important;font-size:7px!important;letter-spacing:.23em!important;color:var(--gold)!important;margin:3px 0 0!important;line-height:1!important;white-space:nowrap}
+
+/* Logo Home: identico come linguaggio tipografico, leggibile e non attaccato */
+.text-logo-home{min-height:360px!important;padding:18px 0 12px!important}
+.home-logo-title{font-family:"Cinzel",Georgia,serif!important;font-weight:600!important;letter-spacing:.13em!important;word-spacing:.08em!important;color:#e7c36c!important}
+.home-esg-row b{font-family:"Cinzel",Georgia,serif!important;letter-spacing:.22em!important}
+.home-logo-sub{font-family:"Cinzel",Georgia,serif!important;font-weight:600!important;letter-spacing:.42em!important}
+.home-champion{font-family:"Cinzel",Georgia,serif!important;font-weight:600!important;letter-spacing:.16em!important}
+.loading-logo{font-family:"Cinzel",Georgia,serif!important;font-weight:600!important;letter-spacing:.16em!important}
+.loading-kicker,.loading-caption{font-family:"Cinzel",Georgia,serif!important;font-weight:600!important;letter-spacing:.16em!important}
+@media(max-width:430px){
+ .topbar .brand{font-size:17px!important;letter-spacing:.1em!important}
+ .brand-divider{width:128px}
+ .text-logo-home{min-height:325px!important}
+ .home-logo-title{font-size:34px!important;letter-spacing:.09em!important}
+ .home-logo-sub{font-size:14px!important;letter-spacing:.30em!important}
+ .home-champion{font-size:9px!important;letter-spacing:.1em!important;white-space:normal!important;max-width:280px;line-height:1.5}
 }
-.home-stars{
-  gap:18px!important;
-  margin-bottom:24px!important;
+
+/* =========================================================
+   PATCH LOGO HOME - VERSIONE ELEGANTE E LEGGIBILE
+   Solo tipografia del logo: nessuna immagine aggiunta.
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap');
+
+/* HOME LOGO */
+#homePage .text-logo-home{
+  min-height:345px!important;
+  padding:22px 8px 18px!important;
+  justify-content:center!important;
+  gap:0!important;
 }
-.home-logo-title{
-  font-family:"Playfair Display",Georgia,serif!important;
-  font-size:clamp(42px,11vw,66px)!important;
+#homePage .home-stars{
+  margin:0 0 20px!important;
+  font-size:30px!important;
+  gap:13px!important;
+  letter-spacing:0!important;
+}
+#homePage .home-logo-title{
+  font-family:'Cinzel', Georgia, serif!important;
+  font-size:clamp(32px,8.8vw,56px)!important;
   font-weight:600!important;
-  letter-spacing:.12em!important;
-  line-height:1.08!important;
-  margin-left:.12em!important;
-  white-space:normal!important;
-  color:#e7c36c!important;
+  line-height:1.15!important;
+  letter-spacing:.075em!important;
+  word-spacing:.12em!important;
+  color:#e8c46d!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.16),0 8px 24px rgba(0,0,0,.38)!important;
+  white-space:nowrap!important;
+  margin:0!important;
 }
-.home-esg-row{
-  max-width:520px!important;
-  gap:18px!important;
-  margin:22px auto 15px!important;
+#homePage .home-esg-row{
+  width:100%!important;
+  max-width:470px!important;
+  margin:20px auto 15px!important;
+  gap:14px!important;
 }
-.home-esg-row b{
-  font-family:"Cinzel",Georgia,serif!important;
-  font-size:clamp(17px,4.5vw,25px)!important;
+#homePage .home-esg-row span{
+  height:1px!important;
+  background:linear-gradient(90deg,transparent,#c7a35b,#f0d78e)!important;
+}
+#homePage .home-esg-row span:last-child{
+  background:linear-gradient(90deg,#f0d78e,#c7a35b,transparent)!important;
+}
+#homePage .home-esg-row b{
+  font-family:'Cinzel', Georgia, serif!important;
+  font-size:clamp(19px,5vw,28px)!important;
   font-weight:600!important;
   letter-spacing:.24em!important;
-  margin-left:.24em!important;
+  color:#e5bd62!important;
+  padding-left:.24em!important;
+  line-height:1!important;
+  text-shadow:0 1px 8px rgba(199,163,91,.15)!important;
 }
-.home-logo-sub{
-  font-family:"Playfair Display",Georgia,serif!important;
-  font-size:clamp(15px,3.8vw,21px)!important;
+#homePage .home-logo-sub{
+  font-family:'Cinzel', Georgia, serif!important;
+  font-size:clamp(13px,3.6vw,20px)!important;
+  font-weight:500!important;
+  letter-spacing:.38em!important;
+  padding-left:.38em!important;
+  color:#d9b663!important;
+  margin:0!important;
+  line-height:1.4!important;
+}
+#homePage .home-champion{
+  font-family:'Cinzel', Georgia, serif!important;
+  font-size:clamp(9px,2.45vw,13px)!important;
+  font-weight:500!important;
+  letter-spacing:.14em!important;
+  color:#e0c37d!important;
+  margin:26px auto 0!important;
+  padding:10px 14px!important;
+  border-top:1px solid rgba(199,163,91,.28)!important;
+  border-bottom:1px solid rgba(199,163,91,.28)!important;
+  width:max-content!important;
+  max-width:100%!important;
+  white-space:nowrap!important;
+}
+
+/* Piccolo logo nel menu: elegante ma separato e leggibile */
+.topbar .brand{
+  font-family:'Cinzel', Georgia, serif!important;
   font-weight:600!important;
-  letter-spacing:.32em!important;
-  margin-left:.32em!important;
-  color:#dcbf75!important;
+  letter-spacing:.11em!important;
 }
-.home-champion{
-  font-family:"Cinzel",Georgia,serif!important;
-  font-size:clamp(9px,2.6vw,13px)!important;
-  letter-spacing:.16em!important;
-  margin-top:28px!important;
-  padding:11px 14px!important;
-  white-space:normal!important;
-  text-align:center!important;
-  line-height:1.55!important;
+.brand-divider b,
+.topbar .brand-sub{
+  font-family:'Cinzel', Georgia, serif!important;
 }
-/* Anche la piccola scritta in alto resta elegante e ben separata */
-.brand{
-  font-family:"Playfair Display",Georgia,serif!important;
-  letter-spacing:.13em!important;
-  margin-left:.13em!important;
-  font-weight:600!important;
-}
-.brand-sub{
-  font-family:"Cinzel",Georgia,serif!important;
-  letter-spacing:.16em!important;
-}
+
 @media(max-width:430px){
-  .text-logo-home{min-height:340px!important;padding-top:8px!important}
-  .home-stars{font-size:27px!important;gap:14px!important;margin-bottom:20px!important}
-  .home-logo-title{font-size:42px!important;letter-spacing:.09em!important;margin-left:.09em!important}
-  .home-esg-row{gap:10px!important;margin:19px auto 13px!important}
-  .home-esg-row b{font-size:17px!important;letter-spacing:.18em!important;margin-left:.18em!important}
-  .home-logo-sub{font-size:14px!important;letter-spacing:.25em!important;margin-left:.25em!important}
-  .home-champion{font-size:9px!important;letter-spacing:.11em!important;margin-top:23px!important;padding:9px 6px!important}
+  #homePage .text-logo-home{min-height:320px!important;padding:18px 4px 14px!important}
+  #homePage .home-stars{font-size:27px!important;margin-bottom:17px!important}
+  #homePage .home-logo-title{font-size:33px!important;letter-spacing:.065em!important}
+  #homePage .home-esg-row{margin:18px auto 13px!important;gap:10px!important}
+  #homePage .home-esg-row b{font-size:19px!important;letter-spacing:.20em!important;padding-left:.20em!important}
+  #homePage .home-logo-sub{font-size:13px!important;letter-spacing:.31em!important;padding-left:.31em!important}
+  #homePage .home-champion{font-size:8.5px!important;letter-spacing:.095em!important;margin-top:22px!important;padding:9px 7px!important}
 }

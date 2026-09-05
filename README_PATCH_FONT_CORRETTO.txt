@@ -1,0 +1,1 @@
+Patch corretta: logo testuale elegante in Home e intestazione, nessuna immagine PNG nel logo della pagina. Migliorata spaziatura E.S.G. e PARRUCCHIERI. Nessuna modifica a database, agenda, login o grafica generale.
