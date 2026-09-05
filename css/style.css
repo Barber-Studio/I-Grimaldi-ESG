@@ -106,3 +106,73 @@ body.session-active #authModal{display:none!important}
 .home-logo-sub{font-family:"Cinzel",Georgia,serif;font-size:clamp(16px,4vw,23px);letter-spacing:.36em;color:#d9b663;margin-left:.36em}
 .home-champion{margin-top:30px;font-family:"Cinzel",Georgia,serif;font-size:clamp(10px,2.8vw,14px);font-weight:600;letter-spacing:.18em;color:var(--gold2);padding:11px 18px;border-top:1px solid rgba(199,163,91,.22);border-bottom:1px solid rgba(199,163,91,.22);white-space:nowrap}
 @media(max-width:430px){.text-logo-home{min-height:330px;padding-top:2px}.home-stars{font-size:28px;gap:12px;margin-bottom:22px}.home-logo-title{font-size:38px;letter-spacing:.06em}.home-esg-row{gap:10px;margin:20px auto 14px}.home-logo-sub{font-size:15px;letter-spacing:.28em;margin-left:.28em}.home-champion{font-size:9px;letter-spacing:.12em;margin-top:24px;padding:10px 8px}.hero-card{padding-top:32px}}
+
+/* PATCH LOGO TIPOGRAFICO FINALE — più elegante, leggibile e coerente */
+.text-logo-home{
+  min-height:370px!important;
+  padding:18px 0 12px!important;
+}
+.home-stars{
+  gap:18px!important;
+  margin-bottom:24px!important;
+}
+.home-logo-title{
+  font-family:"Playfair Display",Georgia,serif!important;
+  font-size:clamp(42px,11vw,66px)!important;
+  font-weight:600!important;
+  letter-spacing:.12em!important;
+  line-height:1.08!important;
+  margin-left:.12em!important;
+  white-space:normal!important;
+  color:#e7c36c!important;
+}
+.home-esg-row{
+  max-width:520px!important;
+  gap:18px!important;
+  margin:22px auto 15px!important;
+}
+.home-esg-row b{
+  font-family:"Cinzel",Georgia,serif!important;
+  font-size:clamp(17px,4.5vw,25px)!important;
+  font-weight:600!important;
+  letter-spacing:.24em!important;
+  margin-left:.24em!important;
+}
+.home-logo-sub{
+  font-family:"Playfair Display",Georgia,serif!important;
+  font-size:clamp(15px,3.8vw,21px)!important;
+  font-weight:600!important;
+  letter-spacing:.32em!important;
+  margin-left:.32em!important;
+  color:#dcbf75!important;
+}
+.home-champion{
+  font-family:"Cinzel",Georgia,serif!important;
+  font-size:clamp(9px,2.6vw,13px)!important;
+  letter-spacing:.16em!important;
+  margin-top:28px!important;
+  padding:11px 14px!important;
+  white-space:normal!important;
+  text-align:center!important;
+  line-height:1.55!important;
+}
+/* Anche la piccola scritta in alto resta elegante e ben separata */
+.brand{
+  font-family:"Playfair Display",Georgia,serif!important;
+  letter-spacing:.13em!important;
+  margin-left:.13em!important;
+  font-weight:600!important;
+}
+.brand-sub{
+  font-family:"Cinzel",Georgia,serif!important;
+  letter-spacing:.16em!important;
+}
+@media(max-width:430px){
+  .text-logo-home{min-height:340px!important;padding-top:8px!important}
+  .home-stars{font-size:27px!important;gap:14px!important;margin-bottom:20px!important}
+  .home-logo-title{font-size:42px!important;letter-spacing:.09em!important;margin-left:.09em!important}
+  .home-esg-row{gap:10px!important;margin:19px auto 13px!important}
+  .home-esg-row b{font-size:17px!important;letter-spacing:.18em!important;margin-left:.18em!important}
+  .home-logo-sub{font-size:14px!important;letter-spacing:.25em!important;margin-left:.25em!important}
+  .home-champion{font-size:9px!important;letter-spacing:.11em!important;margin-top:23px!important;padding:9px 6px!important}
+}
