@@ -22,7 +22,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
 function q(id){return document.getElementById(id)}
 function localDateString(date){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");return `${y}-${m}-${d}`}
 function normalizePhone(v){return String(v||"").replace(/[^0-9]/g,"")}
-function isAdmin(){return !!(currentUser&&((currentUser.role||"").toLowerCase()==="admin"||normalizePhone(currentUser.customer_phone)==="3791415355"))}
+function isAdmin(){
+  if(!currentUser)return false;
+  const phones=[currentUser.customer_phone,currentUser.phone,currentUser.phone_number,currentUser.mobile,currentUser.numero].map(normalizePhone);
+  return (currentUser.role||"").toLowerCase()==="admin" || phones.includes("3791415355");
+}
 function escapeHtml(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 function formatDate(d){return d?new Date(d+"T12:00:00").toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long",year:"numeric"}):"-"}
 
@@ -39,18 +43,51 @@ async function loadUserBookings(){const box=q("bookingsList");if(!currentUser){b
 async function cancelBooking(id){if(!confirm("Vuoi davvero annullare questa prenotazione?"))return;try{const {error}=await supabaseClient.from("appointments").delete().eq("id",id);if(error)throw error;showToast("Prenotazione annullata","success");loadUserBookings()}catch(e){showToast("Errore durante l'annullamento","error")}}
 
 function openAuth(){q("authModal").classList.remove("hidden")}function closeAuth(){q("authModal").classList.add("hidden")}function openRegister(){closeAuth();q("registerModal").classList.remove("hidden")}function closeRegister(){q("registerModal").classList.add("hidden")}
-async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
-async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
-async function restoreSession(){try{const saved=localStorage.getItem("grimaldiUser");if(saved)currentUser=JSON.parse(saved);updateUserInterface()}catch(e){localStorage.removeItem("grimaldiUser")}}
-function logoutUser(){currentUser=null;localStorage.removeItem("grimaldiUser");updateUserInterface();showPage("homePage");showToast("Hai effettuato il logout","success")}
-function updateUserInterface(){const loginBtn=q("loginProfileButton"),logoutBtn=q("logoutButton"),name=q("profileName"),phone=q("profilePhone"),initial=q("profileInitial");if(currentUser){name.textContent=currentUser.customer_name||"Cliente";phone.textContent=currentUser.customer_phone||"";initial.textContent=(currentUser.customer_name||"C").charAt(0).toUpperCase();loginBtn.classList.add("hidden");logoutBtn.classList.remove("hidden")}else{name.textContent="Ospite";phone.textContent="Accedi per gestire il tuo profilo";initial.textContent="G";loginBtn.classList.remove("hidden");logoutBtn.classList.add("hidden")}setupAdminAgendaNav()}
-function setupAdminAgendaNav(){const nav=document.querySelector(".bottom-nav");if(!nav)return;let agendaBtn=q("agendaNavButton"),apptBtn=nav.querySelector('[data-page="appointmentsPage"]');if(isAdmin()){if(!agendaBtn){agendaBtn=document.createElement("button");agendaBtn.id="agendaNavButton";agendaBtn.dataset.page="agendaPage";agendaBtn.innerHTML="<span>▦</span><small>Agenda</small>";agendaBtn.onclick=()=>showPage("agendaPage");if(apptBtn)nav.replaceChild(agendaBtn,apptBtn);else nav.appendChild(agendaBtn)}ensureAgendaPage()}else if(agendaBtn){const b=document.createElement("button");b.dataset.page="appointmentsPage";b.innerHTML="<span>◷</span><small>Appuntamenti</small>";b.onclick=()=>showPage("appointmentsPage");nav.replaceChild(b,agendaBtn)}}
+async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
+async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
+async function restoreSession(){
+  try{
+    // Mantiene l'accesso anche dopo chiusura/riapertura della PWA su iPhone.
+    const saved=localStorage.getItem("grimaldiUser")||sessionStorage.getItem("grimaldiUser")||localStorage.getItem("igrimaldi_session");
+    if(saved){
+      const user=JSON.parse(saved);
+      if(user&&user.id){
+        currentUser=user;
+        localStorage.setItem("grimaldiUser",JSON.stringify(user));
+        localStorage.setItem("igrimaldi_session",JSON.stringify(user));
+      }
+    }
+  }catch(e){
+    console.warn("Sessione locale non valida",e);
+    localStorage.removeItem("grimaldiUser");
+    localStorage.removeItem("igrimaldi_session");
+    sessionStorage.removeItem("grimaldiUser");
+  }
+  updateUserInterface();
+}
+function logoutUser(){currentUser=null;localStorage.removeItem("grimaldiUser");localStorage.removeItem("igrimaldi_session");sessionStorage.removeItem("grimaldiUser");updateUserInterface();showPage("homePage");showToast("Hai effettuato il logout","success")}
+function updateUserInterface(){document.body.classList.toggle("session-active",!!currentUser);const loginBtn=q("loginProfileButton"),logoutBtn=q("logoutButton"),name=q("profileName"),phone=q("profilePhone"),initial=q("profileInitial");if(currentUser){name.textContent=currentUser.customer_name||"Cliente";phone.textContent=currentUser.customer_phone||"";initial.textContent=(currentUser.customer_name||"C").charAt(0).toUpperCase();loginBtn.classList.add("hidden");logoutBtn.classList.remove("hidden")}else{name.textContent="Ospite";phone.textContent="Accedi per gestire il tuo profilo";initial.textContent="G";loginBtn.classList.remove("hidden");logoutBtn.classList.add("hidden")}setupAdminAgendaNav()}
+function setupAdminAgendaNav(){
+ const nav=document.querySelector(".bottom-nav"); if(!nav)return;
+ let agendaBtn=q("agendaNavButton"), apptBtn=nav.querySelector('[data-page="appointmentsPage"]');
+ if(isAdmin()){
+   ensureAgendaPage();
+   if(!agendaBtn){
+     agendaBtn=document.createElement("button"); agendaBtn.id="agendaNavButton"; agendaBtn.dataset.page="agendaPage";
+     agendaBtn.innerHTML="<span>▦</span><small>Agenda</small>"; agendaBtn.onclick=()=>showPage("agendaPage");
+     if(apptBtn) nav.replaceChild(agendaBtn,apptBtn); else nav.insertBefore(agendaBtn,nav.children[2]||null);
+   }
+ } else if(agendaBtn){
+   const b=document.createElement("button"); b.dataset.page="appointmentsPage"; b.innerHTML="<span>◷</span><small>Appuntamenti</small>"; b.onclick=()=>showPage("appointmentsPage"); nav.replaceChild(b,agendaBtn);
+ }
+}
 
 function ensureAgendaPage(){if(q("agendaPage"))return;const section=document.createElement("section");section.id="agendaPage";section.className="page";section.innerHTML=`
 <div class="page-heading"><span>GESTIONE PROFESSIONALE</span><h2>Agenda</h2><p>Calendario, clienti, incassi e gestione completa.</p></div>
 <div class="admin-actions"><button onclick="openManualBooking()">＋ AGGIUNGI CLIENTE</button><button onclick="openBlockModal()">⊘ BLOCCA ORARIO</button></div>
 <div class="card calendar-card"><div class="booking-month-nav"><button id="agendaPrev">‹</button><h3 id="agendaMonthTitle"></h3><button id="agendaNext">›</button></div><div class="booking-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div><div id="agendaCalendar" class="booking-calendar agenda-calendar"></div></div>
 <div class="admin-summary"><div class="admin-stat"><small>APPUNTAMENTI</small><b id="agendaCount">0</b></div><div class="admin-stat"><small>INCASSO PREVISTO</small><b id="agendaRevenue">€0</b></div></div>
+<div class="agenda-tools"><button type="button" onclick="openManualBooking()">＋ AGGIUNGI CLIENTE</button><button type="button" onclick="openBlockModal()">⊘ BLOCCA ORARIO</button></div>
 <div class="agenda-day-title"><span>PROGRAMMA GIORNALIERO</span><h3 id="agendaDayTitle">Agenda del giorno</h3></div><div id="agendaSlots" class="agenda-slots"></div>`;
 document.querySelector(".main-content").appendChild(section);q("agendaPrev").onclick=()=>{agendaViewDate.setMonth(agendaViewDate.getMonth()-1);renderAgendaCalendar()};q("agendaNext").onclick=()=>{agendaViewDate.setMonth(agendaViewDate.getMonth()+1);renderAgendaCalendar()}}
 async function loadAgenda(){if(!isAdmin()||!supabaseClient)return;ensureAgendaPage();try{const [{data:a,error:e1},{data:b,error:e2}]=await Promise.all([supabaseClient.from("appointments").select("*").order("appointment_date").order("appointment_time"),supabaseClient.from("availability_blocks").select("*")]);if(e1)throw e1;if(e2)console.warn(e2);agendaAppointments=a||[];agendaBlocks=b||[];renderAgendaCalendar();renderAgendaSlots()}catch(e){console.error(e);showToast("Errore caricamento agenda","error")}}

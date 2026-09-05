@@ -53,3 +53,43 @@
 #agendaPage .page-heading h2,#agendaDayTitle{font-family:"Playfair Display",Georgia,serif}
 .modal-box select{width:100%;margin-top:11px;background:#0d0d0f;border:1px solid #333238;color:#fff;border-radius:14px;padding:16px;font-size:16px;outline:none}
 @media(max-width:380px){.slot-actions button{width:30px;height:30px;font-size:15px}.agenda-slot{grid-template-columns:44px minmax(0,1fr) auto!important}.hero-logo-image{width:100%}}
+
+/* PATCH AGENDA DEFINITIVA - grafica invariata */
+.agenda-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 18px}.agenda-tools button{min-height:46px;border-radius:14px;border:1px solid rgba(199,163,91,.32);background:#171511;color:#e6c777;font-family:"Cinzel",Georgia,serif;font-size:10px;letter-spacing:.08em;font-weight:700}.agenda-tools button:active{transform:scale(.98)}
+.agenda-slot{min-height:68px}.agenda-slot .slot-actions{padding-left:4px}.agenda-slot.booked .slot-actions button:first-child::after{content:""}.agenda-slot.free{border-color:rgba(255,255,255,.08)}
+.admin-summary .admin-stat small{font-family:"Cinzel",Georgia,serif!important}.admin-summary .admin-stat b{font-family:"Playfair Display",Georgia,serif!important}.service-card,.service-name,.service-price,.booking-summary,.booking-summary b,.booking-summary small{font-family:inherit}.service-card{font-family:"Playfair Display",Georgia,serif!important}.service-price{font-family:"Cinzel",Georgia,serif!important}
+@media(max-width:390px){.agenda-tools button{font-size:9px;padding:8px}.agenda-slot small{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+
+/* AGENDA PREMIUM — stesso linguaggio visivo del resto del sito, nessuna modifica alla grafica generale */
+#agendaPage{padding-bottom:110px}
+#agendaPage .page-heading{margin-bottom:18px}
+#agendaPage .page-heading h2{font-family:"Cinzel",Georgia,serif!important;letter-spacing:.045em;font-weight:600}
+#agendaPage .page-heading p{font-family:"Playfair Display",Georgia,serif;color:var(--muted);font-style:italic}
+#agendaPage .calendar-card,
+#agendaPage .admin-stat,
+#agendaPage .agenda-slot{background:var(--card)!important;border:1px solid var(--line)!important;box-shadow:none}
+#agendaPage .calendar-card{border-radius:22px!important;padding:18px!important}
+#agendaPage .booking-month-nav h3,
+#agendaPage #agendaDayTitle{font-family:"Cinzel",Georgia,serif!important;font-weight:600;letter-spacing:.035em}
+#agendaPage .booking-weekdays span{font-family:"Cinzel",Georgia,serif!important;font-size:9px;letter-spacing:.08em}
+#agendaPage .admin-summary{gap:12px;margin:16px 0}
+#agendaPage .admin-stat{border-radius:18px!important;padding:17px 15px!important;min-height:96px!important}
+#agendaPage .admin-stat small{font-family:"Cinzel",Georgia,serif!important;font-size:9px!important;letter-spacing:.11em!important;color:var(--muted)!important}
+#agendaPage .admin-stat b,#agendaPage #agendaCount,#agendaPage #agendaRevenue{font-family:"Playfair Display",Georgia,serif!important;font-size:26px!important;font-weight:600!important;color:var(--gold2)!important}
+#agendaPage .agenda-tools button{background:var(--card)!important;border:1px solid var(--line)!important;border-radius:16px!important;font-family:"Cinzel",Georgia,serif!important;color:var(--gold2)!important;box-shadow:none}
+#agendaPage .agenda-day-title{padding:16px 2px 8px;border-bottom:1px solid var(--line)}
+#agendaPage .agenda-day-title span{font-family:"Cinzel",Georgia,serif!important;font-size:9px!important;letter-spacing:.14em}
+#agendaPage .agenda-slots{gap:10px;margin-top:12px}
+#agendaPage .agenda-slot{border-radius:18px!important;padding:15px!important;min-height:76px!important}
+#agendaPage .agenda-slot time{font-family:"Cinzel",Georgia,serif!important;font-size:13px;letter-spacing:.03em;color:var(--gold2)!important}
+#agendaPage .agenda-slot b{font-family:"Playfair Display",Georgia,serif!important;font-size:16px!important;font-weight:600!important;letter-spacing:.01em}
+#agendaPage .agenda-slot small{font-family:inherit!important;font-size:11px!important;line-height:1.45;color:var(--muted)!important}
+#agendaPage .slot-actions button{background:transparent!important;border:1px solid rgba(199,163,91,.28)!important;border-radius:10px!important;color:var(--gold2)!important}
+#agendaPage .agenda-slot.free{border-style:dashed!important}
+#agendaPage .agenda-slot.blocked{background:rgba(255,255,255,.018)!important}
+#agendaPage .agenda-calendar .calendar-day{font-family:"Playfair Display",Georgia,serif!important}
+#agendaPage .agenda-calendar .calendar-day.selected{background:var(--gold)!important;color:#111!important}
+
+/* Login persistente PWA: l'utente non vede il popup ad ogni apertura */
+body.session-active #authModal{display:none!important}
