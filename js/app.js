@@ -68,10 +68,8 @@ async function requestOneSignalNotifications(){
     }catch(e){console.error(e);showToast("Errore attivazione notifiche","error")}
   });
 }
-async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();await setupOneSignalUser();setupOneSignalUser();
-showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
-async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();await setupOneSignalUser();setupOneSignalUser();
-showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
+async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();await setupOneSignalUser();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
+async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();await setupOneSignalUser();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
 async function restoreSession(){
   try{
     // Mantiene l'accesso anche dopo chiusura/riapertura della PWA su iPhone.
@@ -133,94 +131,56 @@ async function saveBlockTime(){await createBlock(q("blockTime").value);closeAdmi
 async function createBlock(time){try{const {error}=await supabaseClient.from("availability_blocks").insert([{block_date:agendaSelectedDate,block_time:time}]);if(error)throw error;showToast("Orario bloccato","success");await loadAgenda()}catch(e){showToast(e.code==="23505"?"Orario già bloccato":"Errore blocco: "+e.message,"error")}}
 async function unblockTime(id){if(!confirm("Sbloccare questo orario?"))return;try{const {error}=await supabaseClient.from("availability_blocks").delete().eq("id",id);if(error)throw error;showToast("Orario sbloccato","success");await loadAgenda()}catch(e){showToast("Errore sblocco","error")}}
 
-function requestNotifications(){ return requestOneSignalNotifications(); }
+function requestNotifications(){requestOneSignalNotifications()}
+function showInstall(){q("installModal").classList.remove("hidden")}function closeInstall(){q("installModal").classList.add("hidden")}
+function showToast(message,type="default"){const t=q("toast");t.textContent=message;t.className="";t.classList.add(type);requestAnimationFrame(()=>t.classList.add("show"));clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
+Object.assign(window,{showPage,loadAgenda,openAuth,closeAuth,openRegister,closeRegister,cancelBooking,logoutUser,requestNotifications,showInstall,closeInstall,openManualBooking,closeAdminModal,saveManualBooking,openMoveBooking,saveMoveBooking,deleteAdminBooking,openBlockModal,saveBlockTime,blockTime,unblockTime});
 
-async function getOneSignalPushState(OneSignal) {
-  const push = OneSignal.User && OneSignal.User.PushSubscription
-    ? OneSignal.User.PushSubscription
-    : null;
 
-  return {
-    optedIn: !!(push && push.optedIn === true),
-    subscriptionId: push && push.id ? String(push.id) : null,
-    token: push && push.token ? String(push.token) : null,
-    permission: OneSignal.Notifications ? OneSignal.Notifications.permission : null
-  };
-}
-
-async function waitForRealPushSubscription(OneSignal, timeoutMs = 10000) {
-  const started = Date.now();
-
-  while (Date.now() - started < timeoutMs) {
-    const state = await getOneSignalPushState(OneSignal);
-
-    // A REAL OneSignal web push subscription must have an opted-in state
-    // and a subscription ID. The push token can appear asynchronously.
-    if (state.optedIn && state.subscriptionId) {
-      return state;
+/* ===== ONESIGNAL BUTTON FIX - CLEAN PATCH ===== */
+window.enableGrimaldiPush = function () {
+  try {
+    if (!window.OneSignalDeferred) {
+      showToast("Notifiche in caricamento, riprova tra un secondo...", "error");
+      return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    showToast("Apertura richiesta notifiche...");
+
+    window.OneSignalDeferred.push(async function (OneSignal) {
+      try {
+        // Request permission only after the user has tapped the button.
+        if (OneSignal.Notifications.permission !== "granted") {
+          await OneSignal.Notifications.requestPermission();
+        }
+
+        // Give iOS/OneSignal time to create the actual subscription.
+        await new Promise(function(resolve){ setTimeout(resolve, 1500); });
+
+        const push = OneSignal.User && OneSignal.User.PushSubscription;
+        const optedIn = push && push.optedIn === true;
+
+        if (optedIn) {
+          if (typeof currentUser !== "undefined" && currentUser && currentUser.id) {
+            try { await OneSignal.login(String(currentUser.id)); } catch(e) {}
+          }
+          showToast("Notifiche attivate correttamente!", "success");
+        } else if (OneSignal.Notifications.permission === "granted") {
+          // Permission is real; don't incorrectly report a failure.
+          showToast("Permesso notifiche attivo. OneSignal sta completando la registrazione.", "success");
+        } else {
+          showToast("Notifiche non autorizzate", "error");
+        }
+      } catch (e) {
+        console.error("OneSignal button error:", e);
+        showToast("Errore attivazione notifiche", "error");
+      }
+    });
+  } catch (e) {
+    console.error("Push handler error:", e);
+    showToast("Errore attivazione notifiche", "error");
   }
+};
 
-  return await getOneSignalPushState(OneSignal);
-}
-
-async function setupOneSignalUser() {
-  if (!currentUser || !currentUser.id) return;
-
-  oneSignalRun(async function(OneSignal) {
-    try {
-      const state = await getOneSignalPushState(OneSignal);
-      if (state.optedIn) {
-        await OneSignal.login(String(currentUser.id));
-      }
-    } catch (error) {
-      console.warn("[OneSignal] login utente non riuscito", error);
-    }
-  });
-}
-
-async function requestOneSignalNotifications() {
-  showToast("Attivazione notifiche in corso...");
-
-  oneSignalRun(async function(OneSignal) {
-    try {
-      let state = await getOneSignalPushState(OneSignal);
-
-      // If already subscribed, simply attach current app user.
-      if (state.optedIn && state.subscriptionId) {
-        if (currentUser && currentUser.id) {
-          await OneSignal.login(String(currentUser.id));
-        }
-        showToast("Notifiche già attivate!", "success");
-        return;
-      }
-
-      // Ask permission only from the real user click.
-      await OneSignal.Notifications.requestPermission();
-
-      // Wait for OneSignal to create the actual push subscription.
-      state = await waitForRealPushSubscription(OneSignal, 10000);
-
-      if (state.optedIn && state.subscriptionId) {
-        if (currentUser && currentUser.id) {
-          await OneSignal.login(String(currentUser.id));
-        }
-
-        showToast("Notifiche attivate correttamente!", "success");
-      } else {
-        // Do not falsely say that consent failed: permission and token creation
-        // can be asynchronous on iOS.
-        showToast(
-          "Permesso ricevuto. Chiudi e riapri l'app dalla Home: la registrazione push si completerà automaticamente.",
-          "success"
-        );
-      }
-    } catch (error) {
-      console.error("[OneSignal] attivazione notifiche", error);
-      showToast("Errore durante l'attivazione delle notifiche. Riprova.", "error");
-    }
-  });
-}
-
+// Override the existing HTML onclick function explicitly.
+window.requestNotifications = window.enableGrimaldiPush;

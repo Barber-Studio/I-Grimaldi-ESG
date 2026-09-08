@@ -10,7 +10,6 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <!-- OneSignal Push Notifications -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
@@ -19,18 +18,15 @@ window.OneSignalDeferred.push(async function(OneSignal) {
   try {
     await OneSignal.init({
       appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
-      serviceWorkerPath: "OneSignalSDKWorker.js",
-      autoResubscribe: true
+      serviceWorkerPath: "OneSignalSDKWorker.js"
     });
     window.oneSignalReady = true;
-    console.log("[OneSignal] SDK pronto");
-  } catch (error) {
+  } catch (e) {
     window.oneSignalReady = false;
-    console.error("[OneSignal] init error", error);
+    console.error("OneSignal init:", e);
   }
 });
 </script>
-
 </head>
 <body>
 <div id="loadingScreen" class="loading-screen">
@@ -127,7 +123,7 @@ window.OneSignalDeferred.push(async function(OneSignal) {
         <h3 id="profileName">Ospite</h3>
         <p id="profilePhone">Accedi per gestire il tuo profilo</p>
       </div>
-      <button class="profile-row" onclick="requestNotifications()"><span class="bell-real"><svg viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></div><i>›</i></button>
+      <button class="profile-row" onclick="window.enableGrimaldiPush && window.enableGrimaldiPush()"><span class="bell-real"><svg viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></div><i>›</i></button>
       <button class="profile-row" onclick="showInstall()"><span>⌂</span><div><b>Installa l'app</b><small>Aggiungi I Grimaldi alla schermata Home</small></div><i>›</i></button>
       <button id="loginProfileButton" class="outline-button" onclick="openAuth()">ACCEDI O REGISTRATI</button>
       <button id="logoutButton" class="danger-button hidden" onclick="logoutUser()">ESCI</button>
