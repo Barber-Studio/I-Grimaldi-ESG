@@ -43,57 +43,57 @@ async function loadUserBookings(){const box=q("bookingsList");if(!currentUser){b
 async function cancelBooking(id){if(!confirm("Vuoi davvero annullare questa prenotazione?"))return;try{const {error}=await supabaseClient.from("appointments").delete().eq("id",id);if(error)throw error;showToast("Prenotazione annullata","success");loadUserBookings()}catch(e){showToast("Errore durante l'annullamento","error")}}
 
 function openAuth(){q("authModal").classList.remove("hidden")}function closeAuth(){q("authModal").classList.add("hidden")}function openRegister(){closeAuth();q("registerModal").classList.remove("hidden")}function closeRegister(){q("registerModal").classList.add("hidden")}
-// ONESIGNAL
+// ONESIGNAL - SAFE IOS VERSION
 const ONESIGNAL_APP_ID="864d0967-8a2d-4fe1-8a19-e95fe866b28b";
+
+function withOneSignal(callback){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(callback);
+}
 
 async function setupOneSignalUser(){
   if(!currentUser||!currentUser.id)return;
-  window.OneSignalDeferred=window.OneSignalDeferred||[];
-  window.OneSignalDeferred.push(async function(OneSignal){
+  withOneSignal(async function(OneSignal){
     try{
-      if(OneSignal.User && OneSignal.User.PushSubscription && OneSignal.User.PushSubscription.optedIn){
-        await OneSignal.login(String(currentUser.id));
-      }
-    }catch(e){console.error("Errore collegamento OneSignal:",e)}
+      await OneSignal.login(String(currentUser.id));
+    }catch(e){console.warn("OneSignal login:",e)}
   });
 }
 
 async function logoutOneSignalUser(){
-  window.OneSignalDeferred=window.OneSignalDeferred||[];
-  window.OneSignalDeferred.push(async function(OneSignal){
-    try{await OneSignal.logout()}catch(e){console.warn(e)}
+  withOneSignal(async function(OneSignal){
+    try{await OneSignal.logout()}catch(e){}
   });
 }
 
 async function requestOneSignalNotifications(){
-  window.OneSignalDeferred=window.OneSignalDeferred||[];
-  window.OneSignalDeferred.push(async function(OneSignal){
+  showToast("Richiesta notifiche...");
+  withOneSignal(async function(OneSignal){
     try{
-      // Se è già attivo non chiedere di nuovo e considera il dispositivo correttamente configurato
-      if(OneSignal.User && OneSignal.User.PushSubscription && OneSignal.User.PushSubscription.optedIn===true){
-        if(currentUser&&currentUser.id) await OneSignal.login(String(currentUser.id));
-        showToast("Notifiche già attivate!","success");
-        return;
+      const alreadyAllowed =
+        OneSignal.Notifications.permission === true ||
+        (OneSignal.User && OneSignal.User.PushSubscription &&
+         OneSignal.User.PushSubscription.optedIn === true);
+
+      if(!alreadyAllowed){
+        await OneSignal.Notifications.requestPermission();
+        await new Promise(r=>setTimeout(r,500));
       }
 
-      await OneSignal.Notifications.requestPermission();
+      const allowed =
+        OneSignal.Notifications.permission === true ||
+        (OneSignal.User && OneSignal.User.PushSubscription &&
+         OneSignal.User.PushSubscription.optedIn === true);
 
-      // Lasciamo a OneSignal un istante per aggiornare lo stato su iOS
-      await new Promise(resolve=>setTimeout(resolve,700));
-
-      const optedIn=OneSignal.User &&
-        OneSignal.User.PushSubscription &&
-        OneSignal.User.PushSubscription.optedIn===true;
-
-      if(optedIn){
+      if(allowed){
         if(currentUser&&currentUser.id) await OneSignal.login(String(currentUser.id));
         showToast("Notifiche attivate correttamente!","success");
       }else{
-        showToast("Permesso ricevuto. Riavvia l'app dalla Home e riprova.","error");
+        showToast("Notifiche non disponibili. Apri l'app dalla Home dell'iPhone.","error");
       }
     }catch(e){
-      console.error("Errore OneSignal:",e);
-      showToast("Errore durante l'attivazione delle notifiche","error");
+      console.error("OneSignal:",e);
+      showToast("Errore notifiche. Riprova tra qualche secondo.","error");
     }
   });
 }
@@ -137,53 +137,12 @@ Object.assign(window,{showPage,loadAgenda,openAuth,closeAuth,openRegister,closeR
 })();
 
 
-// =====================================================
-// PWA AUTO UPDATE - controlla automaticamente nuove versioni
-// =====================================================
-(function autoUpdatePWA(){
-  const VERSION_URL = "./version.json";
-  let currentVersion = null;
 
-  async function checkForUpdate(){
-    try{
-      const res = await fetch(VERSION_URL + "?t=" + Date.now(), {
-        cache: "no-store"
-      });
-      if(!res.ok) return;
-      const remote = await res.json();
-
-      if(currentVersion === null){
-        currentVersion = remote.version;
-        return;
-      }
-
-      if(remote.version && remote.version !== currentVersion){
-        currentVersion = remote.version;
-        // nuova versione: aggiorna automaticamente senza modificare grafica
-        window.location.reload();
-      }
-    }catch(e){
-      console.warn("Controllo aggiornamenti non disponibile", e);
-    }
+// PWA UPDATE CHECK - SAFE VERSION
+window.addEventListener("load",()=>{
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.getRegistrations()
+      .then(regs=>regs.forEach(reg=>reg.update().catch(()=>{})))
+      .catch(()=>{});
   }
-
-  window.addEventListener("load", async function(){
-    await checkForUpdate();
-    if("serviceWorker" in navigator){
-      try{
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for(const reg of regs){
-          try{ await reg.update(); }catch(e){}
-        }
-      }catch(e){}
-    }
-  });
-
-  // controllo ogni 5 minuti mentre l'app è aperta
-  setInterval(checkForUpdate, 5 * 60 * 1000);
-
-  // ricontrolla quando l'utente torna nell'app
-  document.addEventListener("visibilitychange", function(){
-    if(!document.hidden) checkForUpdate();
-  });
-})();
+});
