@@ -11,7 +11,7 @@ const services=[
 {id:"colore_barba",name:"Colore Barba",price:10,duration:30},
 {id:"fiala",name:"Fiala",price:5,duration:30}
 ];
-const TIMES=["09:00","09:30","10:00","10:30","11:00","11:30","12:00","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
+const TIMES=["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30","21:00"];
 let currentUser=null,selectedService=null,selectedDate=null,selectedTime=null,toastTimer=null,bookingViewDate=new Date();
 let agendaViewDate=new Date(),agendaSelectedDate=localDateString(new Date()),agendaAppointments=[],agendaBlocks=[];
 
@@ -43,8 +43,33 @@ async function loadUserBookings(){const box=q("bookingsList");if(!currentUser){b
 async function cancelBooking(id){if(!confirm("Vuoi davvero annullare questa prenotazione?"))return;try{const {error}=await supabaseClient.from("appointments").delete().eq("id",id);if(error)throw error;showToast("Prenotazione annullata","success");loadUserBookings()}catch(e){showToast("Errore durante l'annullamento","error")}}
 
 function openAuth(){q("authModal").classList.remove("hidden")}function closeAuth(){q("authModal").classList.add("hidden")}function openRegister(){closeAuth();q("registerModal").classList.remove("hidden")}function closeRegister(){q("registerModal").classList.add("hidden")}
-async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
-async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
+// ONESIGNAL PUSH
+async function setupOneSignalUser(){
+  if(!currentUser||!currentUser.id)return;
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    try{await OneSignal.login(String(currentUser.id));console.log("OneSignal collegato all'utente")}
+    catch(e){console.error("Errore OneSignal",e)}
+  });
+}
+async function logoutOneSignalUser(){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    try{await OneSignal.logout()}catch(e){console.warn(e)}
+  });
+}
+async function requestOneSignalNotifications(){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    try{
+      await OneSignal.Notifications.requestPermission();
+      const permission=OneSignal.Notifications.permission;
+      showToast(permission==="granted"?"Notifiche attivate":"Notifiche non attivate",permission==="granted"?"success":"error");
+    }catch(e){console.error(e);showToast("Errore attivazione notifiche","error")}
+  });
+}
+async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();await setupOneSignalUser();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
+async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();await setupOneSignalUser();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
 async function restoreSession(){
   try{
     // Mantiene l'accesso anche dopo chiusura/riapertura della PWA su iPhone.
@@ -64,8 +89,9 @@ async function restoreSession(){
     sessionStorage.removeItem("grimaldiUser");
   }
   updateUserInterface();
+  if(currentUser) await setupOneSignalUser();
 }
-function logoutUser(){currentUser=null;localStorage.removeItem("grimaldiUser");localStorage.removeItem("igrimaldi_session");sessionStorage.removeItem("grimaldiUser");updateUserInterface();showPage("homePage");showToast("Hai effettuato il logout","success")}
+function logoutUser(){logoutOneSignalUser();currentUser=null;localStorage.removeItem("grimaldiUser");localStorage.removeItem("igrimaldi_session");sessionStorage.removeItem("grimaldiUser");updateUserInterface();showPage("homePage");showToast("Hai effettuato il logout","success")}
 function updateUserInterface(){document.body.classList.toggle("session-active",!!currentUser);const loginBtn=q("loginProfileButton"),logoutBtn=q("logoutButton"),name=q("profileName"),phone=q("profilePhone"),initial=q("profileInitial");if(currentUser){name.textContent=currentUser.customer_name||"Cliente";phone.textContent=currentUser.customer_phone||"";initial.textContent=(currentUser.customer_name||"C").charAt(0).toUpperCase();loginBtn.classList.add("hidden");logoutBtn.classList.remove("hidden")}else{name.textContent="Ospite";phone.textContent="Accedi per gestire il tuo profilo";initial.textContent="G";loginBtn.classList.remove("hidden");logoutBtn.classList.add("hidden")}setupAdminAgendaNav()}
 function setupAdminAgendaNav(){
  const nav=document.querySelector(".bottom-nav"); if(!nav)return;
@@ -105,7 +131,7 @@ async function saveBlockTime(){await createBlock(q("blockTime").value);closeAdmi
 async function createBlock(time){try{const {error}=await supabaseClient.from("availability_blocks").insert([{block_date:agendaSelectedDate,block_time:time}]);if(error)throw error;showToast("Orario bloccato","success");await loadAgenda()}catch(e){showToast(e.code==="23505"?"Orario già bloccato":"Errore blocco: "+e.message,"error")}}
 async function unblockTime(id){if(!confirm("Sbloccare questo orario?"))return;try{const {error}=await supabaseClient.from("availability_blocks").delete().eq("id",id);if(error)throw error;showToast("Orario sbloccato","success");await loadAgenda()}catch(e){showToast("Errore sblocco","error")}}
 
-function requestNotifications(){if("Notification"in window)Notification.requestPermission().then(p=>showToast(p==="granted"?"Notifiche attivate":"Notifiche non attivate",p==="granted"?"success":"error"));else showToast("Notifiche non supportate","error")}
+function requestNotifications(){requestOneSignalNotifications()}
 function showInstall(){q("installModal").classList.remove("hidden")}function closeInstall(){q("installModal").classList.add("hidden")}
 function showToast(message,type="default"){const t=q("toast");t.textContent=message;t.className="";t.classList.add(type);requestAnimationFrame(()=>t.classList.add("show"));clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
 Object.assign(window,{showPage,loadAgenda,openAuth,closeAuth,openRegister,closeRegister,cancelBooking,logoutUser,requestNotifications,showInstall,closeInstall,openManualBooking,closeAdminModal,saveManualBooking,openMoveBooking,saveMoveBooking,deleteAdminBooking,openBlockModal,saveBlockTime,blockTime,unblockTime});
