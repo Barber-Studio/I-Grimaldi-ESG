@@ -43,61 +43,95 @@ async function loadUserBookings(){const box=q("bookingsList");if(!currentUser){b
 async function cancelBooking(id){if(!confirm("Vuoi davvero annullare questa prenotazione?"))return;try{const {error}=await supabaseClient.from("appointments").delete().eq("id",id);if(error)throw error;showToast("Prenotazione annullata","success");loadUserBookings()}catch(e){showToast("Errore durante l'annullamento","error")}}
 
 function openAuth(){q("authModal").classList.remove("hidden")}function closeAuth(){q("authModal").classList.add("hidden")}function openRegister(){closeAuth();q("registerModal").classList.remove("hidden")}function closeRegister(){q("registerModal").classList.add("hidden")}
-// ONESIGNAL - MINIMAL SAFE PATCH
+// ONESIGNAL PUSH
 async function setupOneSignalUser(){
-  if(!currentUser || !currentUser.id) return;
+  if(!currentUser||!currentUser.id)return;
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   window.OneSignalDeferred.push(async function(OneSignal){
-    try{
-      await OneSignal.login(String(currentUser.id));
-    }catch(e){
-      console.warn("OneSignal login non riuscito:",e);
-    }
+    try{await OneSignal.login(String(currentUser.id));console.log("OneSignal collegato all'utente")}
+    catch(e){console.error("Errore OneSignal",e)}
   });
 }
-
+async function logoutOneSignalUser(){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  window.OneSignalDeferred.push(async function(OneSignal){
+    try{await OneSignal.logout()}catch(e){console.warn(e)}
+  });
+}
 async function requestOneSignalNotifications(){
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   window.OneSignalDeferred.push(async function(OneSignal){
     try{
-      const alreadyEnabled =
-        OneSignal.User &&
-        OneSignal.User.PushSubscription &&
-        OneSignal.User.PushSubscription.optedIn === true;
-
-      if(!alreadyEnabled){
-        await OneSignal.Notifications.requestPermission();
-      }
-
-      // Su iPhone lo stato della subscription può aggiornarsi dopo il consenso.
-      // Non mostriamo un falso errore: verifichiamo direttamente optedIn.
-      setTimeout(async function(){
-        try{
-          const enabled =
-            OneSignal.User &&
-            OneSignal.User.PushSubscription &&
-            OneSignal.User.PushSubscription.optedIn === true;
-
-          if(enabled){
-            if(currentUser && currentUser.id){
-              await OneSignal.login(String(currentUser.id));
-            }
-            showToast("Notifiche attivate correttamente!","success");
-          }else{
-            showToast("Permesso concesso. Riapri l'app dalla Home per completare l'attivazione.","success");
-          }
-        }catch(e){
-          showToast("Richiesta notifiche completata","success");
-        }
-      },800);
-    }catch(e){
-      console.error("Errore OneSignal:",e);
-      showToast("Impossibile attivare le notifiche ora. Riprova.","error");
-    }
+      await OneSignal.Notifications.requestPermission();
+      const permission=OneSignal.Notifications.permission;
+      showToast(permission==="granted"?"Notifiche attivate":"Notifiche non attivate",permission==="granted"?"success":"error");
+    }catch(e){console.error(e);showToast("Errore attivazione notifiche","error")}
   });
 }
+async function loginUser(){const phone=normalizePhone(q("phoneInput").value),pin=q("pinInput").value.trim();if(!phone||!pin){showToast("Inserisci numero e PIN","error");return}try{const {data,error}=await supabaseClient.from("profiles").select("*").eq("customer_phone",phone).eq("customer_pin",pin).maybeSingle();if(error)throw error;if(!data){showToast("Numero o PIN non corretto","error");return}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeAuth();updateUserInterface();await setupOneSignalUser();showToast(`Bentornato ${data.customer_name||""}`,"success")}catch(e){console.error(e);showToast("Errore durante il login","error")}}
+async function handleRegistration(){const button=q("registerButton"),name=q("registerName").value.trim(),surname=q("registerSurname").value.trim(),phone=normalizePhone(q("registerPhone").value),pin=q("registerPin").value.trim(),pin2=q("registerPin2").value.trim();if(!supabaseClient){showToast("Supabase non è collegato","error");return}if(!name||!surname||!phone||!pin||!pin2){showToast("Compila tutti i campi","error");return}if(phone.length<8){showToast("Inserisci un numero valido","error");return}if(!/^[0-9]+$/.test(pin)||pin.length<4){showToast("Il PIN deve avere almeno 4 cifre","error");return}if(pin!==pin2){showToast("I PIN non coincidono","error");return}button.disabled=true;const original=button.textContent;button.textContent="REGISTRAZIONE IN CORSO...";try{const fullName=`${name} ${surname}`;const {data,error}=await supabaseClient.from("profiles").insert([{customer_name:fullName,customer_phone:phone,customer_pin:pin,role:phone==="3791415355"?"admin":"customer"}]).select().single();if(error){if(error.code==="23505")throw new Error("Questo numero è già registrato");throw error}currentUser=data;localStorage.setItem("grimaldiUser",JSON.stringify(data));localStorage.setItem("igrimaldi_session",JSON.stringify(data));sessionStorage.setItem("grimaldiUser",JSON.stringify(data));closeRegister();updateUserInterface();await setupOneSignalUser();showToast("Registrazione completata!","success")}catch(e){console.error(e);showToast(e.message||"Errore durante la registrazione","error")}finally{button.disabled=false;button.textContent=original}}
+async function restoreSession(){
+  try{
+    // Mantiene l'accesso anche dopo chiusura/riapertura della PWA su iPhone.
+    const saved=localStorage.getItem("grimaldiUser")||sessionStorage.getItem("grimaldiUser")||localStorage.getItem("igrimaldi_session");
+    if(saved){
+      const user=JSON.parse(saved);
+      if(user&&user.id){
+        currentUser=user;
+        localStorage.setItem("grimaldiUser",JSON.stringify(user));
+        localStorage.setItem("igrimaldi_session",JSON.stringify(user));
+      }
+    }
+  }catch(e){
+    console.warn("Sessione locale non valida",e);
+    localStorage.removeItem("grimaldiUser");
+    localStorage.removeItem("igrimaldi_session");
+    sessionStorage.removeItem("grimaldiUser");
+  }
+  updateUserInterface();
+  if(currentUser) await setupOneSignalUser();
+}
+function logoutUser(){logoutOneSignalUser();currentUser=null;localStorage.removeItem("grimaldiUser");localStorage.removeItem("igrimaldi_session");sessionStorage.removeItem("grimaldiUser");updateUserInterface();showPage("homePage");showToast("Hai effettuato il logout","success")}
+function updateUserInterface(){document.body.classList.toggle("session-active",!!currentUser);const loginBtn=q("loginProfileButton"),logoutBtn=q("logoutButton"),name=q("profileName"),phone=q("profilePhone"),initial=q("profileInitial");if(currentUser){name.textContent=currentUser.customer_name||"Cliente";phone.textContent=currentUser.customer_phone||"";initial.textContent=(currentUser.customer_name||"C").charAt(0).toUpperCase();loginBtn.classList.add("hidden");logoutBtn.classList.remove("hidden")}else{name.textContent="Ospite";phone.textContent="Accedi per gestire il tuo profilo";initial.textContent="G";loginBtn.classList.remove("hidden");logoutBtn.classList.add("hidden")}setupAdminAgendaNav()}
+function setupAdminAgendaNav(){
+ const nav=document.querySelector(".bottom-nav"); if(!nav)return;
+ let agendaBtn=q("agendaNavButton"), apptBtn=nav.querySelector('[data-page="appointmentsPage"]');
+ if(isAdmin()){
+   ensureAgendaPage();
+   if(!agendaBtn){
+     agendaBtn=document.createElement("button"); agendaBtn.id="agendaNavButton"; agendaBtn.dataset.page="agendaPage";
+     agendaBtn.innerHTML="<span>▦</span><small>Agenda</small>"; agendaBtn.onclick=()=>showPage("agendaPage");
+     if(apptBtn) nav.replaceChild(agendaBtn,apptBtn); else nav.insertBefore(agendaBtn,nav.children[2]||null);
+   }
+ } else if(agendaBtn){
+   const b=document.createElement("button"); b.dataset.page="appointmentsPage"; b.innerHTML="<span>◷</span><small>Appuntamenti</small>"; b.onclick=()=>showPage("appointmentsPage"); nav.replaceChild(b,agendaBtn);
+ }
+}
 
-function requestNotifications(){ requestOneSignalNotifications(); }
+function ensureAgendaPage(){if(q("agendaPage"))return;const section=document.createElement("section");section.id="agendaPage";section.className="page";section.innerHTML=`
+<div class="page-heading"><span>GESTIONE PROFESSIONALE</span><h2>Agenda</h2><p>Calendario, clienti, incassi e gestione completa.</p></div>
+<div class="admin-actions"><button onclick="openManualBooking()">＋ AGGIUNGI CLIENTE</button><button onclick="openBlockModal()">⊘ BLOCCA ORARIO</button></div>
+<div class="card calendar-card"><div class="booking-month-nav"><button id="agendaPrev">‹</button><h3 id="agendaMonthTitle"></h3><button id="agendaNext">›</button></div><div class="booking-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div><div id="agendaCalendar" class="booking-calendar agenda-calendar"></div></div>
+<div class="admin-summary"><div class="admin-stat"><small>APPUNTAMENTI</small><b id="agendaCount">0</b></div><div class="admin-stat"><small>INCASSO PREVISTO</small><b id="agendaRevenue">€0</b></div></div>
+<div class="agenda-tools"><button type="button" onclick="openManualBooking()">＋ AGGIUNGI CLIENTE</button><button type="button" onclick="openBlockModal()">⊘ BLOCCA ORARIO</button></div>
+<div class="agenda-day-title"><span>PROGRAMMA GIORNALIERO</span><h3 id="agendaDayTitle">Agenda del giorno</h3></div><div id="agendaSlots" class="agenda-slots"></div>`;
+document.querySelector(".main-content").appendChild(section);q("agendaPrev").onclick=()=>{agendaViewDate.setMonth(agendaViewDate.getMonth()-1);renderAgendaCalendar()};q("agendaNext").onclick=()=>{agendaViewDate.setMonth(agendaViewDate.getMonth()+1);renderAgendaCalendar()}}
+async function loadAgenda(){if(!isAdmin()||!supabaseClient)return;ensureAgendaPage();try{const [{data:a,error:e1},{data:b,error:e2}]=await Promise.all([supabaseClient.from("appointments").select("*").order("appointment_date").order("appointment_time"),supabaseClient.from("availability_blocks").select("*")]);if(e1)throw e1;if(e2)console.warn(e2);agendaAppointments=a||[];agendaBlocks=b||[];renderAgendaCalendar();renderAgendaSlots()}catch(e){console.error(e);showToast("Errore caricamento agenda","error")}}
+function renderAgendaCalendar(){const grid=q("agendaCalendar"),title=q("agendaMonthTitle");if(!grid||!title)return;const y=agendaViewDate.getFullYear(),m=agendaViewDate.getMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();title.textContent=new Intl.DateTimeFormat("it-IT",{month:"long",year:"numeric"}).format(agendaViewDate);let html="";for(let i=0;i<offset;i++)html+='<span class="calendar-empty"></span>';for(let d=1;d<=days;d++){const val=localDateString(new Date(y,m,d)),n=agendaAppointments.filter(a=>a.appointment_date===val&&a.status!=="cancelled").length,blocked=agendaBlocks.some(b=>b.block_date===val&&b.block_time==="ALL");html+=`<button class="calendar-day ${val===agendaSelectedDate?"selected":""} ${n?"has-booking":""}" data-date="${val}">${d}${n?`<i>${n}</i>`:""}${blocked?"<em>×</em>":""}</button>`}grid.innerHTML=html;grid.querySelectorAll(".calendar-day").forEach(b=>b.onclick=()=>{agendaSelectedDate=b.dataset.date;renderAgendaCalendar();renderAgendaSlots()})}
+function renderAgendaSlots(){const box=q("agendaSlots");if(!box)return;const list=agendaAppointments.filter(a=>a.appointment_date===agendaSelectedDate&&a.status!=="cancelled");q("agendaDayTitle").textContent="Agenda · "+formatDate(agendaSelectedDate);q("agendaCount").textContent=list.length;const total=list.reduce((x,a)=>x+Number(a.price||0),0);q("agendaRevenue").textContent="€"+total;box.innerHTML=TIMES.map(t=>{const a=list.find(x=>String(x.appointment_time||"").slice(0,5)===t),block=agendaBlocks.find(b=>b.block_date===agendaSelectedDate&&(b.block_time===t||b.block_time==="ALL"));if(a)return `<div class="agenda-slot booked"><time>${t}</time><div><b>${escapeHtml(a.client_name||"Cliente")}</b><small>${escapeHtml(a.service||"")} · €${a.price||0} · ${escapeHtml(a.client_phone||"")}</small></div><div class="slot-actions"><button onclick="openMoveBooking('${a.id}')">↔</button><button onclick="deleteAdminBooking('${a.id}')">×</button></div></div>`;if(block)return `<div class="agenda-slot blocked"><time>${t}</time><div><b>Orario bloccato</b><small>Non prenotabile dai clienti</small></div><div class="slot-actions"><button onclick="unblockTime('${block.id}')">✓</button></div></div>`;return `<div class="agenda-slot free"><time>${t}</time><div><b>Disponibile</b><small>Puoi aggiungere un cliente manualmente</small></div><div class="slot-actions"><button onclick="openManualBooking('${t}')">＋</button><button onclick="blockTime('${t}')">⊘</button></div></div>`}).join("")}
+async function deleteAdminBooking(id){if(!confirm("Eliminare definitivamente questo appuntamento?"))return;try{const {error}=await supabaseClient.from("appointments").delete().eq("id",id);if(error)throw error;showToast("Appuntamento eliminato","success");await loadAgenda()}catch(e){showToast("Errore eliminazione: "+e.message,"error")}}
+function openManualBooking(prefillTime=""){q("adminModal")?.remove();const modal=document.createElement("div");modal.id="adminModal";modal.className="modal";modal.innerHTML=`<div class="modal-box"><button class="close" onclick="closeAdminModal()">×</button><h2>Aggiungi cliente</h2><p class="modal-text">${formatDate(agendaSelectedDate)}</p><input id="manualName" placeholder="Nome e cognome"><input id="manualPhone" type="tel" placeholder="Numero di telefono"><select id="manualService">${services.map(s=>`<option value="${s.id}">${s.name} · €${s.price}</option>`).join("")}</select><select id="manualTime">${TIMES.map(t=>`<option value="${t}" ${t===prefillTime?"selected":""}>${t}</option>`).join("")}</select><button class="gold-button full" onclick="saveManualBooking()">AGGIUNGI ALL'AGENDA</button></div>`;document.body.appendChild(modal)}
+function closeAdminModal(){q("adminModal")?.remove()}
+async function saveManualBooking(){const name=q("manualName").value.trim(),phone=normalizePhone(q("manualPhone").value),svc=services.find(s=>s.id===q("manualService").value),time=q("manualTime").value;if(!name){showToast("Inserisci il nome del cliente","error");return}const exists=agendaAppointments.some(a=>a.appointment_date===agendaSelectedDate&&String(a.appointment_time).slice(0,5)===time&&a.status!=="cancelled");if(exists){showToast("Orario già occupato","error");return}try{let clientId=currentUser.id;if(phone){const r=await supabaseClient.from("profiles").select("id").eq("customer_phone",phone).maybeSingle();if(r.data)clientId=r.data.id}const {error}=await supabaseClient.from("appointments").insert([{client_id:clientId,client_name:name,client_phone:phone||"Manuale",appointment_date:agendaSelectedDate,appointment_time:time,service:svc.name,price:svc.price,status:"confirmed"}]);if(error)throw error;closeAdminModal();showToast("Cliente aggiunto all'agenda","success");await loadAgenda()}catch(e){showToast("Errore: "+e.message,"error")}}
+function openMoveBooking(id){const a=agendaAppointments.find(x=>x.id===id);if(!a)return;const modal=document.createElement("div");modal.id="adminModal";modal.className="modal";modal.innerHTML=`<div class="modal-box"><button class="close" onclick="closeAdminModal()">×</button><h2>Sposta appuntamento</h2><p class="modal-text">${escapeHtml(a.client_name)} · ${escapeHtml(a.service)}</p><input id="moveDate" type="date" value="${a.appointment_date}"><select id="moveTime">${TIMES.map(t=>`<option value="${t}" ${String(a.appointment_time).slice(0,5)===t?"selected":""}>${t}</option>`).join("")}</select><button class="gold-button full" onclick="saveMoveBooking('${id}')">SALVA SPOSTAMENTO</button></div>`;document.body.appendChild(modal)}
+async function saveMoveBooking(id){const date=q("moveDate").value,time=q("moveTime").value;if(!date||!time)return;try{const conflict=agendaAppointments.some(a=>a.id!==id&&a.appointment_date===date&&String(a.appointment_time).slice(0,5)===time&&a.status!=="cancelled");if(conflict){showToast("Nuovo orario già occupato","error");return}const {error}=await supabaseClient.from("appointments").update({appointment_date:date,appointment_time:time}).eq("id",id);if(error)throw error;agendaSelectedDate=date;agendaViewDate=new Date(date+"T12:00:00");closeAdminModal();showToast("Appuntamento spostato","success");await loadAgenda()}catch(e){showToast("Errore spostamento: "+e.message,"error")}}
+function openBlockModal(){const modal=document.createElement("div");modal.id="adminModal";modal.className="modal";modal.innerHTML=`<div class="modal-box"><button class="close" onclick="closeAdminModal()">×</button><h2>Blocca orario</h2><p class="modal-text">${formatDate(agendaSelectedDate)}</p><select id="blockTime"><option value="ALL">Tutta la giornata</option>${TIMES.map(t=>`<option value="${t}">${t}</option>`).join("")}</select><button class="gold-button full" onclick="saveBlockTime()">BLOCCA</button></div>`;document.body.appendChild(modal)}
+async function blockTime(time){if(!confirm(`Bloccare l'orario ${time}?`))return;await createBlock(time)}
+async function saveBlockTime(){await createBlock(q("blockTime").value);closeAdminModal()}
+async function createBlock(time){try{const {error}=await supabaseClient.from("availability_blocks").insert([{block_date:agendaSelectedDate,block_time:time}]);if(error)throw error;showToast("Orario bloccato","success");await loadAgenda()}catch(e){showToast(e.code==="23505"?"Orario già bloccato":"Errore blocco: "+e.message,"error")}}
+async function unblockTime(id){if(!confirm("Sbloccare questo orario?"))return;try{const {error}=await supabaseClient.from("availability_blocks").delete().eq("id",id);if(error)throw error;showToast("Orario sbloccato","success");await loadAgenda()}catch(e){showToast("Errore sblocco","error")}}
+
+function requestNotifications(){requestOneSignalNotifications()}
 function showInstall(){q("installModal").classList.remove("hidden")}function closeInstall(){q("installModal").classList.add("hidden")}
 function showToast(message,type="default"){const t=q("toast");t.textContent=message;t.className="";t.classList.add(type);requestAnimationFrame(()=>t.classList.add("show"));clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
 Object.assign(window,{showPage,loadAgenda,openAuth,closeAuth,openRegister,closeRegister,cancelBooking,logoutUser,requestNotifications,showInstall,closeInstall,openManualBooking,closeAdminModal,saveManualBooking,openMoveBooking,saveMoveBooking,deleteAdminBooking,openBlockModal,saveBlockTime,blockTime,unblockTime});
