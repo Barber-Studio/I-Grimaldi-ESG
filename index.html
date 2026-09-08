@@ -11,35 +11,86 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- OneSignal Push Notifications -->
+<!-- OneSignal Push Notifications -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
+
 window.OneSignalDeferred.push(async function(OneSignal) {
-  try {
-    await OneSignal.init({
-      appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
-      serviceWorkerPath: "OneSignalSDKWorker.js"
-    });
-    window.oneSignalReady = true;
-    window.linkOneSignalUser = async function(userId) {
-  try {
-    if (!userId) return false;
 
-    await window.OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.login(userId);
-      console.log("OneSignal collegato all'utente:", userId);
-    });
+    try {
+        await OneSignal.init({
+            appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
+            serviceWorkerPath: "OneSignalSDKWorker.js"
+        });
 
-    return true;
-  } catch (error) {
-    console.error("Errore collegamento OneSignal:", error);
-    return false;
-  }
-};
-  } catch (e) {
-    window.oneSignalReady = false;
-    console.error("OneSignal init:", e);
-  }
+        window.oneSignalReady = true;
+
+        console.log("OneSignal inizializzato");
+
+        // Funzione per attivare le notifiche
+        window.enableNotifications = async function() {
+            try {
+                const permission = await OneSignal.Notifications.requestPermission();
+
+                console.log("Permesso notifiche:", permission);
+
+                if (permission) {
+                    const optedIn = OneSignal.User.PushSubscription.optedIn;
+
+                    if (optedIn) {
+                        alert("Notifiche attivate correttamente!");
+                        return true;
+                    }
+                }
+
+                alert("Le notifiche non sono state attivate.");
+                return false;
+
+            } catch (error) {
+                console.error("Errore attivazione notifiche:", error);
+                alert("Errore durante l'attivazione delle notifiche.");
+                return false;
+            }
+        };
+
+        // Collega OneSignal all'utente registrato
+        window.linkOneSignalUser = async function(userId) {
+
+            try {
+                if (!userId) return false;
+
+                await OneSignal.login(userId);
+
+                console.log(
+                    "OneSignal collegato all'utente:",
+                    userId
+                );
+
+                return true;
+
+            } catch (error) {
+
+                console.error(
+                    "Errore collegamento OneSignal:",
+                    error
+                );
+
+                return false;
+            }
+        };
+
+    } catch (error) {
+
+        window.oneSignalReady = false;
+
+        console.error(
+            "Errore inizializzazione OneSignal:",
+            error
+        );
+    }
+
 });
 </script>
 </head>
@@ -86,7 +137,7 @@ window.OneSignalDeferred.push(async function(OneSignal) {
         <div class="info-card">
           <span class="info-icon">◷</span>
           <b>Orari di apertura</b>
-          <small>Martedì - Sabato<br>09:00 - 19:30</small>
+          <small>Martedì - Sabato<br>09:00 - 21:30</small>
         </div>
       </div>
 
