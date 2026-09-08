@@ -30,31 +30,37 @@ window.OneSignalDeferred.push(async function(OneSignal) {
         console.log("OneSignal inizializzato");
 
         // Funzione per attivare le notifiche
-        window.enableNotifications = async function() {
-            try {
-                const permission = await OneSignal.Notifications.requestPermission();
+        wwindow.enableNotifications = async function() {
+    try {
 
-                console.log("Permesso notifiche:", permission);
+        await OneSignal.Notifications.requestPermission();
 
-                if (permission) {
-                    const optedIn = OneSignal.User.PushSubscription.optedIn;
+        // Piccola attesa per permettere la creazione della subscription
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-                    if (optedIn) {
-                        alert("Notifiche attivate correttamente!");
-                        return true;
-                    }
-                }
+        const optedIn = OneSignal.User.PushSubscription.optedIn;
+        const subscriptionId = OneSignal.User.PushSubscription.id;
+        const token = OneSignal.User.PushSubscription.token;
 
-                alert("Le notifiche non sono state attivate.");
-                return false;
+        console.log("OneSignal optedIn:", optedIn);
+        console.log("OneSignal Subscription ID:", subscriptionId);
+        console.log("OneSignal Push Token:", token);
 
-            } catch (error) {
-                console.error("Errore attivazione notifiche:", error);
-                alert("Errore durante l'attivazione delle notifiche.");
-                return false;
-            }
-        };
+        if (optedIn && subscriptionId) {
+            alert("Notifiche attivate correttamente!");
+            return true;
+        }
 
+        alert("Permesso concesso, ma OneSignal sta ancora creando la connessione. Riprova tra qualche secondo.");
+        return false;
+
+    } catch (error) {
+
+        console.error("Errore attivazione notifiche:", error);
+        alert("Errore durante l'attivazione delle notifiche.");
+        return false;
+    }
+};
         // Collega OneSignal all'utente registrato
         window.linkOneSignalUser = async function(userId) {
 
