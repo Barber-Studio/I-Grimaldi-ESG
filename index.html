@@ -21,6 +21,21 @@ window.OneSignalDeferred.push(async function(OneSignal) {
       serviceWorkerPath: "OneSignalSDKWorker.js"
     });
     window.oneSignalReady = true;
+    window.linkOneSignalUser = async function(userId) {
+  try {
+    if (!userId) return false;
+
+    await window.OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.login(userId);
+      console.log("OneSignal collegato all'utente:", userId);
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Errore collegamento OneSignal:", error);
+    return false;
+  }
+};
   } catch (e) {
     window.oneSignalReady = false;
     console.error("OneSignal init:", e);
