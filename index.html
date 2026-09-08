@@ -1,16 +1,22 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <!-- OneSignal Push Notifications -->
+  <!-- OneSignal Push Notifications (Web SDK v16) -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    window.OneSignalDeferred=window.OneSignalDeferred||[];
-    OneSignalDeferred.push(async function(OneSignal){
-      await OneSignal.init({
-        appId:"864d0967-8a2d-4fe1-8a19-e95fe866b28b",
-        serviceWorkerPath:"OneSignalSDKWorker.js",
-        serviceWorkerParam:{scope:"/"}
-      });
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        await OneSignal.init({
+          appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
+          serviceWorkerPath: "OneSignalSDKWorker.js",
+          serviceWorkerParam: { scope: "/" },
+          autoResubscribe: true
+        });
+        console.log("OneSignal inizializzato correttamente");
+      } catch (error) {
+        console.error("Errore inizializzazione OneSignal:", error);
+      }
     });
   </script>
 
