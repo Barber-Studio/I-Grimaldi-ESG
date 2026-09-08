@@ -1,7 +1,8 @@
 {
   "name": "I GRIMALDI E.S.G. PARRUCCHIERI",
   "short_name": "I GRIMALDI",
-  "start_url": "./",
+  "start_url": "/I-Grimaldi-ESG/",
+"scope": "/I-Grimaldi-ESG/",
   "display": "standalone",
   "background_color": "#0a0a0c",
   "theme_color": "#0a0a0c",
