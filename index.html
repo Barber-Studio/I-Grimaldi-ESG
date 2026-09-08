@@ -11,92 +11,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- OneSignal Push Notifications -->
-<!-- OneSignal Push Notifications -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
-
 window.OneSignalDeferred.push(async function(OneSignal) {
-
-    try {
-        await OneSignal.init({
-            appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
-            serviceWorkerPath: "OneSignalSDKWorker.js"
-        });
-
-        window.oneSignalReady = true;
-
-        console.log("OneSignal inizializzato");
-
-        // Funzione per attivare le notifiche
-        wwindow.enableNotifications = async function() {
-    try {
-
-        await OneSignal.Notifications.requestPermission();
-
-        // Piccola attesa per permettere la creazione della subscription
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const optedIn = OneSignal.User.PushSubscription.optedIn;
-        const subscriptionId = OneSignal.User.PushSubscription.id;
-        const token = OneSignal.User.PushSubscription.token;
-
-        console.log("OneSignal optedIn:", optedIn);
-        console.log("OneSignal Subscription ID:", subscriptionId);
-        console.log("OneSignal Push Token:", token);
-
-        if (optedIn && subscriptionId) {
-            alert("Notifiche attivate correttamente!");
-            return true;
-        }
-
-        alert("Permesso concesso, ma OneSignal sta ancora creando la connessione. Riprova tra qualche secondo.");
-        return false;
-
-    } catch (error) {
-
-        console.error("Errore attivazione notifiche:", error);
-        alert("Errore durante l'attivazione delle notifiche.");
-        return false;
-    }
-};
-        // Collega OneSignal all'utente registrato
-        window.linkOneSignalUser = async function(userId) {
-
-            try {
-                if (!userId) return false;
-
-                await OneSignal.login(userId);
-
-                console.log(
-                    "OneSignal collegato all'utente:",
-                    userId
-                );
-
-                return true;
-
-            } catch (error) {
-
-                console.error(
-                    "Errore collegamento OneSignal:",
-                    error
-                );
-
-                return false;
-            }
-        };
-
-    } catch (error) {
-
-        window.oneSignalReady = false;
-
-        console.error(
-            "Errore inizializzazione OneSignal:",
-            error
-        );
-    }
-
+  try {
+    await OneSignal.init({
+      appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
+      serviceWorkerPath: "OneSignalSDKWorker.js"
+    });
+    window.oneSignalReady = true;
+  } catch (e) {
+    window.oneSignalReady = false;
+    console.error("OneSignal init:", e);
+  }
 });
 </script>
 </head>
@@ -117,7 +45,7 @@ window.OneSignalDeferred.push(async function(OneSignal) {
       <div class="brand-divider"><span></span><b>E.S.G.</b><span></span></div>
       <div class="brand-sub">PARRUCCHIERI</div>
     </div>
-    <button class="profile-dot" onclick="showPage('profilePage')" aria-label="Profilo">TU</button>
+    <button class="profile-dot" onclick="showPage('profilePage')" aria-label="Profilo">G</button>
   </header>
 
   <main class="main-content">
@@ -143,7 +71,7 @@ window.OneSignalDeferred.push(async function(OneSignal) {
         <div class="info-card">
           <span class="info-icon">◷</span>
           <b>Orari di apertura</b>
-          <small>Martedì - Sabato<br>09:00 - 21:30</small>
+          <small>Martedì - Sabato<br>09:00 - 19:30</small>
         </div>
       </div>
 
@@ -195,7 +123,7 @@ window.OneSignalDeferred.push(async function(OneSignal) {
         <h3 id="profileName">Ospite</h3>
         <p id="profilePhone">Accedi per gestire il tuo profilo</p>
       </div>
-      <button class="profile-row" onclick="window.enableNotifications && window.enableNotifications()"><span class="bell-real"><svg viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></div><i>›</i></button>
+      <button class="profile-row" onclick="window.enableGrimaldiPush && window.enableGrimaldiPush()"><span class="bell-real"><svg viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Attiva notifiche</b><small>Conferme, promemoria e aggiornamenti</small></div><i>›</i></button>
       <button class="profile-row" onclick="showInstall()"><span>⌂</span><div><b>Installa l'app</b><small>Aggiungi I Grimaldi alla schermata Home</small></div><i>›</i></button>
       <button id="loginProfileButton" class="outline-button" onclick="openAuth()">ACCEDI O REGISTRATI</button>
       <button id="logoutButton" class="danger-button hidden" onclick="logoutUser()">ESCI</button>
