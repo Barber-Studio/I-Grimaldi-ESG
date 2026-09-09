@@ -1,336 +1,1096 @@
 <!doctype html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
   <meta name="theme-color" content="#0a0a0c">
 
   <title>I GRIMALDI E.S.G.</title>
 
-  <link rel="icon" type="image/jpeg" href="assets_logo.png">
-  <link rel="apple-touch-icon" href="assets_logo.png">
-  <link rel="manifest" href="manifest.webmanifest">
+  <link
+    rel="icon"
+    type="image/jpeg"
+    href="assets_logo.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="assets_logo.png"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.webmanifest"
+  >
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
 
-  <link rel="stylesheet" href="css/style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+
+  <!-- SUPABASE -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- OneSignal -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+  <!-- ONESIGNAL -->
+
+  <script
+    src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+    defer
+  ></script>
+
 
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-    window.OneSignalDeferred.push(async function(OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
-          serviceWorkerPath: "OneSignalSDKWorker.js"
-        });
+    window.OneSignalDeferred =
+      window.OneSignalDeferred || [];
 
-        window.oneSignalReady = true;
 
-      } catch (e) {
+    window.OneSignalDeferred.push(
+      async function (OneSignal) {
 
-        window.oneSignalReady = false;
+        try {
 
-        console.error("OneSignal init:", e);
+          await OneSignal.init({
+
+            appId:
+              "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
+
+            serviceWorkerPath:
+              "OneSignalSDKWorker.js"
+
+          });
+
+
+          window.oneSignalReady = true;
+
+
+        } catch (e) {
+
+          window.oneSignalReady = false;
+
+          console.error(
+            "OneSignal init:",
+            e
+          );
+
+        }
+
       }
-    });
+    );
+
   </script>
 
 </head>
 
+
 <body>
 
 
-<!-- LOADING -->
+  <!-- =====================================================
+       LOADING
+  ====================================================== -->
 
-<div id="loadingScreen" class="loading-screen">
+  <div
+    id="loadingScreen"
+    class="loading-screen"
+  >
 
-  <div class="loading-mark">
+    <div class="loading-mark">
 
-    <div class="loading-kicker">
-      E.S.G. PARRUCCHIERI
-    </div>
+      <div class="loading-kicker">
+        E.S.G. PARRUCCHIERI
+      </div>
 
-    <div class="loading-logo">
-      I GRIMALDI
-    </div>
 
-    <div class="loading-line"></div>
+      <div class="loading-logo">
+        I GRIMALDI
+      </div>
 
-    <div class="loading-caption">
-      10 VOLTE CAMPIONE D'ITALIA
+
+      <div class="loading-line"></div>
+
+
+      <div class="loading-caption">
+        10 VOLTE CAMPIONE D'ITALIA
+      </div>
+
     </div>
 
   </div>
 
-</div>
 
 
-<!-- APP -->
+  <!-- =====================================================
+       APP
+  ====================================================== -->
 
-<div id="app" class="app">
+  <div
+    id="app"
+    class="app"
+  >
 
 
-  <!-- HEADER -->
+    <!-- =================================================
+         HEADER
+    ================================================== -->
 
-  <header class="topbar">
+    <header class="topbar">
 
-    <div class="brand-wrap">
+      <div class="brand-wrap">
 
-      <div class="brand">
-        I GRIMALDI
+        <div class="brand">
+          I GRIMALDI
+        </div>
+
+
+        <div class="brand-divider">
+
+          <span></span>
+
+          <b>
+            E.S.G.
+          </b>
+
+          <span></span>
+
+        </div>
+
+
+        <div class="brand-sub">
+          PARRUCCHIERI
+        </div>
+
       </div>
 
-      <div class="brand-divider">
 
-        <span></span>
+      <button
+        class="profile-dot"
+        onclick="showPage('profilePage')"
+        aria-label="Profilo"
+      >
 
-        <b>E.S.G.</b>
+        TU
 
-        <span></span>
+      </button>
 
-      </div>
-
-      <div class="brand-sub">
-        PARRUCCHIERI
-      </div>
-
-    </div>
-
-
-    <button
-      class="profile-dot"
-      onclick="showPage('profilePage')"
-      aria-label="Profilo"
-    >
-      TU
-    </button>
-
-  </header>
+    </header>
 
 
 
-  <!-- CONTENUTO -->
+    <!-- =================================================
+         CONTENUTO
+    ================================================== -->
 
-  <main class="main-content">
+    <main class="main-content">
 
 
-    <!-- HOME -->
 
-    <section
-      id="homePage"
-      class="page active"
-    >
+      <!-- =============================================
+           HOME
+      ============================================== -->
 
-      <div class="hero-card">
+      <section
+        id="homePage"
+        class="page active"
+      >
 
-        <div
-          class="text-logo-home"
-          aria-label="I GRIMALDI E.S.G. PARRUCCHIERI"
-        >
+
+        <div class="hero-card">
+
 
           <div
-            class="home-stars"
-            aria-hidden="true"
+            class="text-logo-home"
+            aria-label="I GRIMALDI E.S.G. PARRUCCHIERI - 10 volte campione d'Italia"
           >
 
-            <span class="star-g">✦</span>
-            <span class="star-w">✦</span>
-            <span class="star-r">✦</span>
+
+            <div
+              class="home-stars"
+              aria-hidden="true"
+            >
+
+              <span class="star-g">
+                ✦
+              </span>
+
+              <span class="star-w">
+                ✦
+              </span>
+
+              <span class="star-r">
+                ✦
+              </span>
+
+            </div>
+
+
+
+            <div class="home-logo-title">
+              I GRIMALDI
+            </div>
+
+
+
+            <div class="home-esg-row">
+
+              <span></span>
+
+              <b>
+                E.S.G.
+              </b>
+
+              <span></span>
+
+            </div>
+
+
+
+            <div class="home-logo-sub">
+              PARRUCCHIERI
+            </div>
+
+
+
+            <div class="home-champion">
+              10 VOLTE CAMPIONE D'ITALIA
+            </div>
+
 
           </div>
 
 
-          <div class="home-logo-title">
-            I GRIMALDI
-          </div>
 
+          <button
+            class="gold-button"
+            onclick="showPage('bookingPage')"
+          >
 
-          <div class="home-esg-row">
+            PRENOTA ORA
 
-            <span></span>
+            <span>
+              →
+            </span>
 
-            <b>E.S.G.</b>
+          </button>
 
-            <span></span>
-
-          </div>
-
-
-          <div class="home-logo-sub">
-            PARRUCCHIERI
-          </div>
-
-
-          <div class="home-champion">
-            10 VOLTE CAMPIONE D'ITALIA
-          </div>
 
         </div>
 
 
-        <button
-          class="gold-button"
-          onclick="showPage('bookingPage')"
-        >
 
-          PRENOTA ORA
+        <div class="section-head">
 
-          <span>→</span>
-
-        </button>
-
-      </div>
-
-
-
-      <div class="section-head">
-
-        <span>
-          ESPERIENZA GRIMALDI
-        </span>
-
-        <h2>
-          Tutto quello che ti serve
-        </h2>
-
-      </div>
-
-
-
-      <div class="home-grid">
-
-        <button
-          class="info-card"
-          onclick="showPage('bookingPage')"
-        >
-
-          <span class="info-icon">
-            ✂
+          <span>
+            ESPERIENZA GRIMALDI
           </span>
 
-          <b>
-            I nostri servizi
-          </b>
 
-          <small>
-            Scopri il listino completo
-          </small>
-
-        </button>
-
-
-
-        <div class="info-card">
-
-          <span class="info-icon">
-            ◷
-          </span>
-
-          <b>
-            Orari di apertura
-          </b>
-
-          <small>
-            Martedì - Sabato
-            <br>
-            09:00 - 21:30
-          </small>
+          <h2>
+            Tutto quello che ti serve
+          </h2>
 
         </div>
 
-      </div>
+
+
+        <div class="home-grid">
+
+
+          <button
+            class="info-card"
+            onclick="showPage('bookingPage')"
+          >
+
+            <span class="info-icon">
+              ✂
+            </span>
+
+
+            <b>
+              I nostri servizi
+            </b>
+
+
+            <small>
+              Scopri il listino completo
+            </small>
+
+          </button>
 
 
 
-      <div class="social-card">
+          <div class="info-card">
 
-        <div class="section-label">
-          SEGUICI
+
+            <span class="info-icon">
+              ◷
+            </span>
+
+
+            <b>
+              Orari di apertura
+            </b>
+
+
+            <small>
+
+              Martedì - Sabato
+
+              <br>
+
+              09:00 - 21:30
+
+            </small>
+
+
+          </div>
+
+
         </div>
 
 
-        <a
-          href="https://instagram.com/igrimaldi21"
-          target="_blank"
-          rel="noopener"
-        >
 
-          <span class="real-social instagram-icon">
+        <div class="social-card">
 
-            <svg viewBox="0 0 24 24">
 
-              <rect
-                x="3"
-                y="3"
-                width="18"
-                height="18"
-                rx="5"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              />
+          <div class="section-label">
+            SEGUICI
+          </div>
 
-              <circle
-                cx="12"
-                cy="12"
-                r="4"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              />
 
-              <circle
-                cx="17.5"
-                cy="6.5"
-                r="1.2"
-                fill="currentColor"
-              />
 
-            </svg>
+          <a
+            href="https://instagram.com/igrimaldi21"
+            target="_blank"
+            rel="noopener"
+          >
 
+
+            <span class="real-social instagram-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+
+                <rect
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                  rx="5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+
+                <circle
+                  cx="17.5"
+                  cy="6.5"
+                  r="1.2"
+                  fill="currentColor"
+                />
+
+              </svg>
+
+            </span>
+
+
+            <div>
+
+              <b>
+                Instagram
+              </b>
+
+              <small>
+                @igrimaldi21
+              </small>
+
+            </div>
+
+
+            <i>
+              ›
+            </i>
+
+
+          </a>
+
+
+
+          <a
+            href="https://www.tiktok.com/@igrimaldi21"
+            target="_blank"
+            rel="noopener"
+          >
+
+
+            <span class="real-social tiktok-icon">
+
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+
+                <path
+                  d="M14 4v9.6a4.1 4.1 0 1 1-3.3-4V7.1A7.2 7.2 0 1 0 16.5 14V9.2c1 .8 2.2 1.3 3.5 1.4V7.9C17.7 7.7 16 6.2 16 4h-2z"
+                  fill="currentColor"
+                />
+
+              </svg>
+
+            </span>
+
+
+            <div>
+
+              <b>
+                TikTok
+              </b>
+
+              <small>
+                @igrimaldi21
+              </small>
+
+            </div>
+
+
+            <i>
+              ›
+            </i>
+
+
+          </a>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- =============================================
+           PRENOTAZIONE
+      ============================================== -->
+
+      <section
+        id="bookingPage"
+        class="page"
+      >
+
+
+        <div class="page-heading">
+
+          <span>
+            IL TUO APPUNTAMENTO
           </span>
+
+
+          <h2>
+            Prenota
+          </h2>
+
+
+          <p>
+            Scegli servizio, giorno e orario.
+          </p>
+
+        </div>
+
+
+
+        <div
+          id="services"
+          class="services-grid"
+        ></div>
+
+
+
+        <div class="booking-card">
+
+
+          <div class="step-title">
+
+            <span>
+              01
+            </span>
+
+
+            <div>
+
+              <b>
+                Scegli la data
+              </b>
+
+
+              <small>
+                Seleziona il giorno disponibile
+              </small>
+
+            </div>
+
+
+          </div>
+
+
+
+          <div class="booking-month-nav">
+
+
+            <button
+              type="button"
+              id="prevBookingMonth"
+              aria-label="Mese precedente"
+            >
+
+              ‹
+
+            </button>
+
+
+            <h3 id="bookingMonthTitle"></h3>
+
+
+            <button
+              type="button"
+              id="nextBookingMonth"
+              aria-label="Mese successivo"
+            >
+
+              ›
+
+            </button>
+
+
+          </div>
+
+
+
+          <div class="booking-weekdays">
+
+            <span>L</span>
+            <span>M</span>
+            <span>M</span>
+            <span>G</span>
+            <span>V</span>
+            <span>S</span>
+            <span>D</span>
+
+          </div>
+
+
+
+          <div
+            id="bookingCalendar"
+            class="booking-calendar"
+          ></div>
+
+
+        </div>
+
+
+
+        <div class="booking-card">
+
+
+          <div class="step-title">
+
+
+            <span>
+              02
+            </span>
+
+
+            <div>
+
+              <b>
+                Scegli l'orario
+              </b>
+
+
+              <small id="selectedBookingDateLabel">
+
+                Seleziona un orario
+
+              </small>
+
+            </div>
+
+
+          </div>
+
+
+
+          <div
+            id="timeSlots"
+            class="times-grid"
+          ></div>
+
+
+        </div>
+
+
+
+        <div class="booking-summary">
 
 
           <div>
 
-            <b>
-              Instagram
-            </b>
-
             <small>
-              @igrimaldi21
+              SERVIZIO
             </small>
+
+
+            <b id="summaryService">
+
+              Non selezionato
+
+            </b>
 
           </div>
 
-          <i>›</i>
-
-        </a>
 
 
+          <div>
 
-        <a
-          href="https://www.tiktok.com/@igrimaldi21"
-          target="_blank"
-          rel="noopener"
+            <small>
+              DATA
+            </small>
+
+
+            <b id="summaryDate">
+
+              -
+
+            </b>
+
+          </div>
+
+
+
+          <div>
+
+            <small>
+              ORARIO
+            </small>
+
+
+            <b id="summaryTime">
+
+              -
+
+            </b>
+
+          </div>
+
+
+
+          <div class="summary-price">
+
+            <small>
+              TOTALE
+            </small>
+
+
+            <b id="summaryPrice">
+
+              €0
+
+            </b>
+
+          </div>
+
+
+        </div>
+
+
+
+        <button
+          id="confirmBooking"
+          class="gold-button full"
         >
 
-          <span class="real-social tiktok-icon">
+          CONFERMA PRENOTAZIONE
+
+        </button>
+
+
+      </section>
+
+
+
+      <!-- =============================================
+           APPUNTAMENTI CLIENTE
+      ============================================== -->
+
+      <section
+        id="appointmentsPage"
+        class="page"
+      >
+
+
+        <div class="page-heading">
+
+          <span>
+            AREA PERSONALE
+          </span>
+
+
+          <h2>
+            I miei appuntamenti
+          </h2>
+
+
+          <p>
+            Gestisci le tue prenotazioni.
+          </p>
+
+        </div>
+
+
+
+        <div
+          id="bookingsList"
+          class="appointments-list"
+        ></div>
+
+
+      </section>
+
+
+
+      <!-- =============================================
+           AGENDA ADMIN
+      ============================================== -->
+
+      <section
+        id="adminAgendaPage"
+        class="page"
+      >
+
+
+        <div class="page-heading">
+
+          <span>
+            AREA ADMIN
+          </span>
+
+
+          <h2>
+            Agenda
+          </h2>
+
+
+          <p>
+            Gestisci appuntamenti e disponibilità.
+          </p>
+
+        </div>
+
+
+
+        <!-- RIEPILOGO GIORNATA -->
+
+        <div class="admin-summary-card">
+
+
+          <div class="admin-summary-title">
+
+            <span>
+              RIEPILOGO GIORNATA
+            </span>
+
+          </div>
+
+
+          <div class="admin-summary-grid">
+
+
+            <div>
+
+              <small>
+                DATA
+              </small>
+
+              <b id="adminSelectedDate">
+                -
+              </b>
+
+            </div>
+
+
+            <div>
+
+              <small>
+                PRENOTATI
+              </small>
+
+              <b id="adminBookedCount">
+                0
+              </b>
+
+            </div>
+
+
+            <div>
+
+              <small>
+                LIBERI
+              </small>
+
+              <b id="adminFreeCount">
+                0
+              </b>
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- CALENDARIO MENSILE ADMIN -->
+
+        <div class="booking-card admin-calendar-card">
+
+
+          <div class="step-title">
+
+
+            <span>
+              CAL
+            </span>
+
+
+            <div>
+
+              <b>
+                Calendario
+              </b>
+
+
+              <small>
+                Seleziona il giorno da gestire
+              </small>
+
+            </div>
+
+
+          </div>
+
+
+
+          <div class="booking-month-nav">
+
+
+            <button
+              type="button"
+              id="prevAdminMonth"
+              aria-label="Mese precedente"
+            >
+
+              ‹
+
+            </button>
+
+
+            <h3 id="adminMonthTitle"></h3>
+
+
+            <button
+              type="button"
+              id="nextAdminMonth"
+              aria-label="Mese successivo"
+            >
+
+              ›
+
+            </button>
+
+
+          </div>
+
+
+
+          <div class="booking-weekdays">
+
+            <span>L</span>
+            <span>M</span>
+            <span>M</span>
+            <span>G</span>
+            <span>V</span>
+            <span>S</span>
+            <span>D</span>
+
+          </div>
+
+
+
+          <div
+            id="adminCalendar"
+            class="booking-calendar"
+          ></div>
+
+
+        </div>
+
+
+
+        <!-- PULSANTE AGGIUNGI -->
+
+        <button
+          class="gold-button full"
+          onclick="openManualBooking()"
+        >
+
+          + AGGIUNGI CLIENTE
+
+        </button>
+
+
+
+        <!-- AGENDA GIORNALIERA -->
+
+        <div class="admin-agenda-section">
+
+
+          <div class="section-head">
+
+            <span>
+              AGENDA DEL GIORNO
+            </span>
+
+
+            <h2 id="adminAgendaDateTitle">
+
+              Seleziona un giorno
+
+            </h2>
+
+          </div>
+
+
+
+          <div
+            id="adminAgendaList"
+            class="admin-agenda-list"
+          ></div>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- =============================================
+           PROFILO
+      ============================================== -->
+
+      <section
+        id="profilePage"
+        class="page"
+      >
+
+
+        <div class="page-heading">
+
+          <span>
+            AREA PERSONALE
+          </span>
+
+
+          <h2>
+            Profilo
+          </h2>
+
+        </div>
+
+
+
+        <div class="profile-card">
+
+
+          <div
+            class="avatar"
+            id="profileInitial"
+          >
+
+            G
+
+          </div>
+
+
+          <h3 id="profileName">
+
+            Ospite
+
+          </h3>
+
+
+          <p id="profilePhone">
+
+            Accedi per gestire il tuo profilo
+
+          </p>
+
+
+        </div>
+
+
+
+        <button
+          class="profile-row"
+          onclick="window.enableGrimaldiPush && window.enableGrimaldiPush()"
+        >
+
+
+          <span class="bell-real">
 
             <svg viewBox="0 0 24 24">
 
               <path
-                d="M14 4v9.6a4.1 4.1 0 1 1-3.3-4V7.1A7.2 7.2 0 1 0 16.5 14V9.2c1 .8 2.2 1.3 3.5 1.4V7.9C17.7 7.7 16 6.2 16 4h-2z"
-                fill="currentColor"
+                d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               />
 
             </svg>
@@ -341,1045 +1101,663 @@
           <div>
 
             <b>
-              TikTok
+              Attiva notifiche
             </b>
 
+
             <small>
-              @igrimaldi21
+              Conferme, promemoria e aggiornamenti
             </small>
 
           </div>
 
-          <i>›</i>
 
-        </a>
-
-      </div>
-
-    </section>
-
-
-
-    <!-- PRENOTAZIONE -->
-
-    <section
-      id="bookingPage"
-      class="page"
-    >
-
-      <div class="page-heading">
-
-        <span>
-          IL TUO APPUNTAMENTO
-        </span>
-
-        <h2>
-          Prenota
-        </h2>
-
-        <p>
-          Scegli servizio, giorno e orario.
-        </p>
-
-      </div>
-
-
-      <div
-        id="services"
-        class="services-grid"
-      ></div>
-
-
-
-      <div class="booking-card">
-
-        <div class="step-title">
-
-          <span>
-            01
-          </span>
-
-          <div>
-
-            <b>
-              Scegli la data
-            </b>
-
-            <small>
-              Seleziona il giorno disponibile
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div class="booking-month-nav">
-
-          <button
-            type="button"
-            id="prevBookingMonth"
-            aria-label="Mese precedente"
-          >
-            ‹
-          </button>
-
-          <h3 id="bookingMonthTitle"></h3>
-
-          <button
-            type="button"
-            id="nextBookingMonth"
-            aria-label="Mese successivo"
-          >
+          <i>
             ›
-          </button>
+          </i>
 
-        </div>
 
+        </button>
 
-        <div class="booking-weekdays">
-
-          <span>L</span>
-          <span>M</span>
-          <span>M</span>
-          <span>G</span>
-          <span>V</span>
-          <span>S</span>
-          <span>D</span>
-
-        </div>
-
-
-        <div
-          id="bookingCalendar"
-          class="booking-calendar"
-        ></div>
-
-      </div>
-
-
-
-      <div class="booking-card">
-
-        <div class="step-title">
-
-          <span>
-            02
-          </span>
-
-          <div>
-
-            <b>
-              Scegli l'orario
-            </b>
-
-            <small id="selectedBookingDateLabel">
-              Seleziona un giorno
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div
-          id="timeSlots"
-          class="times-grid"
-        ></div>
-
-      </div>
-
-
-
-      <div class="booking-summary">
-
-        <div>
-
-          <small>
-            SERVIZIO
-          </small>
-
-          <b id="summaryService">
-            Non selezionato
-          </b>
-
-        </div>
-
-
-        <div>
-
-          <small>
-            DATA
-          </small>
-
-          <b id="summaryDate">
-            -
-          </b>
-
-        </div>
-
-
-        <div>
-
-          <small>
-            ORARIO
-          </small>
-
-          <b id="summaryTime">
-            -
-          </b>
-
-        </div>
-
-
-        <div class="summary-price">
-
-          <small>
-            TOTALE
-          </small>
-
-          <b id="summaryPrice">
-            €0
-          </b>
-
-        </div>
-
-      </div>
-
-
-      <button
-        id="confirmBooking"
-        class="gold-button full"
-      >
-
-        CONFERMA PRENOTAZIONE
-
-      </button>
-
-    </section>
-
-
-
-    <!-- APPUNTAMENTI CLIENTE -->
-
-    <section
-      id="appointmentsPage"
-      class="page"
-    >
-
-      <div class="page-heading">
-
-        <span>
-          AREA PERSONALE
-        </span>
-
-        <h2>
-          I miei appuntamenti
-        </h2>
-
-        <p>
-          Gestisci le tue prenotazioni.
-        </p>
-
-      </div>
-
-
-      <div
-        id="bookingsList"
-        class="appointments-list"
-      ></div>
-
-    </section>
-
-
-
-    <!-- AGENDA ADMIN -->
-
-    <section
-      id="adminAgendaPage"
-      class="page"
-    >
-
-      <div class="page-heading">
-
-        <span>
-          AREA AMMINISTRATORE
-        </span>
-
-        <h2>
-          Agenda
-        </h2>
-
-        <p>
-          Gestisci tutti gli appuntamenti.
-        </p>
-
-      </div>
-
-
-
-      <!-- RIEPILOGO -->
-
-      <div class="agenda-summary">
-
-        <div>
-
-          <small>
-            APPUNTAMENTI
-          </small>
-
-          <b id="agendaTotalAppointments">
-            0
-          </b>
-
-        </div>
-
-
-        <div>
-
-          <small>
-            OCCUPATI
-          </small>
-
-          <b id="agendaBusySlots">
-            0
-          </b>
-
-        </div>
-
-
-        <div>
-
-          <small>
-            LIBERI
-          </small>
-
-          <b id="agendaFreeSlots">
-            0
-          </b>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- CALENDARIO MESE -->
-
-      <div class="booking-card">
-
-        <div class="step-title">
-
-          <span>
-            CAL
-          </span>
-
-          <div>
-
-            <b>
-              Calendario
-            </b>
-
-            <small>
-              Seleziona un giorno
-            </small>
-
-          </div>
-
-        </div>
-
-
-        <div class="booking-month-nav">
-
-          <button
-            type="button"
-            onclick="changeAdminAgendaMonth(-1)"
-          >
-            ‹
-          </button>
-
-          <h3 id="adminAgendaMonthTitle"></h3>
-
-          <button
-            type="button"
-            onclick="changeAdminAgendaMonth(1)"
-          >
-            ›
-          </button>
-
-        </div>
-
-
-        <div class="booking-weekdays">
-
-          <span>L</span>
-          <span>M</span>
-          <span>M</span>
-          <span>G</span>
-          <span>V</span>
-          <span>S</span>
-          <span>D</span>
-
-        </div>
-
-
-        <div
-          id="adminAgendaCalendar"
-          class="booking-calendar"
-        ></div>
-
-      </div>
-
-
-
-      <!-- GIORNO SELEZIONATO -->
-
-      <div class="agenda-day-header">
-
-        <div>
-
-          <span>
-            AGENDA GIORNALIERA
-          </span>
-
-          <h3 id="adminAgendaSelectedDate">
-            -
-          </h3>
-
-        </div>
 
 
         <button
-          class="gold-button"
-          onclick="openAdminAddBooking()"
+          class="profile-row"
+          onclick="showInstall()"
         >
-          + CLIENTE
+
+
+          <span>
+            ⌂
+          </span>
+
+
+          <div>
+
+            <b>
+              Installa l'app
+            </b>
+
+
+            <small>
+              Aggiungi I Grimaldi alla schermata Home
+            </small>
+
+          </div>
+
+
+          <i>
+            ›
+          </i>
+
+
         </button>
 
-      </div>
 
 
-
-      <!-- ORARI -->
-
-      <div
-        id="adminAgendaSlots"
-        class="admin-agenda-slots"
-      ></div>
-
-
-    </section>
-
-
-
-    <!-- PROFILO -->
-
-    <section
-      id="profilePage"
-      class="page"
-    >
-
-      <div class="page-heading">
-
-        <span>
-          AREA PERSONALE
-        </span>
-
-        <h2>
-          Profilo
-        </h2>
-
-      </div>
-
-
-      <div class="profile-card">
-
-        <div
-          class="avatar"
-          id="profileInitial"
+        <button
+          id="loginProfileButton"
+          class="outline-button"
+          onclick="openAuth()"
         >
-          G
-        </div>
 
+          ACCEDI O REGISTRATI
 
-        <h3 id="profileName">
-          Ospite
-        </h3>
-
-
-        <p id="profilePhone">
-          Accedi per gestire il tuo profilo
-        </p>
-
-      </div>
+        </button>
 
 
 
-      <button
-        class="profile-row"
-        onclick="window.enableGrimaldiPush && window.enableGrimaldiPush()"
-      >
+        <button
+          id="logoutButton"
+          class="danger-button hidden"
+          onclick="logoutUser()"
+        >
 
-        <span class="bell-real">
+          ESCI
 
-          <svg viewBox="0 0 24 24">
-
-            <path
-              d="M18 10a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-
-          </svg>
-
-        </span>
+        </button>
 
 
-        <div>
+      </section>
 
-          <b>
-            Attiva notifiche
-          </b>
 
-          <small>
-            Conferme, promemoria e aggiornamenti
-          </small>
+    </main>
 
-        </div>
 
-        <i>›</i>
 
-      </button>
+    <!-- =================================================
+         BOTTOM NAV
+    ================================================== -->
 
+    <nav class="bottom-nav">
 
 
       <button
-        class="profile-row"
-        onclick="showInstall()"
+        data-page="homePage"
+        class="active"
+        onclick="showPage('homePage')"
       >
 
         <span>
           ⌂
         </span>
 
-
-        <div>
-
-          <b>
-            Installa l'app
-          </b>
-
-          <small>
-            Aggiungi I Grimaldi alla schermata Home
-          </small>
-
-        </div>
-
-        <i>›</i>
+        <small>
+          Home
+        </small>
 
       </button>
 
 
 
       <button
-        id="loginProfileButton"
-        class="outline-button"
-        onclick="openAuth()"
+        data-page="bookingPage"
+        onclick="showPage('bookingPage')"
       >
 
-        ACCEDI O REGISTRATI
+        <span>
+          ✂
+        </span>
+
+        <small>
+          Prenota
+        </small>
+
+      </button>
+
+
+
+      <!-- CLIENTE -->
+
+      <button
+        id="appointmentsNavButton"
+        data-page="appointmentsPage"
+        onclick="showPage('appointmentsPage')"
+      >
+
+        <span>
+          ◷
+        </span>
+
+        <small id="appointmentsNavLabel">
+          Appuntamenti
+        </small>
+
+      </button>
+
+
+
+      <!-- ADMIN AGENDA -->
+
+      <button
+        id="adminAgendaNavButton"
+        data-page="adminAgendaPage"
+        onclick="showPage('adminAgendaPage')"
+        style="display:none"
+      >
+
+        <span>
+          ▣
+        </span>
+
+        <small>
+          Agenda
+        </small>
 
       </button>
 
 
 
       <button
-        id="logoutButton"
-        class="danger-button hidden"
-        onclick="logoutUser()"
+        data-page="profilePage"
+        onclick="showPage('profilePage')"
       >
 
-        ESCI
+        <span>
+          ◉
+        </span>
+
+        <small>
+          Profilo
+        </small>
 
       </button>
 
-    </section>
+
+    </nav>
 
 
-  </main>
-
-
-
-  <!-- NAVIGAZIONE -->
-
-  <nav class="bottom-nav">
-
-    <button
-      data-page="homePage"
-      class="active"
-      onclick="showPage('homePage')"
-    >
-
-      <span>⌂</span>
-
-      <small>
-        Home
-      </small>
-
-    </button>
+  </div>
 
 
 
-    <button
-      data-page="bookingPage"
-      onclick="showPage('bookingPage')"
-    >
+  <!-- =====================================================
+       LOGIN
+  ====================================================== -->
 
-      <span>✂</span>
-
-      <small>
-        Prenota
-      </small>
-
-    </button>
+  <div
+    id="authModal"
+    class="modal"
+  >
 
 
+    <div class="modal-box">
 
-    <!-- CLIENTE -->
 
-    <button
-      id="appointmentsNavButton"
-      data-page="appointmentsPage"
-      onclick="showPage('appointmentsPage')"
-    >
+      <button
+        class="close"
+        onclick="closeAuth()"
+      >
 
-      <span>◷</span>
+        ×
 
-      <small id="appointmentsNavLabel">
-        Appuntamenti
-      </small>
-
-    </button>
+      </button>
 
 
 
-    <!-- ADMIN -->
+      <div class="modal-brand">
 
-    <button
-      id="agendaNavButton"
-      data-page="adminAgendaPage"
-      onclick="showPage('adminAgendaPage')"
-      style="display:none"
-    >
+        I GRIMALDI
 
-      <span>▣</span>
+        <small>
+          E.S.G.
+        </small>
 
-      <small>
-        Agenda
-      </small>
-
-    </button>
+      </div>
 
 
 
-    <button
-      data-page="profilePage"
-      onclick="showPage('profilePage')"
-    >
-
-      <span>◉</span>
-
-      <small>
-        Profilo
-      </small>
-
-    </button>
-
-  </nav>
-
-
-</div>
+      <h2>
+        Bentornato
+      </h2>
 
 
 
-<!-- LOGIN -->
+      <p class="modal-text">
 
-<div
-  id="authModal"
-  class="modal hidden"
->
+        Accedi con il tuo numero e PIN.
 
-  <div class="modal-box">
-
-    <button
-      class="close"
-      onclick="closeAuth()"
-    >
-      ×
-    </button>
+      </p>
 
 
-    <div class="modal-brand">
 
-      I GRIMALDI
+      <input
+        id="phoneInput"
+        type="tel"
+        placeholder="Numero di telefono"
+        autocomplete="tel"
+      >
 
-      <small>
-        E.S.G.
-      </small>
+
+
+      <input
+        id="pinInput"
+        type="password"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="PIN"
+      >
+
+
+
+      <button
+        id="loginButton"
+        class="gold-button full"
+      >
+
+        ACCEDI
+
+      </button>
+
+
+
+      <button
+        class="text-button"
+        onclick="openRegister()"
+      >
+
+        Non hai un account?
+
+        <b>
+          Registrati
+        </b>
+
+      </button>
+
 
     </div>
 
 
-    <h2>
-      Bentornato
-    </h2>
-
-
-    <p class="modal-text">
-      Accedi con il tuo numero e PIN.
-    </p>
-
-
-    <input
-      id="phoneInput"
-      type="tel"
-      placeholder="Numero di telefono"
-      autocomplete="tel"
-    >
-
-
-    <input
-      id="pinInput"
-      type="password"
-      inputmode="numeric"
-      maxlength="6"
-      placeholder="PIN"
-    >
-
-
-    <button
-      id="loginButton"
-      class="gold-button full"
-    >
-      ACCEDI
-    </button>
-
-
-    <button
-      class="text-button"
-      onclick="openRegister()"
-    >
-
-      Non hai un account?
-
-      <b>
-        Registrati
-      </b>
-
-    </button>
-
   </div>
 
-</div>
+
+
+  <!-- =====================================================
+       REGISTRAZIONE
+  ====================================================== -->
+
+  <div
+    id="registerModal"
+    class="modal hidden"
+  >
+
+
+    <div class="modal-box">
+
+
+      <button
+        class="close"
+        onclick="closeRegister()"
+      >
+
+        ×
+
+      </button>
 
 
 
-<!-- REGISTRAZIONE -->
-
-<div
-  id="registerModal"
-  class="modal hidden"
->
-
-  <div class="modal-box">
-
-    <button
-      class="close"
-      onclick="closeRegister()"
-    >
-      ×
-    </button>
-
-
-    <h2>
-      Crea il tuo account
-    </h2>
-
-
-    <input
-      id="registerName"
-      placeholder="Nome"
-    >
-
-
-    <input
-      id="registerSurname"
-      placeholder="Cognome"
-    >
-
-
-    <input
-      id="registerPhone"
-      type="tel"
-      placeholder="Numero di telefono"
-    >
-
-
-    <input
-      id="registerPin"
-      type="password"
-      inputmode="numeric"
-      maxlength="6"
-      placeholder="Scegli un PIN (minimo 4 cifre)"
-    >
-
-
-    <input
-      id="registerPin2"
-      type="password"
-      inputmode="numeric"
-      maxlength="6"
-      placeholder="Conferma PIN"
-    >
-
-
-    <button
-      id="registerButton"
-      class="gold-button full"
-    >
-
-      CREA ACCOUNT
-
-    </button>
-
-  </div>
-
-</div>
+      <h2>
+        Crea il tuo account
+      </h2>
 
 
 
-<!-- AGGIUNGI CLIENTE ADMIN -->
-
-<div
-  id="adminAddBookingModal"
-  class="modal hidden"
->
-
-  <div class="modal-box">
-
-    <button
-      class="close"
-      onclick="closeAdminAddBooking()"
-    >
-      ×
-    </button>
+      <input
+        id="registerName"
+        placeholder="Nome"
+      >
 
 
-    <div class="modal-brand">
 
-      I GRIMALDI
+      <input
+        id="registerSurname"
+        placeholder="Cognome"
+      >
 
-      <small>
-        AGENDA ADMIN
-      </small>
+
+
+      <input
+        id="registerPhone"
+        type="tel"
+        placeholder="Numero di telefono"
+      >
+
+
+
+      <input
+        id="registerPin"
+        type="password"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="Scegli un PIN (minimo 4 cifre)"
+      >
+
+
+
+      <input
+        id="registerPin2"
+        type="password"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="Conferma PIN"
+      >
+
+
+
+      <button
+        id="registerButton"
+        class="gold-button full"
+      >
+
+        CREA ACCOUNT
+
+      </button>
+
 
     </div>
 
 
-    <h2>
-      Aggiungi cliente
-    </h2>
-
-
-    <p class="modal-text">
-      Crea manualmente un nuovo appuntamento.
-    </p>
-
-
-    <input
-      id="adminBookingName"
-      placeholder="Nome e cognome cliente"
-    >
-
-
-    <input
-      id="adminBookingPhone"
-      type="tel"
-      placeholder="Numero di telefono"
-    >
-
-
-    <select id="adminBookingService">
-
-      <option value="">
-        Seleziona servizio
-      </option>
-
-    </select>
-
-
-    <input
-      id="adminBookingDate"
-      type="date"
-    >
-
-
-    <select id="adminBookingTime">
-
-      <option value="">
-        Seleziona orario
-      </option>
-
-    </select>
-
-
-    <button
-      class="gold-button full"
-      onclick="createAdminBooking()"
-    >
-
-      CREA APPUNTAMENTO
-
-    </button>
-
   </div>
 
-</div>
+
+
+  <!-- =====================================================
+       MODALE INSTALLAZIONE
+  ====================================================== -->
+
+  <div
+    id="installModal"
+    class="modal hidden"
+  >
+
+
+    <div class="modal-box">
+
+
+      <button
+        class="close"
+        onclick="closeInstall()"
+      >
+
+        ×
+
+      </button>
 
 
 
-<!-- SPOSTA APPUNTAMENTO ADMIN -->
-
-<div
-  id="adminMoveBookingModal"
-  class="modal hidden"
->
-
-  <div class="modal-box">
-
-    <button
-      class="close"
-      onclick="closeAdminMoveBooking()"
-    >
-      ×
-    </button>
+      <h2>
+        Installa l'app
+      </h2>
 
 
-    <div class="modal-brand">
 
-      I GRIMALDI
+      <p class="modal-text">
 
-      <small>
-        SPOSTA APPUNTAMENTO
-      </small>
+        Su iPhone apri questo sito con Safari,
+        premi Condividi e scegli
+
+        <b>
+          Aggiungi alla schermata Home
+        </b>.
+
+      </p>
+
+
+
+      <button
+        class="gold-button full"
+        onclick="closeInstall()"
+      >
+
+        HO CAPITO
+
+      </button>
+
 
     </div>
 
 
-    <h2>
-      Sposta appuntamento
-    </h2>
+  </div>
 
 
-    <p
-      id="adminMoveBookingInfo"
-      class="modal-text"
-    >
-      -
-    </p>
+
+  <!-- =====================================================
+       MODALE AGGIUNGI CLIENTE ADMIN
+  ====================================================== -->
+
+  <div
+    id="manualBookingModal"
+    class="modal hidden"
+  >
 
 
-    <input
-      id="adminMoveBookingDate"
-      type="date"
-    >
+    <div class="modal-box">
 
 
-    <select id="adminMoveBookingTime">
+      <button
+        class="close"
+        onclick="closeManualBooking()"
+      >
 
-      <option value="">
-        Seleziona nuovo orario
-      </option>
+        ×
 
-    </select>
+      </button>
 
 
-    <button
-      class="gold-button full"
-      onclick="confirmAdminMoveBooking()"
-    >
 
-      CONFERMA SPOSTAMENTO
+      <div class="modal-brand">
 
-    </button>
+        I GRIMALDI
+
+        <small>
+          ADMIN
+        </small>
+
+      </div>
+
+
+
+      <h2>
+        Aggiungi cliente
+      </h2>
+
+
+
+      <p class="modal-text">
+
+        Crea manualmente un appuntamento.
+
+      </p>
+
+
+
+      <input
+        id="manualCustomerName"
+        type="text"
+        placeholder="Nome e cognome cliente"
+      >
+
+
+
+      <input
+        id="manualCustomerPhone"
+        type="tel"
+        placeholder="Numero di telefono"
+      >
+
+
+
+      <select id="manualService">
+
+        <option value="">
+          Seleziona servizio
+        </option>
+
+      </select>
+
+
+
+      <input
+        id="manualBookingDate"
+        type="date"
+      >
+
+
+
+      <select id="manualBookingTime">
+
+        <option value="">
+          Seleziona orario
+        </option>
+
+      </select>
+
+
+
+      <button
+        class="gold-button full"
+        onclick="createManualBooking()"
+      >
+
+        AGGIUNGI APPUNTAMENTO
+
+      </button>
+
+
+    </div>
+
 
   </div>
 
-</div>
+
+
+  <!-- =====================================================
+       MODALE SPOSTA APPUNTAMENTO
+  ====================================================== -->
+
+  <div
+    id="moveBookingModal"
+    class="modal hidden"
+  >
+
+
+    <div class="modal-box">
+
+
+      <button
+        class="close"
+        onclick="closeMoveBooking()"
+      >
+
+        ×
+
+      </button>
 
 
 
-<!-- INSTALLAZIONE -->
+      <div class="modal-brand">
 
-<div
-  id="installModal"
-  class="modal hidden"
->
+        I GRIMALDI
 
-  <div class="modal-box">
+        <small>
+          ADMIN
+        </small>
 
-    <button
-      class="close"
-      onclick="closeInstall()"
-    >
-      ×
-    </button>
+      </div>
 
 
-    <h2>
-      Installa l'app
-    </h2>
+
+      <h2>
+        Sposta appuntamento
+      </h2>
 
 
-    <p class="modal-text">
 
-      Su iPhone apri questo sito con Safari,
-      premi Condividi e scegli
+      <p
+        id="moveBookingCustomer"
+        class="modal-text"
+      >
 
-      <b>
-        Aggiungi alla schermata Home
-      </b>.
-
-    </p>
+      </p>
 
 
-    <button
-      class="gold-button full"
-      onclick="closeInstall()"
-    >
 
-      HO CAPITO
+      <input
+        id="moveBookingDate"
+        type="date"
+      >
 
-    </button>
+
+
+      <select id="moveBookingTime">
+
+        <option value="">
+          Seleziona nuovo orario
+        </option>
+
+      </select>
+
+
+
+      <input
+        type="hidden"
+        id="moveBookingId"
+      >
+
+
+
+      <button
+        class="gold-button full"
+        onclick="confirmMoveBooking()"
+      >
+
+        CONFERMA SPOSTAMENTO
+
+      </button>
+
+
+    </div>
+
 
   </div>
 
-</div>
+
+
+  <!-- =====================================================
+       TOAST
+  ====================================================== -->
+
+  <div id="toast"></div>
 
 
 
-<!-- TOAST -->
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
 
-<div id="toast"></div>
-
-
-<!-- JAVASCRIPT -->
-
-<script src="js/app.js"></script>
+  <script src="js/app.js"></script>
 
 
 </body>
+
 </html>
