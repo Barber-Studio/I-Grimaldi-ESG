@@ -1158,6 +1158,83 @@ async function sendAdminBookingNotifications(booking) {
 
 
 /* =========================================================
+   NOTIFICA ADMIN ANNULLAMENTO PRENOTAZIONE
+========================================================= */
+
+async function sendAdminCancellationNotifications(booking) {
+
+  try {
+
+    if (!supabaseClient || !booking) return;
+
+    const { data: admins, error } = await supabaseClient
+      .from("profiles")
+      .select("id,customer_phone,role")
+      .eq("role", "admin");
+
+    if (error) {
+
+      console.error(
+        "Errore ricerca admin per annullamento:",
+        error
+      );
+
+      return;
+
+    }
+
+    if (!admins || admins.length === 0) {
+
+      console.warn(
+        "Nessun admin trovato nella tabella profiles"
+      );
+
+      return;
+
+    }
+
+    const dateText = new Date(
+      booking.appointment_date + "T12:00:00"
+    ).toLocaleDateString("it-IT");
+
+    const timeText = String(
+      booking.start_time || ""
+    ).slice(0, 5);
+
+    const customerName =
+      booking.customer_name ||
+      "Un cliente";
+
+    const title = "Appuntamento annullato ❌";
+
+    const message =
+      `${customerName} ha annullato l'appuntamento del giorno ${dateText} alle ore ${timeText}.`;
+
+    for (const admin of admins) {
+
+      await sendBookingNotification(
+        admin.id,
+        admin.customer_phone || "",
+        title,
+        message,
+        "admin_booking_cancelled"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin annullamento:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
    INVIO NOTIFICA PRENOTAZIONE
 ========================================================= */
 
@@ -1976,6 +2053,11 @@ async function cancelBooking(bookingId) {
       "booking_cancelled"
 
     );
+
+
+    /* NOTIFICA AUTOMATICA A TUTTI GLI ADMIN PER ANNULLAMENTO */
+
+    await sendAdminCancellationNotifications(booking);
 
 
     showToast(
@@ -2799,76 +2881,12 @@ function closeInstall() {
    FUNZIONE NOTIFICHE VECCHIA COMPATIBILITÀ
 ========================================================= */
 
-function requestNotifications(){
+function requestNotifications() {
 
-  window.OneSignalDeferred =
-    window.OneSignalDeferred || [];
-
-  window.OneSignalDeferred.push(
-    async function(OneSignal){
-
-      try{
-
-        const permission =
-          OneSignal.Notifications.permission;
-
-        if(permission === "granted"){
-
-          showToast(
-            "Notifiche già attive ✓",
-            "success"
-          );
-
-          return;
-
-        }
-
-        await OneSignal.Notifications.requestPermission();
-
-        const newPermission =
-          OneSignal.Notifications.permission;
-
-        if(newPermission === "granted"){
-
-          showToast(
-            "Notifiche attivate con successo ✓",
-            "success"
-          );
-
-        }else if(newPermission === "denied"){
-
-          showToast(
-            "Notifiche non consentite sul dispositivo",
-            "error"
-          );
-
-        }else{
-
-          showToast(
-            "Richiesta notifiche completata",
-            "success"
-          );
-
-        }
-
-      }catch(error){
-
-        console.error(
-          "Errore notifiche:",
-          error
-        );
-
-        showToast(
-          "Impossibile verificare le notifiche",
-          "error"
-        );
-
-      }
-
-    }
-  );
+  requestOneSignalNotifications();
 
 }
+
 
 /* =========================================================
    ESPOSIZIONE FUNZIONI HTML
