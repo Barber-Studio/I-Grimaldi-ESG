@@ -674,10 +674,6 @@ async function loadAvailableTimes() {
 
   try {
 
-    /*
-      APPUNTAMENTI GIÀ PRENOTATI
-    */
-
     const {
       data: appointments,
       error: appointmentsError
@@ -725,10 +721,6 @@ async function loadAvailableTimes() {
 
     }
 
-
-    /*
-      ORARI BLOCCATI
-    */
 
     const {
       data: blocks,
@@ -1005,40 +997,50 @@ async function logoutOneSignalUser() {
 }
 
 
+/* =========================================================
+   CONTROLLO NOTIFICHE CORRETTO
+========================================================= */
+
 async function requestOneSignalNotifications() {
 
   window.OneSignalDeferred =
     window.OneSignalDeferred || [];
-
 
   window.OneSignalDeferred.push(
     async function (OneSignal) {
 
       try {
 
-        await OneSignal.Notifications
-          .requestPermission();
+        const isActive = Boolean(
+          OneSignal.User &&
+          OneSignal.User.PushSubscription &&
+          OneSignal.User.PushSubscription.optedIn
+        );
 
+        if (isActive) {
 
-        const permission =
-          OneSignal.Notifications.permission;
-
-
-        if (
-          permission === "granted"
-        ) {
-
-          if (
-            currentUser &&
-            currentUser.id
-          ) {
-
-            await OneSignal.login(
-              String(currentUser.id)
-            );
-
+          if (currentUser && currentUser.id) {
+            await OneSignal.login(String(currentUser.id));
           }
 
+          showToast("Notifiche già attive", "success");
+          return;
+
+        }
+
+        await OneSignal.Notifications.requestPermission();
+
+        const nowActive = Boolean(
+          OneSignal.User &&
+          OneSignal.User.PushSubscription &&
+          OneSignal.User.PushSubscription.optedIn
+        );
+
+        if (nowActive) {
+
+          if (currentUser && currentUser.id) {
+            await OneSignal.login(String(currentUser.id));
+          }
 
           showToast(
             "Notifiche attivate con successo",
@@ -1047,10 +1049,24 @@ async function requestOneSignalNotifications() {
 
         } else {
 
-          showToast(
-            "Permesso notifiche non concesso",
-            "error"
-          );
+          const permission =
+            OneSignal.Notifications.permission;
+
+          if (permission === "denied") {
+
+            showToast(
+              "Notifiche non consentite sul dispositivo",
+              "error"
+            );
+
+          } else {
+
+            showToast(
+              "Attivazione notifiche in attesa",
+              "default"
+            );
+
+          }
 
         }
 
@@ -1061,9 +1077,8 @@ async function requestOneSignalNotifications() {
           error
         );
 
-
         showToast(
-          "Errore durante l'attivazione delle notifiche",
+          "Impossibile verificare le notifiche",
           "error"
         );
 
@@ -1071,6 +1086,73 @@ async function requestOneSignalNotifications() {
 
     }
   );
+
+}
+
+
+/* =========================================================
+   NOTIFICA ADMIN NUOVA PRENOTAZIONE
+========================================================= */
+
+async function sendAdminBookingNotifications(booking) {
+
+  try {
+
+    if (!supabaseClient || !booking) return;
+
+    const { data: admins, error } = await supabaseClient
+      .from("profiles")
+      .select("id,customer_phone,role")
+      .eq("role", "admin");
+
+    if (error) {
+      console.error(
+        "Errore ricerca admin:",
+        error
+      );
+      return;
+    }
+
+    if (!admins || admins.length === 0) {
+      console.warn(
+        "Nessun admin trovato nella tabella profiles"
+      );
+      return;
+    }
+
+    const dateText = new Date(
+      booking.appointment_date + "T12:00:00"
+    ).toLocaleDateString("it-IT");
+
+    const timeText = String(
+      booking.start_time || ""
+    ).slice(0, 5);
+
+    const title = "Nuova prenotazione ✂️";
+
+    const message =
+      `${booking.customer_name || "Un cliente"} ha prenotato ${booking.service_name || "un servizio"} per il giorno ${dateText} alle ore ${timeText}.`;
+
+    for (const admin of admins) {
+
+      await sendBookingNotification(
+        admin.id,
+        admin.customer_phone || "",
+        title,
+        message,
+        "admin_new_booking"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin:",
+      error
+    );
+
+  }
 
 }
 
@@ -1097,13 +1179,6 @@ async function sendBookingNotification(
     const cleanPhone =
       normalizePhone(phone);
 
-
-    /*
-      SALVA NOTIFICA NELLA TABELLA notifications
-
-      La tua tabella NON ha customer_id.
-      Ha customer_phone.
-    */
 
     try {
 
@@ -1140,10 +1215,6 @@ async function sendBookingNotification(
 
     }
 
-
-    /*
-      INVIO ALLA EDGE FUNCTION
-    */
 
     if (!userId) {
 
@@ -1219,10 +1290,6 @@ async function sendBookingNotification(
 
 async function createBooking() {
 
-  /*
-    CONTROLLO LOGIN
-  */
-
   if (!currentUser) {
 
     showToast(
@@ -1237,10 +1304,6 @@ async function createBooking() {
   }
 
 
-  /*
-    CONTROLLO SERVIZIO
-  */
-
   if (!selectedService) {
 
     showToast(
@@ -1253,10 +1316,6 @@ async function createBooking() {
   }
 
 
-  /*
-    CONTROLLO DATA
-  */
-
   if (!selectedDate) {
 
     showToast(
@@ -1268,10 +1327,6 @@ async function createBooking() {
 
   }
 
-
-  /*
-    CONTROLLO ORARIO
-  */
 
   if (!selectedTime) {
 
@@ -1318,13 +1373,6 @@ async function createBooking() {
 
     }
 
-
-    /*
-      CONTROLLO FINALE SUL DATABASE
-
-      Questo evita che due persone prenotino
-      lo stesso orario contemporaneamente.
-    */
 
     const {
       data: existingAppointments,
@@ -1388,16 +1436,7 @@ async function createBooking() {
     }
 
 
-    /*
-      DATI PRENOTAZIONE
-
-      Usano ESATTAMENTE le colonne
-      della tua tabella appointments.
-    */
-
-    const bookingPayload = {
-
-      customer_id:
+    const bookingPayload = {      customer_id:
         currentUser.id,
 
       customer_name:
@@ -1451,10 +1490,6 @@ async function createBooking() {
     }
 
 
-    /*
-      NOTIFICA PRENOTAZIONE
-    */
-
     const notificationTitle =
       "Prenotazione confermata ✂️";
 
@@ -1478,9 +1513,10 @@ async function createBooking() {
     );
 
 
-    /*
-      SUCCESSO
-    */
+    /* NOTIFICA AUTOMATICA A TUTTI GLI ADMIN */
+
+    await sendAdminBookingNotifications(booking);
+
 
     showToast(
       "Prenotazione confermata!",
@@ -1569,10 +1605,6 @@ async function loadUserBookings() {
   if (!container) return;
 
 
-  /*
-    UTENTE NON LOGGATO
-  */
-
   if (!currentUser) {
 
     container.innerHTML = `
@@ -1610,11 +1642,6 @@ async function loadUserBookings() {
 
   try {
 
-    /*
-      Prima cerca tramite customer_id.
-      È il metodo principale.
-    */
-
     let {
       data,
       error
@@ -1638,11 +1665,6 @@ async function loadUserBookings() {
         }
       );
 
-
-    /*
-      Se ci sono vecchie prenotazioni senza customer_id
-      prova anche tramite numero telefono.
-    */
 
     if (error) {
 
@@ -1720,10 +1742,6 @@ async function loadUserBookings() {
 
     }
 
-
-    /*
-      ORDINE
-    */
 
     const today =
       localDateString(
@@ -1911,10 +1929,6 @@ async function cancelBooking(bookingId) {
 
   try {
 
-    /*
-      Recuperiamo appuntamento prima dell'annullamento
-    */
-
     const {
       data: booking,
       error: bookingError
@@ -1932,10 +1946,6 @@ async function cancelBooking(bookingId) {
     }
 
 
-    /*
-      Aggiorna stato
-    */
-
     const {
       error
     } = await supabaseClient
@@ -1952,10 +1962,6 @@ async function cancelBooking(bookingId) {
 
     }
 
-
-    /*
-      NOTIFICA ANNULLAMENTO
-    */
 
     await sendBookingNotification(
 
@@ -2095,11 +2101,6 @@ async function loginUser() {
     }
 
 
-    /*
-      LOGIN IDENTICO AL TUO SISTEMA:
-      profiles + customer_phone + customer_pin
-    */
-
     const {
       data,
       error
@@ -2146,10 +2147,6 @@ async function loginUser() {
 
     updateUserInterface();
 
-
-    /*
-      COLLEGA ONESIGNAL
-    */
 
     await setupOneSignalUser();
 
@@ -2272,10 +2269,6 @@ async function handleRegistration() {
     ).trim();
 
 
-  /*
-    CONTROLLI
-  */
-
   if (
     !name ||
     !surname ||
@@ -2359,10 +2352,6 @@ async function handleRegistration() {
       `${name} ${surname}`;
 
 
-    /*
-      CONTROLLA SE NUMERO ESISTE GIÀ
-    */
-
     const {
       data: existingUser,
       error: existingError
@@ -2394,10 +2383,6 @@ async function handleRegistration() {
 
     }
 
-
-    /*
-      CREA PROFILO
-    */
 
     const {
       data,
@@ -2433,10 +2418,6 @@ async function handleRegistration() {
 
     updateUserInterface();
 
-
-    /*
-      COLLEGA ONESIGNAL
-    */
 
     await setupOneSignalUser();
 
