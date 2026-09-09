@@ -12,7 +12,7 @@ const SUPABASE_URL =
   "https://wxcdmtajcasnlohqkgmk.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  "INSERISCI_QUI_LA_TUA_SUPABASE_PUBLISHABLE_KEY";
+  "sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
 
 
 const supabaseClient =
@@ -41,10 +41,6 @@ const SERVICES = [
     price: 20
   },
 
-  {
-    name: "Taglio bambino (0-10 anni)",
-    price: 12
-  },
 
   {
     name: "Barba 5€",
