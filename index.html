@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0a0c">
+
   <title>I GRIMALDI E.S.G.</title>
 
   <link rel="icon" type="image/jpeg" href="assets_logo.png">
@@ -19,13 +20,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- OneSignal Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
+
       try {
+
         await OneSignal.init({
           appId: "864d0967-8a2d-4fe1-8a19-e95fe866b28b",
           serviceWorkerPath: "OneSignalSDKWorker.js"
@@ -38,9 +42,12 @@
         window.oneSignalReady = false;
 
         console.error("OneSignal init:", e);
+
       }
+
     });
   </script>
+
 </head>
 
 <body>
@@ -70,6 +77,8 @@
 
 <div id="app" class="app">
 
+  <!-- HEADER -->
+
   <header class="topbar">
 
     <div class="brand-wrap">
@@ -79,13 +88,9 @@
       </div>
 
       <div class="brand-divider">
-
         <span></span>
-
         <b>E.S.G.</b>
-
         <span></span>
-
       </div>
 
       <div class="brand-sub">
@@ -93,7 +98,6 @@
       </div>
 
     </div>
-
 
     <button
       class="profile-dot"
@@ -105,6 +109,8 @@
 
   </header>
 
+
+  <!-- CONTENUTO -->
 
   <main class="main-content">
 
@@ -120,35 +126,28 @@
           aria-label="I GRIMALDI E.S.G. PARRUCCHIERI - 10 volte campione d'Italia"
         >
 
-          <div class="home-stars" aria-hidden="true">
-
+          <div
+            class="home-stars"
+            aria-hidden="true"
+          >
             <span class="star-g">✦</span>
             <span class="star-w">✦</span>
             <span class="star-r">✦</span>
-
           </div>
-
 
           <div class="home-logo-title">
             I GRIMALDI
           </div>
 
-
           <div class="home-esg-row">
-
             <span></span>
-
             <b>E.S.G.</b>
-
             <span></span>
-
           </div>
-
 
           <div class="home-logo-sub">
             PARRUCCHIERI
           </div>
-
 
           <div class="home-champion">
             10 VOLTE CAMPIONE D'ITALIA
@@ -156,14 +155,12 @@
 
         </div>
 
-
         <button
           class="gold-button"
           onclick="showPage('bookingPage')"
         >
-
-          PRENOTA ORA <span>→</span>
-
+          PRENOTA ORA
+          <span>→</span>
         </button>
 
       </div>
@@ -240,7 +237,10 @@
 
           <span class="real-social instagram-icon">
 
-            <svg viewBox="0 0 24 24">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
 
               <rect
                 x="3"
@@ -273,7 +273,6 @@
 
           </span>
 
-
           <div>
 
             <b>
@@ -299,7 +298,10 @@
 
           <span class="real-social tiktok-icon">
 
-            <svg viewBox="0 0 24 24">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
 
               <path
                 d="M14 4v9.6a4.1 4.1 0 1 1-3.3-4V7.1A7.2 7.2 0 1 0 16.5 14V9.2c1 .8 2.2 1.3 3.5 1.4V7.9C17.7 7.7 16 6.2 16 4h-2z"
@@ -309,7 +311,6 @@
             </svg>
 
           </span>
-
 
           <div>
 
@@ -387,17 +388,17 @@
           <button
             type="button"
             id="prevBookingMonth"
+            aria-label="Mese precedente"
           >
             ‹
           </button>
 
-
           <h3 id="bookingMonthTitle"></h3>
-
 
           <button
             type="button"
             id="nextBookingMonth"
+            aria-label="Mese successivo"
           >
             ›
           </button>
@@ -461,7 +462,9 @@
 
         <div>
 
-          <small>SERVIZIO</small>
+          <small>
+            SERVIZIO
+          </small>
 
           <b id="summaryService">
             Non selezionato
@@ -472,7 +475,9 @@
 
         <div>
 
-          <small>DATA</small>
+          <small>
+            DATA
+          </small>
 
           <b id="summaryDate">
             -
@@ -483,7 +488,9 @@
 
         <div>
 
-          <small>ORARIO</small>
+          <small>
+            ORARIO
+          </small>
 
           <b id="summaryTime">
             -
@@ -494,7 +501,9 @@
 
         <div class="summary-price">
 
-          <small>TOTALE</small>
+          <small>
+            TOTALE
+          </small>
 
           <b id="summaryPrice">
             €0
@@ -509,15 +518,13 @@
         id="confirmBooking"
         class="gold-button full"
       >
-
         CONFERMA PRENOTAZIONE
-
       </button>
 
     </section>
 
 
-    <!-- APPUNTAMENTI CLIENTE -->
+    <!-- AGENDA -->
 
     <section id="appointmentsPage" class="page">
 
@@ -528,11 +535,11 @@
         </span>
 
         <h2>
-          I miei appuntamenti
+          Agenda
         </h2>
 
         <p>
-          Gestisci le tue prenotazioni.
+          Gestisci i tuoi appuntamenti.
         </p>
 
       </div>
@@ -540,35 +547,6 @@
 
       <div
         id="bookingsList"
-        class="appointments-list"
-      ></div>
-
-    </section>
-
-
-    <!-- AGENDA ADMIN -->
-
-    <section id="adminPage" class="page">
-
-      <div class="page-heading">
-
-        <span>
-          AREA AMMINISTRATORE
-        </span>
-
-        <h2>
-          Agenda
-        </h2>
-
-        <p>
-          Gestisci tutti gli appuntamenti.
-        </p>
-
-      </div>
-
-
-      <div
-        id="adminAgendaList"
         class="appointments-list"
       ></div>
 
@@ -601,44 +579,15 @@
           G
         </div>
 
-
         <h3 id="profileName">
           Ospite
         </h3>
-
 
         <p id="profilePhone">
           Accedi per gestire il tuo profilo
         </p>
 
       </div>
-
-
-      <button
-        id="adminAgendaButton"
-        class="profile-row hidden"
-        onclick="showPage('adminPage')"
-      >
-
-        <span>
-          📅
-        </span>
-
-        <div>
-
-          <b>
-            Agenda Admin
-          </b>
-
-          <small>
-            Gestisci tutti gli appuntamenti
-          </small>
-
-        </div>
-
-        <i>›</i>
-
-      </button>
 
 
       <button
@@ -712,9 +661,7 @@
         class="outline-button"
         onclick="openAuth()"
       >
-
         ACCEDI O REGISTRATI
-
       </button>
 
 
@@ -723,16 +670,15 @@
         class="danger-button hidden"
         onclick="logoutUser()"
       >
-
         ESCI
-
       </button>
 
     </section>
 
-
   </main>
 
+
+  <!-- NAVIGAZIONE -->
 
   <nav class="bottom-nav">
 
@@ -744,7 +690,9 @@
 
       <span>⌂</span>
 
-      <small>Home</small>
+      <small>
+        Home
+      </small>
 
     </button>
 
@@ -756,7 +704,9 @@
 
       <span>✂</span>
 
-      <small>Prenota</small>
+      <small>
+        Prenota
+      </small>
 
     </button>
 
@@ -768,7 +718,9 @@
 
       <span>◷</span>
 
-      <small>Appuntamenti</small>
+      <small>
+        Agenda
+      </small>
 
     </button>
 
@@ -780,22 +732,20 @@
 
       <span>◉</span>
 
-      <small>Profilo</small>
+      <small>
+        Profilo
+      </small>
 
     </button>
 
   </nav>
 
-
 </div>
 
 
-<!-- LOGIN -->
+<!-- MODALE LOGIN -->
 
-<div
-  id="authModal"
-  class="modal"
->
+<div id="authModal" class="modal">
 
   <div class="modal-box">
 
@@ -811,7 +761,9 @@
 
       I GRIMALDI
 
-      <small>E.S.G.</small>
+      <small>
+        E.S.G.
+      </small>
 
     </div>
 
@@ -847,9 +799,7 @@
       id="loginButton"
       class="gold-button full"
     >
-
       ACCEDI
-
     </button>
 
 
@@ -871,12 +821,9 @@
 </div>
 
 
-<!-- REGISTRAZIONE -->
+<!-- MODALE REGISTRAZIONE -->
 
-<div
-  id="registerModal"
-  class="modal hidden"
->
+<div id="registerModal" class="modal hidden">
 
   <div class="modal-box">
 
@@ -934,9 +881,7 @@
       id="registerButton"
       class="gold-button full"
     >
-
       CREA ACCOUNT
-
     </button>
 
   </div>
@@ -970,6 +915,7 @@
 
       Su iPhone apri questo sito con Safari,
       premi Condividi e scegli
+
       <b>
         Aggiungi alla schermata Home
       </b>.
@@ -981,9 +927,7 @@
       class="gold-button full"
       onclick="closeInstall()"
     >
-
       HO CAPITO
-
     </button>
 
   </div>
@@ -991,8 +935,12 @@
 </div>
 
 
+<!-- TOAST -->
+
 <div id="toast"></div>
 
+
+<!-- JAVASCRIPT -->
 
 <script src="js/app.js"></script>
 
