@@ -1214,7 +1214,32 @@ async function sendBookingNotification(
       );
 
     }
+async function sendAdminNotification(title, message, type){
 
+  try{
+
+    await supabaseClient.functions.invoke(
+      "send-notification",
+      {
+        body: {
+          title: title,
+          message: message,
+          type: type,
+          is_admin: true
+        }
+      }
+    );
+
+  }catch(error){
+
+    console.error(
+      "Errore notifica admin:",
+      error
+    );
+
+  }
+
+}
 
     if (!userId) {
 
@@ -1282,8 +1307,110 @@ async function sendBookingNotification(
   }
 
 }
+// ==========================================
+// NOTIFICA ADMIN ANNULLAMENTO
+// ==========================================
 
+async function sendAdminCancelNotification(
+  customerName,
+  date,
+  time
+) {
 
+  try {
+
+    if (!supabaseClient) return false;
+
+    const title = "❌ Prenotazione annullata";
+
+    const message =
+      `${customerName} ha annullato la prenotazione del ${date} alle ${time}`;
+
+    const { error } = await supabaseClient
+      .from("notifications")
+      .insert([{
+        customer_phone: "ADMIN",
+        title: title,
+        message: message,
+        type: "admin_cancel",
+        read: false
+      }]);
+
+    if (error) {
+      console.error(
+        "Errore notifica admin annullamento:",
+        error
+      );
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin annullamento:",
+      error
+    );
+
+    return false;
+
+  }
+
+}
+// ==========================================
+// NOTIFICA ADMIN SPOSTAMENTO
+// ==========================================
+
+async function sendAdminMoveNotification(
+  customerName,
+  oldDate,
+  oldTime,
+  newDate,
+  newTime
+) {
+
+  try {
+
+    if (!supabaseClient) return false;
+
+    const title = "🔄 Prenotazione spostata";
+
+    const message =
+      `${customerName} ha spostato la prenotazione dal ${oldDate} alle ${oldTime} al ${newDate} alle ${newTime}`;
+
+    const { error } = await supabaseClient
+      .from("notifications")
+      .insert([{
+        customer_phone: "ADMIN",
+        title: title,
+        message: message,
+        type: "admin_move",
+        read: false
+      }]);
+
+    if (error) {
+      console.error(
+        "Errore notifica admin spostamento:",
+        error
+      );
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin spostamento:",
+      error
+    );
+
+    return false;
+
+  }
+
+}
 /* =========================================================
    CREA PRENOTAZIONE
 ========================================================= */
