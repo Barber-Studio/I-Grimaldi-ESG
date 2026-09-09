@@ -993,14 +993,6 @@ async function logoutOneSignalUser() {
 
     }
   );
-
-}
-
-
-/* =========================================================
-   CONTROLLO NOTIFICHE CORRETTO
-========================================================= */
-
 async function requestOneSignalNotifications() {
 
   window.OneSignalDeferred =
@@ -1042,10 +1034,7 @@ async function requestOneSignalNotifications() {
             await OneSignal.login(String(currentUser.id));
           }
 
-          showToast(
-            "Notifiche attivate con successo",
-            "success"
-          );
+          showToast("Notifiche attivate con successo", "success");
 
         } else {
 
@@ -1053,29 +1042,16 @@ async function requestOneSignalNotifications() {
             OneSignal.Notifications.permission;
 
           if (permission === "denied") {
-
-            showToast(
-              "Notifiche non consentite sul dispositivo",
-              "error"
-            );
-
+            showToast("Notifiche non consentite sul dispositivo", "error");
           } else {
-
-            showToast(
-              "Attivazione notifiche in attesa",
-              "default"
-            );
-
+            showToast("Attivazione notifiche in attesa", "default");
           }
 
         }
 
       } catch (error) {
 
-        console.error(
-          "Errore notifiche:",
-          error
-        );
+        console.error("Errore notifiche:", error);
 
         showToast(
           "Impossibile verificare le notifiche",
@@ -1106,17 +1082,12 @@ async function sendAdminBookingNotifications(booking) {
       .eq("role", "admin");
 
     if (error) {
-      console.error(
-        "Errore ricerca admin:",
-        error
-      );
+      console.error("Errore ricerca admin:", error);
       return;
     }
 
     if (!admins || admins.length === 0) {
-      console.warn(
-        "Nessun admin trovato nella tabella profiles"
-      );
+      console.warn("Nessun admin trovato nella tabella profiles");
       return;
     }
 
@@ -1175,10 +1146,8 @@ async function sendBookingNotification(
       return false;
     }
 
-
     const cleanPhone =
       normalizePhone(phone);
-
 
     try {
 
@@ -1195,7 +1164,6 @@ async function sendBookingNotification(
             read: false
           }
         ]);
-
 
       if (notificationError) {
 
@@ -1215,7 +1183,6 @@ async function sendBookingNotification(
 
     }
 
-
     if (!userId) {
 
       console.warn(
@@ -1225,7 +1192,6 @@ async function sendBookingNotification(
       return false;
 
     }
-
 
     const {
       data,
@@ -1248,7 +1214,6 @@ async function sendBookingNotification(
         }
       );
 
-
     if (error) {
 
       console.error(
@@ -1260,15 +1225,12 @@ async function sendBookingNotification(
 
     }
 
-
     console.log(
       "Notifica inviata:",
       data
     );
 
-
     return true;
-
 
   } catch (error) {
 
@@ -1303,7 +1265,6 @@ async function createBooking() {
 
   }
 
-
   if (!selectedService) {
 
     showToast(
@@ -1314,7 +1275,6 @@ async function createBooking() {
     return;
 
   }
-
 
   if (!selectedDate) {
 
@@ -1327,7 +1287,6 @@ async function createBooking() {
 
   }
 
-
   if (!selectedTime) {
 
     showToast(
@@ -1338,7 +1297,6 @@ async function createBooking() {
     return;
 
   }
-
 
   if (!supabaseClient) {
 
@@ -1351,16 +1309,13 @@ async function createBooking() {
 
   }
 
-
   const button =
     q("confirmBooking");
-
 
   const originalText =
     button
       ? button.textContent
       : "";
-
 
   try {
 
@@ -1372,7 +1327,6 @@ async function createBooking() {
         "CONTROLLO DISPONIBILITÀ...";
 
     }
-
 
     const {
       data: existingAppointments,
@@ -1389,13 +1343,11 @@ async function createBooking() {
         selectedTime
       );
 
-
     if (checkError) {
 
       throw checkError;
 
     }
-
 
     const alreadyBooked =
       (existingAppointments || [])
@@ -1408,14 +1360,12 @@ async function createBooking() {
 
         });
 
-
     if (alreadyBooked) {
 
       showToast(
         "Questo orario è stato appena prenotato",
         "error"
       );
-
 
       selectedTime = null;
 
@@ -1427,7 +1377,6 @@ async function createBooking() {
 
     }
 
-
     if (button) {
 
       button.textContent =
@@ -1435,8 +1384,9 @@ async function createBooking() {
 
     }
 
+    const bookingPayload = {
 
-    const bookingPayload = {      customer_id:
+      customer_id:
         currentUser.id,
 
       customer_name:
@@ -1470,7 +1420,6 @@ async function createBooking() {
 
     };
 
-
     const {
       data: booking,
       error: bookingError
@@ -1482,21 +1431,17 @@ async function createBooking() {
       .select()
       .single();
 
-
     if (bookingError) {
 
       throw bookingError;
 
     }
 
-
     const notificationTitle =
       "Prenotazione confermata ✂️";
 
-
     const notificationMessage =
       `Il tuo appuntamento per ${selectedService.name} è confermato per ${formatDate(selectedDate)} alle ${selectedTime}.`;
-
 
     await sendBookingNotification(
 
@@ -1512,28 +1457,21 @@ async function createBooking() {
 
     );
 
-
-    /* NOTIFICA AUTOMATICA A TUTTI GLI ADMIN */
-
     await sendAdminBookingNotifications(booking);
-
 
     showToast(
       "Prenotazione confermata!",
       "success"
     );
 
-
     selectedService = null;
     selectedTime = null;
-
 
     renderServices();
 
     updateSummary();
 
     await loadAvailableTimes();
-
 
     setTimeout(() => {
 
@@ -1543,7 +1481,6 @@ async function createBooking() {
 
     }, 700);
 
-
   } catch (error) {
 
     console.error(
@@ -1551,10 +1488,8 @@ async function createBooking() {
       error
     );
 
-
     let message =
       "Errore durante la prenotazione";
-
 
     if (error.code === "23505") {
 
@@ -1568,12 +1503,10 @@ async function createBooking() {
 
     }
 
-
     showToast(
       message,
       "error"
     );
-
 
   } finally {
 
@@ -1601,9 +1534,7 @@ async function loadUserBookings() {
   const container =
     q("bookingsList");
 
-
   if (!container) return;
-
 
   if (!currentUser) {
 
@@ -1632,13 +1563,11 @@ async function loadUserBookings() {
 
   }
 
-
   container.innerHTML = `
     <div class="empty-state">
       Caricamento appuntamenti...
     </div>
   `;
-
 
   try {
 
@@ -1665,20 +1594,12 @@ async function loadUserBookings() {
         }
       );
 
-
     if (error) {
-
-      console.warn(
-        "Ricerca customer_id:",
-        error
-      );
-
 
       const phone =
         normalizePhone(
           currentUser.customer_phone
         );
-
 
       const fallback =
         await supabaseClient
@@ -1701,19 +1622,16 @@ async function loadUserBookings() {
             }
           );
 
-
       data = fallback.data;
       error = fallback.error;
 
     }
-
 
     if (error) {
 
       throw error;
 
     }
-
 
     if (!data || data.length === 0) {
 
@@ -1742,12 +1660,10 @@ async function loadUserBookings() {
 
     }
 
-
     const today =
       localDateString(
         new Date()
       );
-
 
     const upcoming =
       data.filter(appointment => {
@@ -1760,7 +1676,6 @@ async function loadUserBookings() {
 
       });
 
-
     const past =
       data.filter(appointment => {
 
@@ -1772,12 +1687,10 @@ async function loadUserBookings() {
 
       });
 
-
     const ordered = [
       ...upcoming,
       ...past
     ];
-
 
     container.innerHTML =
       ordered
@@ -1789,7 +1702,6 @@ async function loadUserBookings() {
               "T12:00:00"
             );
 
-
           const dateText =
             date.toLocaleDateString(
               "it-IT",
@@ -1800,17 +1712,14 @@ async function loadUserBookings() {
               }
             );
 
-
           const time =
             String(
               appointment.start_time || ""
             ).slice(0, 5);
 
-
           const isCancelled =
             appointment.status === "cancelled" ||
             appointment.status === "cancelled_by_admin";
-
 
           return `
 
@@ -1828,7 +1737,6 @@ async function loadUserBookings() {
 
               </div>
 
-
               <div class="appointment-info">
 
                 <h3>
@@ -1840,7 +1748,6 @@ async function loadUserBookings() {
                 <p>
                   €${appointment.service_price}
                 </p>
-
 
                 <span class="appointment-status
                   ${isCancelled ? "cancelled" : "confirmed"}
@@ -1855,7 +1762,6 @@ async function loadUserBookings() {
                 </span>
 
               </div>
-
 
               ${
                 !isCancelled &&
@@ -1878,14 +1784,12 @@ async function loadUserBookings() {
         })
         .join("");
 
-
   } catch (error) {
 
     console.error(
       "Errore caricamento appuntamenti:",
       error
     );
-
 
     container.innerHTML = `
       <div class="empty-state">
@@ -1917,15 +1821,12 @@ async function cancelBooking(bookingId) {
 
   if (!currentUser) return;
 
-
   const confirmed =
     confirm(
       "Vuoi davvero annullare questo appuntamento?"
     );
 
-
   if (!confirmed) return;
-
 
   try {
 
@@ -1938,13 +1839,11 @@ async function cancelBooking(bookingId) {
       .eq("id", bookingId)
       .single();
 
-
     if (bookingError) {
 
       throw bookingError;
 
     }
-
 
     const {
       error
@@ -1955,13 +1854,11 @@ async function cancelBooking(bookingId) {
       })
       .eq("id", bookingId);
 
-
     if (error) {
 
       throw error;
 
     }
-
 
     await sendBookingNotification(
 
@@ -1977,15 +1874,16 @@ async function cancelBooking(bookingId) {
 
     );
 
+    /* NOTIFICA ADMIN ANNULLAMENTO */
+
+    await sendAdminCancellationNotifications(booking);
 
     showToast(
       "Appuntamento annullato",
       "success"
     );
 
-
     await loadUserBookings();
-
 
   } catch (error) {
 
@@ -1994,10 +1892,60 @@ async function cancelBooking(bookingId) {
       error
     );
 
-
     showToast(
       "Errore durante l'annullamento",
       "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   NOTIFICA ADMIN ANNULLAMENTO
+========================================================= */
+
+async function sendAdminCancellationNotifications(booking) {
+
+  try {
+
+    if (!supabaseClient || !booking) return;
+
+    const { data: admins, error } = await supabaseClient
+      .from("profiles")
+      .select("id,customer_phone,role")
+      .eq("role", "admin");
+
+    if (error || !admins || admins.length === 0) {
+      return;
+    }
+
+    const dateText = new Date(
+      booking.appointment_date + "T12:00:00"
+    ).toLocaleDateString("it-IT");
+
+    const timeText = String(
+      booking.start_time || ""
+    ).slice(0, 5);
+
+    for (const admin of admins) {
+
+      await sendBookingNotification(
+        admin.id,
+        admin.customer_phone || "",
+        "Appuntamento annullato ❌",
+        `${booking.customer_name || "Un cliente"} ha annullato l'appuntamento del ${dateText} alle ore ${timeText}.`,
+        "admin_booking_cancelled"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica annullamento admin:",
+      error
     );
 
   }
@@ -2054,18 +2002,15 @@ async function loginUser() {
 
   }
 
-
   const phone =
     normalizePhone(
       q("phoneInput").value
     );
 
-
   const pin =
     String(
       q("pinInput").value || ""
     ).trim();
-
 
   if (!phone || !pin) {
 
@@ -2078,16 +2023,13 @@ async function loginUser() {
 
   }
 
-
   const button =
     q("loginButton");
-
 
   const originalText =
     button
       ? button.textContent
       : "";
-
 
   try {
 
@@ -2099,7 +2041,6 @@ async function loginUser() {
         "ACCESSO IN CORSO...";
 
     }
-
 
     const {
       data,
@@ -2117,13 +2058,11 @@ async function loginUser() {
       )
       .maybeSingle();
 
-
     if (error) {
 
       throw error;
 
     }
-
 
     if (!data) {
 
@@ -2136,26 +2075,20 @@ async function loginUser() {
 
     }
 
-
     currentUser = data;
 
-
     saveUserSession(data);
-
 
     closeAuth();
 
     updateUserInterface();
 
-
     await setupOneSignalUser();
-
 
     showToast(
       `Bentornato ${data.customer_name || ""}`,
       "success"
     );
-
 
   } catch (error) {
 
@@ -2163,7 +2096,6 @@ async function loginUser() {
       "Errore login:",
       error
     );
-
 
     showToast(
       "Errore durante il login",
@@ -2238,36 +2170,30 @@ async function handleRegistration() {
 
   }
 
-
   const name =
     String(
       q("registerName").value || ""
     ).trim();
-
 
   const surname =
     String(
       q("registerSurname").value || ""
     ).trim();
 
-
   const phone =
     normalizePhone(
       q("registerPhone").value
     );
-
 
   const pin =
     String(
       q("registerPin").value || ""
     ).trim();
 
-
   const pin2 =
     String(
       q("registerPin2").value || ""
     ).trim();
-
 
   if (
     !name ||
@@ -2286,7 +2212,6 @@ async function handleRegistration() {
 
   }
 
-
   if (phone.length < 8) {
 
     showToast(
@@ -2297,7 +2222,6 @@ async function handleRegistration() {
     return;
 
   }
-
 
   if (
     !/^[0-9]+$/.test(pin) ||
@@ -2313,7 +2237,6 @@ async function handleRegistration() {
 
   }
 
-
   if (pin !== pin2) {
 
     showToast(
@@ -2325,16 +2248,13 @@ async function handleRegistration() {
 
   }
 
-
   const button =
     q("registerButton");
-
 
   const originalText =
     button
       ? button.textContent
       : "";
-
 
   try {
 
@@ -2347,10 +2267,8 @@ async function handleRegistration() {
 
     }
 
-
     const fullName =
       `${name} ${surname}`;
-
 
     const {
       data: existingUser,
@@ -2364,13 +2282,11 @@ async function handleRegistration() {
       )
       .maybeSingle();
 
-
     if (existingError) {
 
       throw existingError;
 
     }
-
 
     if (existingUser) {
 
@@ -2382,7 +2298,6 @@ async function handleRegistration() {
       return;
 
     }
-
 
     const {
       data,
@@ -2400,33 +2315,26 @@ async function handleRegistration() {
       .select()
       .single();
 
-
     if (error) {
 
       throw error;
 
     }
 
-
     currentUser = data;
 
-
     saveUserSession(data);
-
 
     closeRegister();
 
     updateUserInterface();
 
-
     await setupOneSignalUser();
-
 
     showToast(
       "Registrazione completata!",
       "success"
     );
-
 
   } catch (error) {
 
@@ -2435,10 +2343,8 @@ async function handleRegistration() {
       error
     );
 
-
     let message =
       "Errore durante la registrazione";
-
 
     if (error.code === "23505") {
 
@@ -2452,12 +2358,10 @@ async function handleRegistration() {
 
     }
 
-
     showToast(
       message,
       "error"
     );
-
 
   } finally {
 
@@ -2487,24 +2391,20 @@ function saveUserSession(user) {
     const userData =
       JSON.stringify(user);
 
-
     localStorage.setItem(
       "grimaldiUser",
       userData
     );
-
 
     localStorage.setItem(
       "igrimaldi_session",
       userData
     );
 
-
     sessionStorage.setItem(
       "grimaldiUser",
       userData
     );
-
 
   } catch (error) {
 
@@ -2533,7 +2433,6 @@ async function restoreSession() {
         "grimaldiUser"
       );
 
-
     if (!savedUser) {
 
       updateUserInterface();
@@ -2542,10 +2441,8 @@ async function restoreSession() {
 
     }
 
-
     const user =
       JSON.parse(savedUser);
-
 
     if (
       user &&
@@ -2560,14 +2457,12 @@ async function restoreSession() {
 
     }
 
-
   } catch (error) {
 
     console.warn(
       "Errore ripristino sessione:",
       error
     );
-
 
     localStorage.removeItem(
       "grimaldiUser"
@@ -2592,36 +2487,28 @@ async function logoutUser() {
 
     await logoutOneSignalUser();
 
-
     currentUser = null;
-
 
     localStorage.removeItem(
       "grimaldiUser"
     );
-
 
     localStorage.removeItem(
       "igrimaldi_session"
     );
 
-
     sessionStorage.removeItem(
       "grimaldiUser"
     );
 
-
     updateUserInterface();
 
-
     showPage("homePage");
-
 
     showToast(
       "Hai effettuato il logout",
       "success"
     );
-
 
   } catch (error) {
 
@@ -2656,7 +2543,6 @@ function updateUserInterface() {
   const logoutButton =
     q("logoutButton");
 
-
   if (!currentUser) {
 
     if (nameElement) {
@@ -2666,7 +2552,6 @@ function updateUserInterface() {
 
     }
 
-
     if (phoneElement) {
 
       phoneElement.textContent =
@@ -2674,14 +2559,12 @@ function updateUserInterface() {
 
     }
 
-
     if (initialElement) {
 
       initialElement.textContent =
         "G";
 
     }
-
 
     if (loginButton) {
 
@@ -2691,7 +2574,6 @@ function updateUserInterface() {
 
     }
 
-
     if (logoutButton) {
 
       logoutButton.classList.add(
@@ -2700,21 +2582,17 @@ function updateUserInterface() {
 
     }
 
-
     return;
 
   }
-
 
   const name =
     currentUser.customer_name ||
     "Cliente";
 
-
   const phone =
     currentUser.customer_phone ||
     "";
-
 
   if (nameElement) {
 
@@ -2722,13 +2600,11 @@ function updateUserInterface() {
 
   }
 
-
   if (phoneElement) {
 
     phoneElement.textContent = phone;
 
   }
-
 
   if (initialElement) {
 
@@ -2738,7 +2614,6 @@ function updateUserInterface() {
 
   }
 
-
   if (loginButton) {
 
     loginButton.classList.add(
@@ -2746,7 +2621,6 @@ function updateUserInterface() {
     );
 
   }
-
 
   if (logoutButton) {
 
@@ -2837,3 +2711,4 @@ window.requestNotifications =
 
 window.enableGrimaldiPush =
   requestOneSignalNotifications;
+}
