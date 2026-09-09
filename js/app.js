@@ -1,11 +1,621 @@
+const SUPABASE_URL="https://wxcdmtajcasnlohqkgmk.supabase.co";
+const SUPABASE_KEY="sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
 
-/* ============================================================
-   NUOVA PRENOTAZIONE + NOTIFICA
-============================================================ */
+let supabaseClient=null;
 
-createBooking = async function () {
+try{
+  if(window.supabase){
+    supabaseClient=window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+  }
+}catch(e){
+  console.error(e);
+}
 
-  if (!currentUser) {
+const services=[
+  {id:"shampoo_taglio",name:"Shampoo + Taglio",price:20,duration:30},
+  {id:"barba_5",name:"Barba 5€",price:5,duration:30},
+  {id:"barba_10",name:"Barba 10€",price:10,duration:30},
+  {id:"colore",name:"Colore",price:20,duration:30},
+  {id:"colore_barba",name:"Colore Barba",price:10,duration:30},
+  {id:"fiala",name:"Fiala",price:5,duration:30}
+];
+
+const TIMES=[
+  "09:00","09:30","10:00","10:30",
+  "11:00","11:30","12:00","12:30",
+  "13:00","13:30","14:00","14:30",
+  "15:00","15:30","16:00","16:30",
+  "17:00","17:30","18:00","18:30",
+  "19:00","19:30","20:00","20:30","21:00"
+];
+
+let currentUser=null;
+let selectedService=null;
+let selectedDate=null;
+let selectedTime=null;
+let toastTimer=null;
+let bookingViewDate=new Date();
+
+let agendaViewDate=new Date();
+let agendaSelectedDate=localDateString(new Date());
+let agendaAppointments=[];
+let agendaBlocks=[];
+
+
+/* =========================================================
+   AVVIO APP
+========================================================= */
+
+document.addEventListener("DOMContentLoaded",async()=>{
+
+  renderServices();
+  setupDate();
+  setupEvents();
+
+  await restoreSession();
+
+  setTimeout(()=>{
+
+    const l=document.getElementById("loadingScreen");
+
+    if(l){
+      l.style.opacity="0";
+
+      setTimeout(()=>{
+        l.remove();
+      },350);
+    }
+
+  },1200);
+
+});
+
+
+/* =========================================================
+   FUNZIONI BASE
+========================================================= */
+
+function q(id){
+  return document.getElementById(id);
+}
+
+
+function localDateString(date){
+
+  const y=date.getFullYear();
+  const m=String(date.getMonth()+1).padStart(2,"0");
+  const d=String(date.getDate()).padStart(2,"0");
+
+  return `${y}-${m}-${d}`;
+
+}
+
+
+function normalizePhone(v){
+
+  return String(v||"")
+    .replace(/[^0-9]/g,"");
+
+}
+
+
+function isAdmin(){
+
+  if(!currentUser)return false;
+
+  const phones=[
+    currentUser.customer_phone,
+    currentUser.phone,
+    currentUser.phone_number,
+    currentUser.mobile,
+    currentUser.numero
+  ].map(normalizePhone);
+
+  return (
+    (currentUser.role||"").toLowerCase()==="admin" ||
+    phones.includes("3791415355")
+  );
+
+}
+
+
+function escapeHtml(v){
+
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function formatDate(d){
+
+  return d
+    ?new Date(d+"T12:00:00")
+      .toLocaleDateString("it-IT",{
+        weekday:"long",
+        day:"numeric",
+        month:"long",
+        year:"numeric"
+      })
+    :"-";
+
+}
+
+
+/* =========================================================
+   NUOVO - INVIO NOTIFICA EDGE FUNCTION
+   NON TOCCA IL RESTO DELL'APP
+========================================================= */
+
+async function sendGrimaldiNotification(
+  userId,
+  phone,
+  title,
+  message,
+  type="general"
+){
+
+  if(!supabaseClient){
+    console.warn("Supabase non disponibile per notifica");
+    return false;
+  }
+
+  if(!userId){
+    console.warn("Utente senza ID, notifica non inviata");
+    return false;
+  }
+
+  try{
+
+    const {data,error}=await supabaseClient.functions.invoke(
+      "send-notification",
+      {
+        body:{
+          external_id:String(userId),
+          customer_phone:normalizePhone(phone),
+          title:title,
+          message:message,
+          type:type
+        }
+      }
+    );
+
+    if(error){
+      console.error("Errore invio notifica:",error);
+      return false;
+    }
+
+    console.log("Notifica inviata:",data);
+
+    return true;
+
+  }catch(e){
+
+    console.error("Errore notifica:",e);
+
+    return false;
+
+  }
+
+}
+
+
+/* =========================================================
+   SERVIZI
+========================================================= */
+
+function renderServices(){
+
+  const box=q("services");
+
+  if(!box)return;
+
+  box.innerHTML=services.map(s=>`
+
+    <button
+      type="button"
+      class="service-card ${selectedService?.id===s.id?"selected":""}"
+      data-service="${s.id}"
+    >
+
+      <span class="service-name">
+        ${s.name}
+      </span>
+
+      <strong class="service-price">
+        €${s.price}
+      </strong>
+
+    </button>
+
+  `).join("");
+
+  box.querySelectorAll(".service-card").forEach(b=>{
+
+    b.onclick=()=>{
+
+      selectedService=services.find(
+        x=>x.id===b.dataset.service
+      );
+
+      renderServices();
+      updateSummary();
+
+    };
+
+  });
+
+}
+
+
+/* =========================================================
+   EVENTI
+========================================================= */
+
+function setupEvents(){
+
+  q("confirmBooking")
+    ?.addEventListener("click",createBooking);
+
+  q("loginButton")
+    ?.addEventListener("click",loginUser);
+
+  q("registerButton")
+    ?.addEventListener("click",handleRegistration);
+
+  q("prevBookingMonth")
+    ?.addEventListener("click",()=>{
+
+      bookingViewDate.setMonth(
+        bookingViewDate.getMonth()-1
+      );
+
+      renderBookingCalendar();
+
+    });
+
+  q("nextBookingMonth")
+    ?.addEventListener("click",()=>{
+
+      bookingViewDate.setMonth(
+        bookingViewDate.getMonth()+1
+      );
+
+      renderBookingCalendar();
+
+    });
+
+}
+
+
+/* =========================================================
+   DATA
+========================================================= */
+
+function setupDate(){
+
+  const t=new Date();
+
+  t.setHours(0,0,0,0);
+
+  selectedDate=localDateString(t);
+
+  bookingViewDate=new Date(
+    t.getFullYear(),
+    t.getMonth(),
+    1
+  );
+
+  renderBookingCalendar();
+
+  loadAvailableTimes();
+
+  updateSummary();
+
+}
+
+
+/* =========================================================
+   CALENDARIO PRENOTAZIONI
+========================================================= */
+
+function renderBookingCalendar(){
+
+  const grid=q("bookingCalendar");
+  const title=q("bookingMonthTitle");
+
+  if(!grid||!title)return;
+
+  const y=bookingViewDate.getFullYear();
+  const m=bookingViewDate.getMonth();
+
+  const first=new Date(y,m,1);
+
+  const offset=(first.getDay()+6)%7;
+
+  const days=new Date(y,m+1,0).getDate();
+
+  const today=localDateString(new Date());
+
+  title.textContent=new Intl.DateTimeFormat(
+    "it-IT",
+    {
+      month:"long",
+      year:"numeric"
+    }
+  ).format(bookingViewDate);
+
+  let html="";
+
+  for(let i=0;i<offset;i++){
+
+    html+='<span class="calendar-empty"></span>';
+
+  }
+
+  for(let d=1;d<=days;d++){
+
+    const val=localDateString(
+      new Date(y,m,d)
+    );
+
+    const past=val<today;
+
+    html+=`
+
+      <button
+        type="button"
+        class="calendar-day
+          ${past?"past":""}
+          ${val===selectedDate?"selected":""}
+          ${val===today?"today":""}"
+        data-date="${val}"
+        ${past?"disabled":""}
+      >
+
+        ${d}
+
+      </button>
+
+    `;
+
+  }
+
+  grid.innerHTML=html;
+
+  grid
+    .querySelectorAll(".calendar-day:not(.past)")
+    .forEach(b=>{
+
+      b.onclick=async()=>{
+
+        selectedDate=b.dataset.date;
+
+        selectedTime=null;
+
+        renderBookingCalendar();
+
+        await loadAvailableTimes();
+
+        updateSummary();
+
+      };
+
+    });
+
+}
+
+
+/* =========================================================
+   ORARI DISPONIBILI
+========================================================= */
+
+async function loadAvailableTimes(){
+
+  const box=q("timeSlots");
+
+  if(!box)return;
+
+  box.innerHTML=TIMES.map(t=>`
+
+    <button
+      class="time-slot"
+      data-time="${t}"
+    >
+
+      ${t}
+
+    </button>
+
+  `).join("");
+
+  let busy=[];
+
+  if(supabaseClient&&selectedDate){
+
+    try{
+
+      const {data,error}=await supabaseClient
+        .from("appointments")
+        .select("appointment_time,status")
+        .eq("appointment_date",selectedDate);
+
+      if(!error){
+
+        busy=(data||[])
+          .filter(x=>x.status!=="cancelled")
+          .map(x=>
+            String(x.appointment_time||"")
+              .slice(0,5)
+          );
+
+      }
+
+      const bl=await supabaseClient
+        .from("availability_blocks")
+        .select("block_time")
+        .eq("block_date",selectedDate);
+
+      if(!bl.error){
+
+        const times=(bl.data||[])
+          .map(x=>x.block_time);
+
+        if(times.includes("ALL")){
+
+          busy=[...TIMES];
+
+        }else{
+
+          busy.push(...times);
+
+        }
+
+      }
+
+    }catch(e){
+
+      console.warn(e);
+
+    }
+
+  }
+
+  box.querySelectorAll(".time-slot").forEach(b=>{
+
+    const t=b.dataset.time;
+
+    if(busy.includes(t)){
+
+      b.classList.add("busy");
+
+      b.disabled=true;
+
+    }else{
+
+      b.onclick=()=>{
+
+        selectedTime=t;
+
+        box
+          .querySelectorAll(".time-slot")
+          .forEach(x=>
+            x.classList.toggle(
+              "selected",
+              x===b
+            )
+          );
+
+        updateSummary();
+
+      };
+
+    }
+
+  });
+
+}
+
+
+/* =========================================================
+   RIEPILOGO
+========================================================= */
+
+function updateSummary(){
+
+  q("summaryService").textContent=
+    selectedService
+      ?selectedService.name
+      :"Non selezionato";
+
+  q("summaryDate").textContent=
+    selectedDate
+      ?new Date(selectedDate+"T12:00:00")
+        .toLocaleDateString(
+          "it-IT",
+          {
+            day:"numeric",
+            month:"short"
+          }
+        )
+      :"-";
+
+  q("summaryTime").textContent=
+    selectedTime||"-";
+
+  q("summaryPrice").textContent=
+    selectedService
+      ?`€${selectedService.price}`
+      :"€0";
+
+}
+
+
+/* =========================================================
+   NAVIGAZIONE
+========================================================= */
+
+function showPage(id){
+
+  document
+    .querySelectorAll(".page")
+    .forEach(p=>
+      p.classList.toggle(
+        "active",
+        p.id===id
+      )
+    );
+
+  document
+    .querySelectorAll(".bottom-nav button")
+    .forEach(b=>
+      b.classList.toggle(
+        "active",
+        b.dataset.page===id
+      )
+    );
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+  if(id==="appointmentsPage"){
+
+    loadUserBookings();
+
+  }
+
+  if(id==="profilePage"){
+
+    updateUserInterface();
+
+  }
+
+  if(id==="agendaPage"){
+
+    loadAgenda();
+
+  }
+
+}
+
+
+/* =========================================================
+   PRENOTAZIONE
+   ORIGINALE + SOLO NOTIFICA AGGIUNTA
+========================================================= */
+
+async function createBooking(){
+
+  if(!currentUser){
 
     showToast(
       "Accedi prima di prenotare",
@@ -18,12 +628,11 @@ createBooking = async function () {
 
   }
 
-
-  if (
-    !selectedService ||
-    !selectedDate ||
+  if(
+    !selectedService||
+    !selectedDate||
     !selectedTime
-  ) {
+  ){
 
     showToast(
       "Completa servizio, data e orario",
@@ -34,8 +643,7 @@ createBooking = async function () {
 
   }
 
-
-  if (!supabaseClient) {
+  if(!supabaseClient){
 
     showToast(
       "Supabase non disponibile",
@@ -46,65 +654,38 @@ createBooking = async function () {
 
   }
 
+  const payload={
 
-  const payload = {
+    client_id:currentUser.id,
 
-    client_id: currentUser.id,
+    client_name:currentUser.customer_name,
 
-    client_name:
-      currentUser.customer_name,
+    client_phone:currentUser.customer_phone,
 
-    client_phone:
-      currentUser.customer_phone,
+    appointment_date:selectedDate,
 
-    appointment_date:
-      selectedDate,
+    appointment_time:selectedTime,
 
-    appointment_time:
-      selectedTime,
+    service:selectedService.name,
 
-    service:
-      selectedService.name,
+    price:selectedService.price,
 
-    price:
-      selectedService.price,
-
-    status:
-      "confirmed"
+    status:"confirmed"
 
   };
 
+  try{
 
-  try {
+    const {error}=await supabaseClient
+      .from("appointments")
+      .insert([payload]);
 
-    const { error } =
-      await supabaseClient
-        .from("appointments")
-        .insert([payload]);
-
-
-    if (error) throw error;
+    if(error)throw error;
 
 
-    /* ============================================
-       INVIO NOTIFICA CONFERMA
-    ============================================ */
+    /* NOTIFICA CONFERMA */
 
-    const dataFormattata =
-      new Date(
-        selectedDate + "T12:00:00"
-      ).toLocaleDateString(
-        "it-IT",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      );
-
-
-    await sendBookingNotification(
+    await sendGrimaldiNotification(
 
       currentUser.id,
 
@@ -112,14 +693,11 @@ createBooking = async function () {
 
       "Prenotazione confermata ✂️",
 
-      `Il tuo appuntamento per ${selectedService.name} è confermato per ${dataFormattata} alle ${selectedTime}.`,
+      `Il tuo appuntamento per ${selectedService.name} è confermato per ${formatDate(selectedDate)} alle ${selectedTime}.`,
 
       "booking_confirmed"
 
     );
-
-
-    /* ============================================ */
 
 
     showToast(
@@ -127,39 +705,31 @@ createBooking = async function () {
       "success"
     );
 
+    selectedService=null;
 
-    selectedService = null;
-
-    selectedTime = null;
-
+    selectedTime=null;
 
     renderServices();
 
     updateSummary();
 
-
     await loadAvailableTimes();
 
-
     setTimeout(
-      () => showPage("appointmentsPage"),
+      ()=>showPage("appointmentsPage"),
       450
     );
 
-
-  } catch (e) {
+  }catch(e){
 
     console.error(e);
 
-
     showToast(
 
-      e.code === "23505"
-
-        ? "Questo orario è già occupato"
-
-        : "Errore prenotazione: " +
-          (e.message || "controlla Supabase"),
+      e.code==="23505"
+        ?"Questo orario è già occupato"
+        :"Errore prenotazione: "+
+          (e.message||"controlla Supabase"),
 
       "error"
 
@@ -167,80 +737,190 @@ createBooking = async function () {
 
   }
 
-};
+}
 
 
-/* ============================================================
-   ANNULLAMENTO + NOTIFICA
-============================================================ */
+/* =========================================================
+   I MIEI APPUNTAMENTI
+========================================================= */
 
-cancelBooking = async function (id) {
+async function loadUserBookings(){
 
-  if (
+  const box=q("bookingsList");
+
+  if(!currentUser){
+
+    box.innerHTML=`
+
+      <div class="empty-state">
+
+        <h3>
+          Non hai effettuato l’accesso
+        </h3>
+
+        <p>
+          Accedi per vedere le tue prenotazioni.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+  box.innerHTML=
+    '<div class="empty-state">Caricamento appuntamenti...</div>';
+
+  try{
+
+    const {data,error}=await supabaseClient
+      .from("appointments")
+      .select("*")
+      .eq("client_id",currentUser.id)
+      .order(
+        "appointment_date",
+        {ascending:true}
+      );
+
+    if(error)throw error;
+
+    if(!data?.length){
+
+      box.innerHTML=`
+
+        <div class="empty-state">
+
+          <h3>
+            Nessuna prenotazione
+          </h3>
+
+          <p>
+            Non hai ancora appuntamenti.
+          </p>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    box.innerHTML=data.map(a=>`
+
+      <div class="booking-item">
+
+        <div class="booking-item-top">
+
+          <div>
+
+            <h3>
+              ${escapeHtml(a.service||"Servizio")}
+            </h3>
+
+            <p>
+              ${formatDate(a.appointment_date)}
+              ·
+              ${escapeHtml(
+                String(a.appointment_time||"")
+                  .slice(0,5)
+              )}
+            </p>
+
+            <p>
+              €${a.price||0}
+            </p>
+
+          </div>
+
+          <span>✓</span>
+
+        </div>
+
+        <button
+          class="cancel-booking"
+          onclick="cancelBooking('${a.id}')"
+        >
+
+          Annulla appuntamento
+
+        </button>
+
+      </div>
+
+    `).join("");
+
+  }catch(e){
+
+    console.error(e);
+
+    box.innerHTML=`
+
+      <div class="empty-state">
+
+        <h3>
+          Errore
+        </h3>
+
+        <p>
+          Impossibile caricare gli appuntamenti.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================================================
+   ANNULLAMENTO
+   ORIGINALE + NOTIFICA
+========================================================= */
+
+async function cancelBooking(id){
+
+  if(
     !confirm(
       "Vuoi davvero annullare questa prenotazione?"
     )
-  ) return;
+  )return;
 
+  try{
 
-  try {
+    /* Recuperiamo dati appuntamento */
 
-    // Recuperiamo prima i dati dell'appuntamento
     const {
-      data: booking,
-      error: bookingError
-    } =
-      await supabaseClient
-        .from("appointments")
-        .select("*")
-        .eq("id", id)
-        .single();
+      data:booking,
+      error:getError
+    }=await supabaseClient
+      .from("appointments")
+      .select("*")
+      .eq("id",id)
+      .single();
+
+    if(getError)throw getError;
 
 
-    if (bookingError) {
+    /* Elimina */
 
-      throw bookingError;
+    const {error}=await supabaseClient
+      .from("appointments")
+      .delete()
+      .eq("id",id);
 
-    }
-
-
-    // Eliminiamo l'appuntamento
-    const { error } =
-      await supabaseClient
-        .from("appointments")
-        .delete()
-        .eq("id", id);
+    if(error)throw error;
 
 
-    if (error) {
+    /* NOTIFICA ANNULLAMENTO */
 
-      throw error;
+    if(booking){
 
-    }
-
-
-    /* ============================================
-       INVIO NOTIFICA ANNULLAMENTO
-    ============================================ */
-
-    if (booking) {
-
-      const dataFormattata =
-        new Date(
-          booking.appointment_date +
-          "T12:00:00"
-        ).toLocaleDateString(
-          "it-IT",
-          {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-          }
-        );
-
-
-      await sendBookingNotification(
+      await sendGrimaldiNotification(
 
         booking.client_id,
 
@@ -248,9 +928,7 @@ cancelBooking = async function (id) {
 
         "Prenotazione annullata",
 
-        `Il tuo appuntamento del ${dataFormattata} alle ${String(
-          booking.appointment_time || ""
-        ).slice(0, 5)} è stato annullato.`,
+        `Il tuo appuntamento del ${formatDate(booking.appointment_date)} alle ${String(booking.appointment_time||"").slice(0,5)} è stato annullato.`,
 
         "booking_cancelled"
 
@@ -259,19 +937,14 @@ cancelBooking = async function (id) {
     }
 
 
-    /* ============================================ */
-
-
     showToast(
       "Prenotazione annullata",
       "success"
     );
 
-
     loadUserBookings();
 
-
-  } catch (e) {
+  }catch(e){
 
     console.error(e);
 
@@ -282,34 +955,2025 @@ cancelBooking = async function (id) {
 
   }
 
-};
+}
 
 
-/* ============================================================
-   AGGIORNA EVENT LISTENER DEL PULSANTE PRENOTA
-============================================================ */
+/* =========================================================
+   AUTH MODAL
+========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
+function openAuth(){
 
-    const button =
-      document.getElementById(
-        "confirmBooking"
+  q("authModal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeAuth(){
+
+  q("authModal")
+    .classList.add("hidden");
+
+}
+
+
+function openRegister(){
+
+  closeAuth();
+
+  q("registerModal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeRegister(){
+
+  q("registerModal")
+    .classList.add("hidden");
+
+}
+
+
+/* =========================================================
+   ONESIGNAL
+========================================================= */
+
+async function setupOneSignalUser(){
+
+  if(!currentUser||!currentUser.id)return;
+
+  window.OneSignalDeferred=
+    window.OneSignalDeferred||[];
+
+  window.OneSignalDeferred.push(
+    async function(OneSignal){
+
+      try{
+
+        await OneSignal.login(
+          String(currentUser.id)
+        );
+
+        console.log(
+          "OneSignal collegato all'utente"
+        );
+
+      }catch(e){
+
+        console.error(
+          "Errore OneSignal",
+          e
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+async function logoutOneSignalUser(){
+
+  window.OneSignalDeferred=
+    window.OneSignalDeferred||[];
+
+  window.OneSignalDeferred.push(
+    async function(OneSignal){
+
+      try{
+
+        await OneSignal.logout();
+
+      }catch(e){
+
+        console.warn(e);
+
+      }
+
+    }
+  );
+
+}
+
+
+async function requestOneSignalNotifications(){
+
+  window.OneSignalDeferred=
+    window.OneSignalDeferred||[];
+
+  window.OneSignalDeferred.push(
+    async function(OneSignal){
+
+      try{
+
+        await OneSignal.Notifications
+          .requestPermission();
+
+        const permission=
+          OneSignal.Notifications.permission;
+
+        showToast(
+
+          permission==="granted"
+            ?"Notifiche attivate"
+            :"Notifiche non attivate",
+
+          permission==="granted"
+            ?"success"
+            :"error"
+
+        );
+
+      }catch(e){
+
+        console.error(e);
+
+        showToast(
+          "Errore attivazione notifiche",
+          "error"
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   LOGIN
+   NON MODIFICATO
+========================================================= */
+
+async function loginUser(){
+
+  const phone=normalizePhone(
+    q("phoneInput").value
+  );
+
+  const pin=q("pinInput")
+    .value
+    .trim();
+
+  if(!phone||!pin){
+
+    showToast(
+      "Inserisci numero e PIN",
+      "error"
+    );
+
+    return;
+
+  }
+
+  try{
+
+    const {data,error}=await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("customer_phone",phone)
+      .eq("customer_pin",pin)
+      .maybeSingle();
+
+    if(error)throw error;
+
+    if(!data){
+
+      showToast(
+        "Numero o PIN non corretto",
+        "error"
       );
 
-    if (button) {
-
-      button.onclick =
-        function (event) {
-
-          event.preventDefault();
-
-          createBooking();
-
-        };
+      return;
 
     }
 
+    currentUser=data;
+
+    localStorage.setItem(
+      "grimaldiUser",
+      JSON.stringify(data)
+    );
+
+    localStorage.setItem(
+      "igrimaldi_session",
+      JSON.stringify(data)
+    );
+
+    sessionStorage.setItem(
+      "grimaldiUser",
+      JSON.stringify(data)
+    );
+
+    closeAuth();
+
+    updateUserInterface();
+
+    await setupOneSignalUser();
+
+    showToast(
+      `Bentornato ${data.customer_name||""}`,
+      "success"
+    );
+
+  }catch(e){
+
+    console.error(e);
+
+    showToast(
+      "Errore durante il login",
+      "error"
+    );
+
   }
-);
+
+}
+
+
+/* =========================================================
+   REGISTRAZIONE
+   NON MODIFICATA
+========================================================= */
+
+async function handleRegistration(){
+
+  const button=q("registerButton");
+
+  const name=q("registerName")
+    .value
+    .trim();
+
+  const surname=q("registerSurname")
+    .value
+    .trim();
+
+  const phone=normalizePhone(
+    q("registerPhone").value
+  );
+
+  const pin=q("registerPin")
+    .value
+    .trim();
+
+  const pin2=q("registerPin2")
+    .value
+    .trim();
+
+  if(!supabaseClient){
+
+    showToast(
+      "Supabase non è collegato",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(
+    !name||
+    !surname||
+    !phone||
+    !pin||
+    !pin2
+  ){
+
+    showToast(
+      "Compila tutti i campi",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(phone.length<8){
+
+    showToast(
+      "Inserisci un numero valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(
+    !/^[0-9]+$/.test(pin)||
+    pin.length<4
+  ){
+
+    showToast(
+      "Il PIN deve avere almeno 4 cifre",
+      "error"
+    );
+
+    return;
+
+  }
+
+  if(pin!==pin2){
+
+    showToast(
+      "I PIN non coincidono",
+      "error"
+    );
+
+    return;
+
+  }
+
+  button.disabled=true;
+
+  const original=button.textContent;
+
+  button.textContent=
+    "REGISTRAZIONE IN CORSO...";
+
+  try{
+
+    const fullName=
+      `${name} ${surname}`;
+
+    const {data,error}=await supabaseClient
+      .from("profiles")
+      .insert([{
+
+        customer_name:fullName,
+
+        customer_phone:phone,
+
+        customer_pin:pin,
+
+        role:
+          phone==="3791415355"
+            ?"admin"
+            :"customer"
+
+      }])
+      .select()
+      .single();
+
+    if(error){
+
+      if(error.code==="23505"){
+
+        throw new Error(
+          "Questo numero è già registrato"
+        );
+
+      }
+
+      throw error;
+
+    }
+
+    currentUser=data;
+
+    localStorage.setItem(
+      "grimaldiUser",
+      JSON.stringify(data)
+    );
+
+    localStorage.setItem(
+      "igrimaldi_session",
+      JSON.stringify(data)
+    );
+
+    sessionStorage.setItem(
+      "grimaldiUser",
+      JSON.stringify(data)
+    );
+
+    closeRegister();
+
+    updateUserInterface();
+
+    await setupOneSignalUser();
+
+    showToast(
+      "Registrazione completata!",
+      "success"
+    );
+
+  }catch(e){
+
+    console.error(e);
+
+    showToast(
+      e.message||
+      "Errore durante la registrazione",
+      "error"
+    );
+
+  }finally{
+
+    button.disabled=false;
+
+    button.textContent=original;
+
+  }
+
+}
+
+
+/* =========================================================
+   SESSIONE
+========================================================= */
+
+async function restoreSession(){
+
+  try{
+
+    const saved=
+
+      localStorage.getItem("grimaldiUser")||
+
+      sessionStorage.getItem("grimaldiUser")||
+
+      localStorage.getItem("igrimaldi_session");
+
+    if(saved){
+
+      const user=JSON.parse(saved);
+
+      if(user&&user.id){
+
+        currentUser=user;
+
+        localStorage.setItem(
+          "grimaldiUser",
+          JSON.stringify(user)
+        );
+
+        localStorage.setItem(
+          "igrimaldi_session",
+          JSON.stringify(user)
+        );
+
+      }
+
+    }
+
+  }catch(e){
+
+    console.warn(
+      "Sessione locale non valida",
+      e
+    );
+
+    localStorage.removeItem("grimaldiUser");
+
+    localStorage.removeItem("igrimaldi_session");
+
+    sessionStorage.removeItem("grimaldiUser");
+
+  }
+
+  updateUserInterface();
+
+  if(currentUser){
+
+    await setupOneSignalUser();
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+function logoutUser(){
+
+  logoutOneSignalUser();
+
+  currentUser=null;
+
+  localStorage.removeItem("grimaldiUser");
+
+  localStorage.removeItem("igrimaldi_session");
+
+  sessionStorage.removeItem("grimaldiUser");
+
+  updateUserInterface();
+
+  showPage("homePage");
+
+  showToast(
+    "Hai effettuato il logout",
+    "success"
+  );
+
+}
+
+
+/* =========================================================
+   INTERFACCIA UTENTE
+========================================================= */
+
+function updateUserInterface(){
+
+  document.body.classList.toggle(
+    "session-active",
+    !!currentUser
+  );
+
+  const loginBtn=q("loginProfileButton");
+
+  const logoutBtn=q("logoutButton");
+
+  const name=q("profileName");
+
+  const phone=q("profilePhone");
+
+  const initial=q("profileInitial");
+
+  if(currentUser){
+
+    name.textContent=
+      currentUser.customer_name||"Cliente";
+
+    phone.textContent=
+      currentUser.customer_phone||"";
+
+    initial.textContent=
+      (
+        currentUser.customer_name||"C"
+      )
+      .charAt(0)
+      .toUpperCase();
+
+    loginBtn.classList.add("hidden");
+
+    logoutBtn.classList.remove("hidden");
+
+  }else{
+
+    name.textContent="Ospite";
+
+    phone.textContent=
+      "Accedi per gestire il tuo profilo";
+
+    initial.textContent="G";
+
+    loginBtn.classList.remove("hidden");
+
+    logoutBtn.classList.add("hidden");
+
+  }
+
+  setupAdminAgendaNav();
+
+}
+
+
+/* =========================================================
+   NAV AGENDA ADMIN
+========================================================= */
+
+function setupAdminAgendaNav(){
+
+  const nav=document.querySelector(".bottom-nav");
+
+  if(!nav)return;
+
+  let agendaBtn=q("agendaNavButton");
+
+  let apptBtn=nav.querySelector(
+    '[data-page="appointmentsPage"]'
+  );
+
+  if(isAdmin()){
+
+    ensureAgendaPage();
+
+    if(!agendaBtn){
+
+      agendaBtn=document.createElement("button");
+
+      agendaBtn.id="agendaNavButton";
+
+      agendaBtn.dataset.page="agendaPage";
+
+      agendaBtn.innerHTML=
+        "<span>▦</span><small>Agenda</small>";
+
+      agendaBtn.onclick=
+        ()=>showPage("agendaPage");
+
+      if(apptBtn){
+
+        nav.replaceChild(
+          agendaBtn,
+          apptBtn
+        );
+
+      }else{
+
+        nav.insertBefore(
+          agendaBtn,
+          nav.children[2]||null
+        );
+
+      }
+
+    }
+
+  }else if(agendaBtn){
+
+    const b=document.createElement("button");
+
+    b.dataset.page="appointmentsPage";
+
+    b.innerHTML=
+      "<span>◷</span><small>Appuntamenti</small>";
+
+    b.onclick=
+      ()=>showPage("appointmentsPage");
+
+    nav.replaceChild(
+      b,
+      agendaBtn
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CREA PAGINA AGENDA
+========================================================= */
+
+function ensureAgendaPage(){
+
+  if(q("agendaPage"))return;
+
+  const section=document.createElement("section");
+
+  section.id="agendaPage";
+
+  section.className="page";
+
+  section.innerHTML=`
+
+<div class="page-heading">
+
+  <span>GESTIONE PROFESSIONALE</span>
+
+  <h2>Agenda</h2>
+
+  <p>
+    Calendario, clienti, incassi e gestione completa.
+  </p>
+
+</div>
+
+<div class="admin-actions">
+
+  <button onclick="openManualBooking()">
+    ＋ AGGIUNGI CLIENTE
+  </button>
+
+  <button onclick="openBlockModal()">
+    ⊘ BLOCCA ORARIO
+  </button>
+
+</div>
+
+<div class="card calendar-card">
+
+  <div class="booking-month-nav">
+
+    <button id="agendaPrev">‹</button>
+
+    <h3 id="agendaMonthTitle"></h3>
+
+    <button id="agendaNext">›</button>
+
+  </div>
+
+  <div class="booking-weekdays">
+
+    <span>L</span>
+    <span>M</span>
+    <span>M</span>
+    <span>G</span>
+    <span>V</span>
+    <span>S</span>
+    <span>D</span>
+
+  </div>
+
+  <div
+    id="agendaCalendar"
+    class="booking-calendar agenda-calendar"
+  ></div>
+
+</div>
+
+<div class="admin-summary">
+
+  <div class="admin-stat">
+
+    <small>APPUNTAMENTI</small>
+
+    <b id="agendaCount">0</b>
+
+  </div>
+
+  <div class="admin-stat">
+
+    <small>INCASSO PREVISTO</small>
+
+    <b id="agendaRevenue">€0</b>
+
+  </div>
+
+</div>
+
+<div class="agenda-tools">
+
+  <button
+    type="button"
+    onclick="openManualBooking()"
+  >
+
+    ＋ AGGIUNGI CLIENTE
+
+  </button>
+
+  <button
+    type="button"
+    onclick="openBlockModal()"
+  >
+
+    ⊘ BLOCCA ORARIO
+
+  </button>
+
+</div>
+
+<div class="agenda-day-title">
+
+  <span>PROGRAMMA GIORNALIERO</span>
+
+  <h3 id="agendaDayTitle">
+    Agenda del giorno
+  </h3>
+
+</div>
+
+<div
+  id="agendaSlots"
+  class="agenda-slots"
+></div>
+
+`;
+
+  document
+    .querySelector(".main-content")
+    .appendChild(section);
+
+  q("agendaPrev").onclick=()=>{
+
+    agendaViewDate.setMonth(
+      agendaViewDate.getMonth()-1
+    );
+
+    renderAgendaCalendar();
+
+  };
+
+  q("agendaNext").onclick=()=>{
+
+    agendaViewDate.setMonth(
+      agendaViewDate.getMonth()+1
+    );
+
+    renderAgendaCalendar();
+
+  };
+
+}
+
+
+/* =========================================================
+   CARICA AGENDA
+========================================================= */
+
+async function loadAgenda(){
+
+  if(!isAdmin()||!supabaseClient)return;
+
+  ensureAgendaPage();
+
+  try{
+
+    const [
+      {data:a,error:e1},
+      {data:b,error:e2}
+    ]=await Promise.all([
+
+      supabaseClient
+        .from("appointments")
+        .select("*")
+        .order("appointment_date")
+        .order("appointment_time"),
+
+      supabaseClient
+        .from("availability_blocks")
+        .select("*")
+
+    ]);
+
+    if(e1)throw e1;
+
+    if(e2)console.warn(e2);
+
+    agendaAppointments=a||[];
+
+    agendaBlocks=b||[];
+
+    renderAgendaCalendar();
+
+    renderAgendaSlots();
+
+  }catch(e){
+
+    console.error(e);
+
+    showToast(
+      "Errore caricamento agenda",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CALENDARIO AGENDA
+========================================================= */
+
+function renderAgendaCalendar(){
+
+  const grid=q("agendaCalendar");
+
+  const title=q("agendaMonthTitle");
+
+  if(!grid||!title)return;
+
+  const y=agendaViewDate.getFullYear();
+
+  const m=agendaViewDate.getMonth();
+
+  const first=new Date(y,m,1);
+
+  const offset=(first.getDay()+6)%7;
+
+  const days=new Date(y,m+1,0).getDate();
+
+  title.textContent=
+    new Intl.DateTimeFormat(
+      "it-IT",
+      {
+        month:"long",
+        year:"numeric"
+      }
+    ).format(agendaViewDate);
+
+  let html="";
+
+  for(let i=0;i<offset;i++){
+
+    html+='<span class="calendar-empty"></span>';
+
+  }
+
+  for(let d=1;d<=days;d++){
+
+    const val=localDateString(
+      new Date(y,m,d)
+    );
+
+    const n=agendaAppointments.filter(
+      a=>
+        a.appointment_date===val&&
+        a.status!=="cancelled"
+    ).length;
+
+    const blocked=agendaBlocks.some(
+      b=>
+        b.block_date===val&&
+        b.block_time==="ALL"
+    );
+
+    html+=`
+
+<button
+  class="calendar-day
+    ${val===agendaSelectedDate?"selected":""}
+    ${n?"has-booking":""}"
+  data-date="${val}"
+>
+
+  ${d}
+
+  ${n?`<i>${n}</i>`:""}
+
+  ${blocked?"<em>×</em>":""}
+
+</button>
+
+`;
+
+  }
+
+  grid.innerHTML=html;
+
+  grid
+    .querySelectorAll(".calendar-day")
+    .forEach(b=>{
+
+      b.onclick=()=>{
+
+        agendaSelectedDate=b.dataset.date;
+
+        renderAgendaCalendar();
+
+        renderAgendaSlots();
+
+      };
+
+    });
+
+}
+
+
+/* =========================================================
+   SLOT AGENDA
+========================================================= */
+
+function renderAgendaSlots(){
+
+  const box=q("agendaSlots");
+
+  if(!box)return;
+
+  const list=agendaAppointments.filter(
+    a=>
+      a.appointment_date===agendaSelectedDate&&
+      a.status!=="cancelled"
+  );
+
+  q("agendaDayTitle").textContent=
+    "Agenda · "+formatDate(agendaSelectedDate);
+
+  q("agendaCount").textContent=list.length;
+
+  const total=list.reduce(
+    (x,a)=>x+Number(a.price||0),
+    0
+  );
+
+  q("agendaRevenue").textContent=
+    "€"+total;
+
+  box.innerHTML=TIMES.map(t=>{
+
+    const a=list.find(
+      x=>
+        String(x.appointment_time||"")
+          .slice(0,5)===t
+    );
+
+    const block=agendaBlocks.find(
+      b=>
+        b.block_date===agendaSelectedDate&&
+        (
+          b.block_time===t||
+          b.block_time==="ALL"
+        )
+    );
+
+    if(a)return `
+
+<div class="agenda-slot booked">
+
+  <time>${t}</time>
+
+  <div>
+
+    <b>
+      ${escapeHtml(a.client_name||"Cliente")}
+    </b>
+
+    <small>
+      ${escapeHtml(a.service||"")}
+      · €${a.price||0}
+      · ${escapeHtml(a.client_phone||"")}
+    </small>
+
+  </div>
+
+  <div class="slot-actions">
+
+    <button
+      onclick="openMoveBooking('${a.id}')"
+    >
+      ↔
+    </button>
+
+    <button
+      onclick="deleteAdminBooking('${a.id}')"
+    >
+      ×
+    </button>
+
+  </div>
+
+</div>
+
+`;
+
+    if(block)return `
+
+<div class="agenda-slot blocked">
+
+  <time>${t}</time>
+
+  <div>
+
+    <b>
+      Orario bloccato
+    </b>
+
+    <small>
+      Non prenotabile dai clienti
+    </small>
+
+  </div>
+
+  <div class="slot-actions">
+
+    <button
+      onclick="unblockTime('${block.id}')"
+    >
+      ✓
+    </button>
+
+  </div>
+
+</div>
+
+`;
+
+    return `
+
+<div class="agenda-slot free">
+
+  <time>${t}</time>
+
+  <div>
+
+    <b>
+      Disponibile
+    </b>
+
+    <small>
+      Puoi aggiungere un cliente manualmente
+    </small>
+
+  </div>
+
+  <div class="slot-actions">
+
+    <button
+      onclick="openManualBooking('${t}')"
+    >
+      ＋
+    </button>
+
+    <button
+      onclick="blockTime('${t}')"
+    >
+      ⊘
+    </button>
+
+  </div>
+
+</div>
+
+`;
+
+  }).join("");
+
+}
+
+
+/* =========================================================
+   ELIMINA APPUNTAMENTO ADMIN
+========================================================= */
+
+async function deleteAdminBooking(id){
+
+  if(
+    !confirm(
+      "Eliminare definitivamente questo appuntamento?"
+    )
+  )return;
+
+  try{
+
+    const {data:booking}=await supabaseClient
+      .from("appointments")
+      .select("*")
+      .eq("id",id)
+      .single();
+
+    const {error}=await supabaseClient
+      .from("appointments")
+      .delete()
+      .eq("id",id);
+
+    if(error)throw error;
+
+
+    if(booking){
+
+      await sendGrimaldiNotification(
+
+        booking.client_id,
+
+        booking.client_phone,
+
+        "Prenotazione annullata",
+
+        `Il tuo appuntamento del ${formatDate(booking.appointment_date)} alle ${String(booking.appointment_time||"").slice(0,5)} è stato annullato.`,
+
+        "booking_cancelled"
+
+      );
+
+    }
+
+
+    showToast(
+      "Appuntamento eliminato",
+      "success"
+    );
+
+    await loadAgenda();
+
+  }catch(e){
+
+    showToast(
+      "Errore eliminazione: "+e.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   AGGIUNGI CLIENTE MANUALE
+========================================================= */
+
+function openManualBooking(prefillTime=""){
+
+  q("adminModal")?.remove();
+
+  const modal=document.createElement("div");
+
+  modal.id="adminModal";
+
+  modal.className="modal";
+
+  modal.innerHTML=`
+
+<div class="modal-box">
+
+  <button
+    class="close"
+    onclick="closeAdminModal()"
+  >
+    ×
+  </button>
+
+  <h2>Aggiungi cliente</h2>
+
+  <p class="modal-text">
+    ${formatDate(agendaSelectedDate)}
+  </p>
+
+  <input
+    id="manualName"
+    placeholder="Nome e cognome"
+  >
+
+  <input
+    id="manualPhone"
+    type="tel"
+    placeholder="Numero di telefono"
+  >
+
+  <select id="manualService">
+
+    ${services.map(s=>`
+
+      <option value="${s.id}">
+
+        ${s.name} · €${s.price}
+
+      </option>
+
+    `).join("")}
+
+  </select>
+
+  <select id="manualTime">
+
+    ${TIMES.map(t=>`
+
+      <option
+        value="${t}"
+        ${t===prefillTime?"selected":""}
+      >
+
+        ${t}
+
+      </option>
+
+    `).join("")}
+
+  </select>
+
+  <button
+    class="gold-button full"
+    onclick="saveManualBooking()"
+  >
+
+    AGGIUNGI ALL'AGENDA
+
+  </button>
+
+</div>
+
+`;
+
+  document.body.appendChild(modal);
+
+}
+
+
+function closeAdminModal(){
+
+  q("adminModal")?.remove();
+
+}
+
+
+async function saveManualBooking(){
+
+  const name=q("manualName")
+    .value
+    .trim();
+
+  const phone=normalizePhone(
+    q("manualPhone").value
+  );
+
+  const svc=services.find(
+    s=>s.id===q("manualService").value
+  );
+
+  const time=q("manualTime").value;
+
+  if(!name){
+
+    showToast(
+      "Inserisci il nome del cliente",
+      "error"
+    );
+
+    return;
+
+  }
+
+  const exists=agendaAppointments.some(
+    a=>
+      a.appointment_date===agendaSelectedDate&&
+      String(a.appointment_time)
+        .slice(0,5)===time&&
+      a.status!=="cancelled"
+  );
+
+  if(exists){
+
+    showToast(
+      "Orario già occupato",
+      "error"
+    );
+
+    return;
+
+  }
+
+  try{
+
+    let clientId=currentUser.id;
+
+    if(phone){
+
+      const r=await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("customer_phone",phone)
+        .maybeSingle();
+
+      if(r.data){
+
+        clientId=r.data.id;
+
+      }
+
+    }
+
+    const {error}=await supabaseClient
+      .from("appointments")
+      .insert([{
+
+        client_id:clientId,
+
+        client_name:name,
+
+        client_phone:phone||"Manuale",
+
+        appointment_date:agendaSelectedDate,
+
+        appointment_time:time,
+
+        service:svc.name,
+
+        price:svc.price,
+
+        status:"confirmed"
+
+      }]);
+
+    if(error)throw error;
+
+
+    /* NOTIFICA CLIENTE */
+
+    if(phone){
+
+      const profile=await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("customer_phone",phone)
+        .maybeSingle();
+
+      if(profile.data){
+
+        await sendGrimaldiNotification(
+
+          profile.data.id,
+
+          phone,
+
+          "Nuova prenotazione ✂️",
+
+          `Ti è stato prenotato un appuntamento per ${svc.name} il ${formatDate(agendaSelectedDate)} alle ${time}.`,
+
+          "booking_confirmed"
+
+        );
+
+      }
+
+    }
+
+
+    closeAdminModal();
+
+    showToast(
+      "Cliente aggiunto all'agenda",
+      "success"
+    );
+
+    await loadAgenda();
+
+  }catch(e){
+
+    showToast(
+      "Errore: "+e.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SPOSTA APPUNTAMENTO
+========================================================= */
+
+function openMoveBooking(id){
+
+  const a=agendaAppointments.find(
+    x=>x.id===id
+  );
+
+  if(!a)return;
+
+  const modal=document.createElement("div");
+
+  modal.id="adminModal";
+
+  modal.className="modal";
+
+  modal.innerHTML=`
+
+<div class="modal-box">
+
+  <button
+    class="close"
+    onclick="closeAdminModal()"
+  >
+    ×
+  </button>
+
+  <h2>Sposta appuntamento</h2>
+
+  <p class="modal-text">
+
+    ${escapeHtml(a.client_name)}
+    ·
+    ${escapeHtml(a.service)}
+
+  </p>
+
+  <input
+    id="moveDate"
+    type="date"
+    value="${a.appointment_date}"
+  >
+
+  <select id="moveTime">
+
+    ${TIMES.map(t=>`
+
+      <option
+        value="${t}"
+        ${
+          String(a.appointment_time)
+            .slice(0,5)===t
+            ?"selected"
+            :""
+        }
+      >
+
+        ${t}
+
+      </option>
+
+    `).join("")}
+
+  </select>
+
+  <button
+    class="gold-button full"
+    onclick="saveMoveBooking('${id}')"
+  >
+
+    SALVA SPOSTAMENTO
+
+  </button>
+
+</div>
+
+`;
+
+  document.body.appendChild(modal);
+
+}
+
+
+async function saveMoveBooking(id){
+
+  const date=q("moveDate").value;
+
+  const time=q("moveTime").value;
+
+  if(!date||!time)return;
+
+  try{
+
+    const appointment=agendaAppointments.find(
+      a=>a.id===id
+    );
+
+    const conflict=agendaAppointments.some(
+      a=>
+        a.id!==id&&
+        a.appointment_date===date&&
+        String(a.appointment_time)
+          .slice(0,5)===time&&
+        a.status!=="cancelled"
+    );
+
+    if(conflict){
+
+      showToast(
+        "Nuovo orario già occupato",
+        "error"
+      );
+
+      return;
+
+    }
+
+    const {error}=await supabaseClient
+      .from("appointments")
+      .update({
+
+        appointment_date:date,
+
+        appointment_time:time
+
+      })
+      .eq("id",id);
+
+    if(error)throw error;
+
+
+    /* NOTIFICA SPOSTAMENTO */
+
+    if(appointment){
+
+      await sendGrimaldiNotification(
+
+        appointment.client_id,
+
+        appointment.client_phone,
+
+        "Appuntamento spostato 📅",
+
+        `Il tuo appuntamento per ${appointment.service} è stato spostato a ${formatDate(date)} alle ${time}.`,
+
+        "booking_moved"
+
+      );
+
+    }
+
+
+    agendaSelectedDate=date;
+
+    agendaViewDate=new Date(
+      date+"T12:00:00"
+    );
+
+    closeAdminModal();
+
+    showToast(
+      "Appuntamento spostato",
+      "success"
+    );
+
+    await loadAgenda();
+
+  }catch(e){
+
+    showToast(
+      "Errore spostamento: "+e.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   BLOCCO ORARI
+========================================================= */
+
+function openBlockModal(){
+
+  const modal=document.createElement("div");
+
+  modal.id="adminModal";
+
+  modal.className="modal";
+
+  modal.innerHTML=`
+
+<div class="modal-box">
+
+  <button
+    class="close"
+    onclick="closeAdminModal()"
+  >
+    ×
+  </button>
+
+  <h2>Blocca orario</h2>
+
+  <p class="modal-text">
+
+    ${formatDate(agendaSelectedDate)}
+
+  </p>
+
+  <select id="blockTime">
+
+    <option value="ALL">
+      Tutta la giornata
+    </option>
+
+    ${TIMES.map(t=>`
+
+      <option value="${t}">
+        ${t}
+      </option>
+
+    `).join("")}
+
+  </select>
+
+  <button
+    class="gold-button full"
+    onclick="saveBlockTime()"
+  >
+
+    BLOCCA
+
+  </button>
+
+</div>
+
+`;
+
+  document.body.appendChild(modal);
+
+}
+
+
+async function blockTime(time){
+
+  if(
+    !confirm(
+      `Bloccare l'orario ${time}?`
+    )
+  )return;
+
+  await createBlock(time);
+
+}
+
+
+async function saveBlockTime(){
+
+  await createBlock(
+    q("blockTime").value
+  );
+
+  closeAdminModal();
+
+}
+
+
+async function createBlock(time){
+
+  try{
+
+    const {error}=await supabaseClient
+      .from("availability_blocks")
+      .insert([{
+
+        block_date:agendaSelectedDate,
+
+        block_time:time
+
+      }]);
+
+    if(error)throw error;
+
+    showToast(
+      "Orario bloccato",
+      "success"
+    );
+
+    await loadAgenda();
+
+  }catch(e){
+
+    showToast(
+
+      e.code==="23505"
+        ?"Orario già bloccato"
+        :"Errore blocco: "+e.message,
+
+      "error"
+
+    );
+
+  }
+
+}
+
+
+async function unblockTime(id){
+
+  if(
+    !confirm(
+      "Sbloccare questo orario?"
+    )
+  )return;
+
+  try{
+
+    const {error}=await supabaseClient
+      .from("availability_blocks")
+      .delete()
+      .eq("id",id);
+
+    if(error)throw error;
+
+    showToast(
+      "Orario sbloccato",
+      "success"
+    );
+
+    await loadAgenda();
+
+  }catch(e){
+
+    showToast(
+      "Errore sblocco",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   NOTIFICHE / INSTALLAZIONE
+========================================================= */
+
+function requestNotifications(){
+
+  requestOneSignalNotifications();
+
+}
+
+
+function showInstall(){
+
+  q("installModal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeInstall(){
+
+  q("installModal")
+    .classList.add("hidden");
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function showToast(
+  message,
+  type="default"
+){
+
+  const t=q("toast");
+
+  t.textContent=message;
+
+  t.className="";
+
+  t.classList.add(type);
+
+  requestAnimationFrame(()=>{
+
+    t.classList.add("show");
+
+  });
+
+  clearTimeout(toastTimer);
+
+  toastTimer=setTimeout(()=>{
+
+    t.classList.remove("show");
+
+  },3000);
+
+}
+
+
+/* =========================================================
+   FUNZIONI GLOBALI HTML
+========================================================= */
+
+Object.assign(window,{
+
+  showPage,
+
+  loadAgenda,
+
+  openAuth,
+
+  closeAuth,
+
+  openRegister,
+
+  closeRegister,
+
+  cancelBooking,
+
+  logoutUser,
+
+  requestNotifications,
+
+  showInstall,
+
+  closeInstall,
+
+  openManualBooking,
+
+  closeAdminModal,
+
+  saveManualBooking,
+
+  openMoveBooking,
+
+  saveMoveBooking,
+
+  deleteAdminBooking,
+
+  openBlockModal,
+
+  saveBlockTime,
+
+  blockTime,
+
+  unblockTime
+
+});
+
+
+/* =========================================================
+   ONESIGNAL BUTTON FIX
+========================================================= */
+
+window.enableGrimaldiPush=function(){
+
+  try{
+
+    if(!window.OneSignalDeferred){
+
+      showToast(
+        "Notifiche in caricamento, riprova tra un secondo...",
+        "error"
+      );
+
+      return;
+
+    }
+
+    showToast(
+      "Apertura richiesta notifiche..."
+    );
+
+    window.OneSignalDeferred.push(
+      async function(OneSignal){
+
+        try{
+
+          if(
+            OneSignal.Notifications.permission!=="granted"
+          ){
+
+            await OneSignal.Notifications
+              .requestPermission();
+
+          }
+
+
+          await new Promise(
+            function(resolve){
+
+              setTimeout(resolve,1500);
+
+            }
+          );
+
+
+          const push=
+            OneSignal.User&&
+            OneSignal.User.PushSubscription;
+
+          const optedIn=
+            push&&
+            push.optedIn===true;
+
+
+          if(optedIn){
+
+            if(
+              typeof currentUser!=="undefined"&&
+              currentUser&&
+              currentUser.id
+            ){
+
+              try{
+
+                await OneSignal.login(
+                  String(currentUser.id)
+                );
+
+              }catch(e){}
+
+            }
+
+            showToast(
+              "Notifiche attivate correttamente!",
+              "success"
+            );
+
+          }else if(
+            OneSignal.Notifications.permission==="granted"
+          ){
+
+            showToast(
+              "Permesso notifiche attivo. OneSignal sta completando la registrazione.",
+              "success"
+            );
+
+          }else{
+
+            showToast(
+              "Notifiche non autorizzate",
+              "error"
+            );
+
+          }
+
+        }catch(e){
+
+          console.error(
+            "OneSignal button error:",
+            e
+          );
+
+          showToast(
+            "Errore attivazione notifiche",
+            "error"
+          );
+
+        }
+
+      }
+    );
+
+  }catch(e){
+
+    console.error(
+      "Push handler error:",
+      e
+    );
+
+    showToast(
+      "Errore attivazione notifiche",
+      "error"
+    );
+
+  }
+
+};
+
+
+window.requestNotifications=
+  window.enableGrimaldiPush;
