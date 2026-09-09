@@ -184,3 +184,30 @@ window.enableGrimaldiPush = function () {
 
 // Override the existing HTML onclick function explicitly.
 window.requestNotifications = window.enableGrimaldiPush;
+async function sendNotification(customerPhone, title, message, type = "info") {
+  try {
+    const { data, error } = await supabase.functions.invoke(
+      "send-notification",
+      {
+        body: {
+          customer_phone: customerPhone,
+          title: title,
+          message: message,
+          type: type
+        }
+      }
+    );
+
+    if (error) {
+      console.error("Errore notifica:", error);
+      return false;
+    }
+
+    console.log("Notifica inviata:", data);
+    return true;
+
+  } catch (error) {
+    console.error("Errore chiamata notifica:", error);
+    return false;
+  }
+}
