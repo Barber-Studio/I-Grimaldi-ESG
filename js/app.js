@@ -2787,71 +2787,66 @@ function saveUserSession(
 
 
 async function restoreSession() {
+  let savedUser = null;
 
   try {
-
-    const savedUser =
-      localStorage.getItem(
-        "grimaldiUser"
-      ) ||
-      localStorage.getItem(
-        "igrimaldi_session"
-      ) ||
-      sessionStorage.getItem(
-        "grimaldiUser"
-      );
-
+    savedUser =
+      localStorage.getItem("grimaldiUser") ||
+      localStorage.getItem("igrimaldi_session") ||
+      sessionStorage.getItem("grimaldiUser");
 
     if (!savedUser) {
-
       updateUserInterface();
-
       return;
-
     }
 
+    const user = JSON.parse(savedUser);
 
-    const user =
-      JSON.parse(
-        savedUser
-      );
-
-
-    if (
-      user &&
-      user.id &&
-      user.customer_phone &&
-      user.customer_pin
-    ) {
-
-      currentUser =
-        user;
-
-
+    if (!user || !user.id) {
       updateUserInterface();
-
-      updateAdminAgendaAccess();
-
-      setupOneSignalUser();
-
-    } else {
-
-      clearSession();
-
+      return;
     }
 
+    currentUser = user;
+
+    // Mantiene la sessione persistente
+    const userData = JSON.stringify(user);
+
+    localStorage.setItem("grimaldiUser", userData);
+    localStorage.setItem("igrimaldi_session", userData);
+
+    updateUserInterface();
 
   } catch (error) {
+    console.warn("Errore ripristino sessione:", error);
 
-    console.warn(
-      "Errore ripristino sessione:",
-      error
-    );
+    // Cancella la sessione SOLO se i dati salvati sono corrotti
+    try {
+      if (savedUser) {
+        JSON.parse(savedUser);
+      }
+    } catch (_) {
+      localStorage.removeItem("grimaldiUser");
+      localStorage.removeItem("igrimaldi_session");
+      sessionStorage.removeItem("grimaldiUser");
+    }
 
-    clearSession();
-
+    currentUser = null;
+    updateUserInterface();
+    return;
   }
 
+  // OneSignal non deve mai far perdere la sessione
+  if (currentUser) {
+    try {
+      await setupOneSignalUser();
+    } catch (error) {
+      console.warn(
+        "OneSignal non disponibile all'avvio, sessione mantenuta:",
+        error
+      );
+    }
+  }
 }
 
 
