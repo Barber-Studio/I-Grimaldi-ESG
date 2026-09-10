@@ -229,7 +229,22 @@ async function igrimaldiAPI(
   payload = {}
 ) {
 
+  const controller =
+    new AbortController();
+
+  const timeout =
+    setTimeout(
+      () => controller.abort(),
+      15000
+    );
+
   try {
+
+    console.log(
+      "I GRIMALDI API →",
+      action
+    );
+
 
     const response =
       await fetch(
@@ -237,61 +252,135 @@ async function igrimaldiAPI(
         {
           method: "POST",
 
+          signal:
+            controller.signal,
+
           headers: {
             "Content-Type": "application/json",
-            "apikey": SUPABASE_KEY
+
+            "apikey":
+              SUPABASE_KEY,
+
+            "Authorization":
+              `Bearer ${SUPABASE_KEY}`
           },
 
-          body: JSON.stringify({
-            action,
-            ...payload
-          })
+          body:
+            JSON.stringify({
+              action,
+              ...payload
+            })
         }
       );
+
+
+    const responseText =
+      await response.text();
+
+
+    console.log(
+      "I GRIMALDI API ←",
+      action,
+      response.status,
+      responseText
+    );
 
 
     let result = null;
 
 
-    try {
+    if (responseText) {
 
-      result =
-        await response.json();
+      try {
 
-    } catch {
+        result =
+          JSON.parse(
+            responseText
+          );
+
+      } catch {
+
+        throw new Error(
+          `Risposta server non valida (${response.status}).`
+        );
+
+      }
+
+    }
+
+
+    if (!response.ok) {
+
+      const serverError =
+        result?.error ||
+        result?.message ||
+        responseText ||
+        `Errore server (${response.status})`;
+
 
       throw new Error(
-        "Risposta non valida dal server."
+        serverError
       );
 
     }
 
 
     if (
-      !response.ok ||
-      result?.ok === false
+      result &&
+      result.ok === false
     ) {
 
       throw new Error(
-        result?.error ||
-        `Errore server (${response.status})`
+        result.error ||
+        result.message ||
+        "Operazione non riuscita."
       );
 
     }
 
 
-    return result;
+    return result || {};
 
 
   } catch (error) {
 
     console.error(
-      "I GRIMALDI API:",
+      "I GRIMALDI API ERRORE:",
       action,
       error
     );
 
+
+    if (
+      error?.name ===
+      "AbortError"
+    ) {
+
+      throw new Error(
+        "Il server non ha risposto. Controlla che la Edge Function igrimaldi-api sia attiva."
+      );
+
+    }
+
+
+    if (
+      error instanceof TypeError
+    ) {
+
+      throw new Error(
+        "Impossibile raggiungere il server. Controlla URL della Edge Function, CORS e pubblicazione della funzione."
+      );
+
+    }
+
+
     throw error;
+
+  } finally {
+
+    clearTimeout(
+      timeout
+    );
 
   }
 
@@ -440,19 +529,25 @@ function showToast(
 
   if (type) {
 
-    toast.classList.add(type);
+    toast.classList.add(
+      type
+    );
 
   }
 
 
   requestAnimationFrame(() => {
 
-    toast.classList.add("show");
+    toast.classList.add(
+      "show"
+    );
 
   });
 
 
-  clearTimeout(toastTimer);
+  clearTimeout(
+    toastTimer
+  );
 
 
   toastTimer =
@@ -1075,6 +1170,7 @@ async function loadAvailableTimes() {
 
 
     showToast(
+      error.message ||
       "Impossibile caricare gli orari",
       "error"
     );
@@ -1558,11 +1654,6 @@ async function createBooking() {
     );
 
 
-    /*
-      La Edge Function ha già scritto
-      l'appuntamento nel database.
-    */
-
     selectedService =
       null;
 
@@ -2024,6 +2115,10 @@ function closeAuth() {
 }
 
 
+/* =========================================================
+   LOGIN CORRETTO
+========================================================= */
+
 async function loginUser() {
 
   const phoneInput =
@@ -2064,6 +2159,35 @@ async function loginUser() {
   }
 
 
+  if (
+    phone.length < 8
+  ) {
+
+    showToast(
+      "Numero di telefono non valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !/^[0-9]+$/.test(pin) ||
+    pin.length < 4
+  ) {
+
+    showToast(
+      "PIN non valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+
   const button =
     q("loginButton");
 
@@ -2088,9 +2212,20 @@ async function loginUser() {
 
 
     console.log(
-      "I GRIMALDI: login..."
+      "I GRIMALDI: avvio login",
+      {
+        phone
+      }
     );
 
+
+    /*
+      Il login passa dalla Edge Function.
+
+      Il database è stato protetto con RLS,
+      quindi NON facciamo più una SELECT
+      diretta su profiles dal browser.
+    */
 
     const result =
       await igrimaldiAPI(
@@ -2102,27 +2237,34 @@ async function loginUser() {
       );
 
 
+    console.log(
+      "I GRIMALDI: risposta login",
+      result
+    );
+
+
     if (
       !result ||
       !result.user
     ) {
 
       throw new Error(
-        "Risposta login non valida."
+        "Il server non ha restituito i dati dell'utente."
       );
 
     }
 
 
-    /*
-      Il PIN viene mantenuto nella sessione
-      perché il sistema attuale usa autenticazione
-      personalizzata telefono + PIN.
-    */
-
     currentUser = {
       ...result.user,
-      customer_pin: pin
+
+      /*
+        Il sistema personalizzato usa
+        telefono + PIN per le chiamate successive.
+      */
+
+      customer_pin:
+        pin
     };
 
 
@@ -2151,14 +2293,24 @@ async function loginUser() {
   } catch (error) {
 
     console.error(
-      "Errore login:",
+      "ERRORE LOGIN COMPLETO:",
       error
     );
 
 
+    const message =
+      error?.message ||
+      "Errore durante il login";
+
+
+    /*
+      Mostriamo l'errore reale.
+      Non nascondiamo più eventuali errori
+      della Edge Function.
+    */
+
     showToast(
-      error.message ||
-      "Errore durante il login",
+      message,
       "error"
     );
 
@@ -2375,7 +2527,8 @@ async function handleRegistration() {
 
     currentUser = {
       ...result.user,
-      customer_pin: pin
+      customer_pin:
+        pin
     };
 
 
@@ -2523,12 +2676,6 @@ async function restoreSession() {
 
 
     } else {
-
-      /*
-        Vecchia sessione senza PIN.
-        La cancelliamo perché non può essere
-        utilizzata dalla nuova Edge Function.
-      */
 
       localStorage.removeItem(
         "grimaldiUser"
