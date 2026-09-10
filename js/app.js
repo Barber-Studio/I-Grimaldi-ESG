@@ -25,33 +25,19 @@ const SUPABASE_KEY =
 let supabaseClient = null;
 
 try {
-
   if (
     window.supabase &&
     typeof window.supabase.createClient === "function"
   ) {
-
-    supabaseClient =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
-
-  } else {
-
-    console.error(
-      "Libreria Supabase non trovata."
+    supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
     );
-
+  } else {
+    console.error("Libreria Supabase non trovata.");
   }
-
 } catch (error) {
-
-  console.error(
-    "Errore inizializzazione Supabase:",
-    error
-  );
-
+  console.error("Errore inizializzazione Supabase:", error);
 }
 
 
@@ -60,56 +46,48 @@ try {
 ========================================================= */
 
 const services = [
-
   {
     id: "shampoo_taglio",
     name: "Shampoo + Taglio",
     price: 20,
     duration: 30
   },
-
   {
     id: "shampoo",
     name: "Shampoo",
     price: 10,
     duration: 30
   },
-
   {
     id: "barba_5",
     name: "Barba 5€",
     price: 5,
     duration: 30
   },
-
   {
     id: "barba_10",
     name: "Barba 10€",
     price: 10,
     duration: 30
   },
-
   {
     id: "colore",
     name: "Colore",
     price: 20,
     duration: 30
   },
-
   {
     id: "colore_barba",
     name: "Colore Barba",
     price: 10,
     duration: 30
   },
-
   {
     id: "fiala",
     name: "Fiala",
     price: 5,
     duration: 30
   }
-
 ];
 
 
@@ -118,39 +96,27 @@ const services = [
 ========================================================= */
 
 const TIMES = [
-
   "09:00",
   "09:30",
-
   "10:00",
   "10:30",
-
   "11:00",
   "11:30",
-
   "12:00",
   "12:30",
-
   "15:00",
   "15:30",
-
   "16:00",
   "16:30",
-
   "17:00",
   "17:30",
-
   "18:00",
   "18:30",
-
   "19:00",
   "19:30",
-
   "20:00",
   "20:30",
-
   "21:00"
-
 ];
 
 
@@ -161,57 +127,54 @@ const TIMES = [
 let currentUser = null;
 
 let selectedService = null;
-
 let selectedDate = null;
-
 let selectedTime = null;
 
 let bookingViewDate = new Date();
 
 let adminAgendaDate = new Date();
-
 let adminSelectedDate = null;
 
 let toastTimer = null;
+
+let oneSignalInitialized = false;
 
 
 /* =========================================================
    AVVIO
 ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-    renderServices();
+  injectAgendaStyles();
 
-    setupBookingCalendar();
+  renderServices();
 
-    setupEvents();
+  setupBookingCalendar();
 
-    await restoreSession();
+  setupEvents();
 
-    setTimeout(() => {
+  await restoreSession();
 
-      const loading =
-        q("loadingScreen");
+  updateAdminAgendaAccess();
 
-      if (loading) {
+  setTimeout(() => {
 
-        loading.style.opacity = "0";
+    const loading = q("loadingScreen");
 
-        setTimeout(() => {
+    if (loading) {
 
-          loading.remove();
+      loading.style.opacity = "0";
 
-        }, 350);
+      setTimeout(() => {
+        loading.remove();
+      }, 350);
 
-      }
+    }
 
-    }, 800);
+  }, 800);
 
-  }
-);
+});
 
 
 /* =========================================================
@@ -219,9 +182,7 @@ document.addEventListener(
 ========================================================= */
 
 function q(id) {
-
   return document.getElementById(id);
-
 }
 
 
@@ -243,18 +204,15 @@ function normalizePhone(phone) {
 
 function localDateString(date) {
 
-  const year =
-    date.getFullYear();
+  const year = date.getFullYear();
 
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
 
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 
@@ -292,8 +250,7 @@ function normalizeTime(time) {
 
   if (!time) return "";
 
-  return String(time)
-    .slice(0, 5);
+  return String(time).slice(0, 5);
 
 }
 
@@ -318,49 +275,32 @@ function escapeHtml(value) {
    TOAST
 ========================================================= */
 
-function showToast(
-  message,
-  type = "default"
-) {
+function showToast(message, type = "default") {
 
-  const toast =
-    q("toast");
+  const toast = q("toast");
 
   if (!toast) {
-
     alert(message);
-
     return;
-
   }
 
-  toast.textContent =
-    message;
+  toast.textContent = message;
 
   toast.className = "";
 
   if (type) {
-
     toast.classList.add(type);
-
   }
 
   requestAnimationFrame(() => {
-
     toast.classList.add("show");
-
   });
 
   clearTimeout(toastTimer);
 
-  toastTimer =
-    setTimeout(() => {
-
-      toast.classList.remove(
-        "show"
-      );
-
-    }, 3500);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3500);
 
 }
 
@@ -370,6 +310,21 @@ function showToast(
 ========================================================= */
 
 function showPage(pageId) {
+
+  if (
+    pageId === "adminAgendaPage" &&
+    !isAdmin()
+  ) {
+
+    showToast(
+      "Accesso non autorizzato",
+      "error"
+    );
+
+    pageId = "homePage";
+
+  }
+
 
   document
     .querySelectorAll(".page")
@@ -384,9 +339,7 @@ function showPage(pageId) {
 
 
   document
-    .querySelectorAll(
-      ".bottom-nav button"
-    )
+    .querySelectorAll(".bottom-nav button")
     .forEach(button => {
 
       button.classList.toggle(
@@ -403,30 +356,17 @@ function showPage(pageId) {
   });
 
 
-  if (
-    pageId ===
-    "appointmentsPage"
-  ) {
-
+  if (pageId === "appointmentsPage") {
     loadUserBookings();
-
   }
 
 
-  if (
-    pageId ===
-    "profilePage"
-  ) {
-
+  if (pageId === "profilePage") {
     updateUserInterface();
-
   }
 
 
-  if (
-    pageId ===
-    "bookingPage"
-  ) {
+  if (pageId === "bookingPage") {
 
     renderBookingCalendar();
 
@@ -435,25 +375,7 @@ function showPage(pageId) {
   }
 
 
-  if (
-    pageId ===
-    "adminAgendaPage"
-  ) {
-
-    if (!isAdmin()) {
-
-      showToast(
-        "Accesso non autorizzato",
-        "error"
-      );
-
-      showPage(
-        "homePage"
-      );
-
-      return;
-
-    }
+  if (pageId === "adminAgendaPage") {
 
     renderAdminAgenda();
 
@@ -468,75 +390,52 @@ function showPage(pageId) {
 
 function renderServices() {
 
-  const container =
-    q("services");
+  const container = q("services");
 
   if (!container) return;
 
+  container.innerHTML = services.map(service => {
 
-  container.innerHTML =
-    services
-      .map(service => {
+    const selected =
+      selectedService &&
+      selectedService.id === service.id;
 
-        const selected =
-          selectedService &&
-          selectedService.id ===
-            service.id;
+    return `
+      <button
+        type="button"
+        class="service-card ${selected ? "selected" : ""}"
+        data-service="${escapeHtml(service.id)}"
+      >
+        <span class="service-name">
+          ${escapeHtml(service.name)}
+        </span>
 
+        <strong class="service-price">
+          €${service.price}
+        </strong>
+      </button>
+    `;
 
-        return `
-
-          <button
-            type="button"
-            class="service-card ${
-              selected
-                ? "selected"
-                : ""
-            }"
-            data-service="${service.id}"
-          >
-
-            <span class="service-name">
-              ${escapeHtml(
-                service.name
-              )}
-            </span>
-
-            <strong class="service-price">
-              €${service.price}
-            </strong>
-
-          </button>
-
-        `;
-
-      })
-      .join("");
+  }).join("");
 
 
   container
-    .querySelectorAll(
-      ".service-card"
-    )
+    .querySelectorAll(".service-card")
     .forEach(button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+      button.addEventListener("click", () => {
 
-          selectedService =
-            services.find(
-              service =>
-                service.id ===
-                button.dataset.service
-            ) || null;
+        selectedService =
+          services.find(
+            service =>
+              service.id === button.dataset.service
+          ) || null;
 
-          renderServices();
+        renderServices();
 
-          updateSummary();
+        updateSummary();
 
-        }
-      );
+      });
 
     });
 
@@ -549,110 +448,106 @@ function renderServices() {
 
 function setupEvents() {
 
-  const confirmButton =
-    q("confirmBooking");
+  q("confirmBooking")?.addEventListener(
+    "click",
+    createBooking
+  );
 
-  if (confirmButton) {
+  q("loginButton")?.addEventListener(
+    "click",
+    loginUser
+  );
 
-    confirmButton.addEventListener(
-      "click",
-      createBooking
-    );
-
-  }
-
-
-  const loginButton =
-    q("loginButton");
-
-  if (loginButton) {
-
-    loginButton.addEventListener(
-      "click",
-      loginUser
-    );
-
-  }
+  q("registerButton")?.addEventListener(
+    "click",
+    handleRegistration
+  );
 
 
-  const registerButton =
-    q("registerButton");
+  q("prevBookingMonth")?.addEventListener(
+    "click",
+    () => {
 
-  if (registerButton) {
+      const today = new Date();
 
-    registerButton.addEventListener(
-      "click",
-      handleRegistration
-    );
+      const currentMonth =
+        new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1
+        );
 
-  }
+      const previousMonth =
+        new Date(
+          bookingViewDate.getFullYear(),
+          bookingViewDate.getMonth() - 1,
+          1
+        );
 
-
-  const prevMonth =
-    q("prevBookingMonth");
-
-  if (prevMonth) {
-
-    prevMonth.addEventListener(
-      "click",
-      () => {
-
-        const today =
-          new Date();
-
-        const currentMonth =
-          new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            1
-          );
-
-        const previousMonth =
-          new Date(
-            bookingViewDate.getFullYear(),
-            bookingViewDate.getMonth() - 1,
-            1
-          );
-
-
-        if (
-          previousMonth >=
-          currentMonth
-        ) {
-
-          bookingViewDate.setMonth(
-            bookingViewDate.getMonth() - 1
-          );
-
-          renderBookingCalendar();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  const nextMonth =
-    q("nextBookingMonth");
-
-  if (nextMonth) {
-
-    nextMonth.addEventListener(
-      "click",
-      () => {
+      if (previousMonth >= currentMonth) {
 
         bookingViewDate.setMonth(
-          bookingViewDate.getMonth() + 1
+          bookingViewDate.getMonth() - 1
         );
 
         renderBookingCalendar();
 
       }
-    );
 
-  }
+    }
+  );
+
+
+  q("nextBookingMonth")?.addEventListener(
+    "click",
+    () => {
+
+      bookingViewDate.setMonth(
+        bookingViewDate.getMonth() + 1
+      );
+
+      renderBookingCalendar();
+
+    }
+  );
+
+
+  q("adminPrevMonth")?.addEventListener(
+    "click",
+    () => {
+
+      if (!isAdmin()) return;
+
+      adminAgendaDate.setMonth(
+        adminAgendaDate.getMonth() - 1
+      );
+
+      renderAdminAgenda();
+
+    }
+  );
+
+
+  q("adminNextMonth")?.addEventListener(
+    "click",
+    () => {
+
+      if (!isAdmin()) return;
+
+      adminAgendaDate.setMonth(
+        adminAgendaDate.getMonth() + 1
+      );
+
+      renderAdminAgenda();
+
+    }
+  );
+
+
+  q("adminAddClientButton")?.addEventListener(
+    "click",
+    openAdminAddClient
+  );
 
 }
 
@@ -663,20 +558,12 @@ function setupEvents() {
 
 function setupBookingCalendar() {
 
-  const today =
-    new Date();
+  const today = new Date();
 
-  today.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
+  today.setHours(0, 0, 0, 0);
 
   selectedDate =
     localDateString(today);
-
 
   bookingViewDate =
     new Date(
@@ -684,7 +571,6 @@ function setupBookingCalendar() {
       today.getMonth(),
       1
     );
-
 
   renderBookingCalendar();
 
@@ -699,25 +585,16 @@ function setupBookingCalendar() {
 
 function renderBookingCalendar() {
 
-  const calendar =
-    q("bookingCalendar");
+  const calendar = q("bookingCalendar");
+  const title = q("bookingMonthTitle");
 
-  const title =
-    q("bookingMonthTitle");
-
-
-  if (
-    !calendar ||
-    !title
-  ) return;
-
+  if (!calendar || !title) return;
 
   const year =
     bookingViewDate.getFullYear();
 
   const month =
     bookingViewDate.getMonth();
-
 
   title.textContent =
     new Intl.DateTimeFormat(
@@ -726,25 +603,14 @@ function renderBookingCalendar() {
         month: "long",
         year: "numeric"
       }
-    ).format(
-      bookingViewDate
-    );
+    ).format(bookingViewDate);
 
 
   const firstDay =
-    new Date(
-      year,
-      month,
-      1
-    );
-
+    new Date(year, month, 1);
 
   const startOffset =
-    (
-      firstDay.getDay() +
-      6
-    ) % 7;
-
+    (firstDay.getDay() + 6) % 7;
 
   const daysInMonth =
     new Date(
@@ -753,11 +619,8 @@ function renderBookingCalendar() {
       0
     ).getDate();
 
-
   const todayString =
-    localDateString(
-      new Date()
-    );
+    localDateString(new Date());
 
 
   let html = "";
@@ -791,7 +654,6 @@ function renderBookingCalendar() {
         )
       );
 
-
     const isPast =
       date < todayString;
 
@@ -803,7 +665,6 @@ function renderBookingCalendar() {
 
 
     html += `
-
       <button
         type="button"
         class="calendar-day
@@ -816,14 +677,12 @@ function renderBookingCalendar() {
       >
         ${day}
       </button>
-
     `;
 
   }
 
 
-  calendar.innerHTML =
-    html;
+  calendar.innerHTML = html;
 
 
   calendar
@@ -839,8 +698,7 @@ function renderBookingCalendar() {
           selectedDate =
             button.dataset.date;
 
-          selectedTime =
-            null;
+          selectedTime = null;
 
           renderBookingCalendar();
 
@@ -862,30 +720,21 @@ function renderBookingCalendar() {
 
 async function loadAvailableTimes() {
 
-  const container =
-    q("timeSlots");
+  const container = q("timeSlots");
 
   if (!container) return;
 
 
   container.innerHTML =
-    TIMES
-      .map(time => {
-
-        return `
-
-          <button
-            type="button"
-            class="time-slot"
-            data-time="${time}"
-          >
-            ${time}
-          </button>
-
-        `;
-
-      })
-      .join("");
+    TIMES.map(time => `
+      <button
+        type="button"
+        class="time-slot"
+        data-time="${time}"
+      >
+        ${time}
+      </button>
+    `).join("");
 
 
   const dateLabel =
@@ -919,30 +768,22 @@ async function loadAvailableTimes() {
     } =
       await supabaseClient
         .from("appointments")
-        .select(
-          "start_time,status"
-        )
+        .select("start_time,status")
         .eq(
           "appointment_date",
           selectedDate
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     const occupied =
       (data || [])
         .filter(
           appointment =>
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
+            appointment.status !== "cancelled" &&
+            appointment.status !== "cancelled_by_admin"
         )
         .map(
           appointment =>
@@ -958,34 +799,32 @@ async function loadAvailableTimes() {
     } =
       await supabaseClient
         .from("availability_blocks")
-        .select(
-          "block_time"
-        )
+        .select("block_time")
         .eq(
           "block_date",
           selectedDate
         );
 
 
-    if (blocksError) {
-
-      throw blocksError;
-
-    }
+    if (blocksError) throw blocksError;
 
 
     const blocked =
       (blocks || [])
-        .map(
-          block =>
+        .map(block => {
+
+          const value =
             String(
               block.block_time || ""
-            ).toUpperCase() === "ALL"
-              ? "ALL"
-              : normalizeTime(
-                  block.block_time
-                )
-        );
+            ).toUpperCase();
+
+          return value === "ALL"
+            ? "ALL"
+            : normalizeTime(
+                block.block_time
+              );
+
+        });
 
 
     const busyTimes =
@@ -999,10 +838,7 @@ async function loadAvailableTimes() {
           ];
 
 
-    setupTimeButtons(
-      busyTimes
-    );
-
+    setupTimeButtons(busyTimes);
 
   } catch (error) {
 
@@ -1010,7 +846,6 @@ async function loadAvailableTimes() {
       "Errore disponibilità:",
       error
     );
-
 
     setupTimeButtons([]);
 
@@ -1028,55 +863,38 @@ async function loadAvailableTimes() {
    PULSANTI ORARI
 ========================================================= */
 
-function setupTimeButtons(
-  busyTimes
-) {
+function setupTimeButtons(busyTimes) {
 
-  const container =
-    q("timeSlots");
+  const container = q("timeSlots");
 
   if (!container) return;
 
 
-  const busy =
-    new Set(
-      busyTimes
-    );
+  const busy = new Set(busyTimes);
 
 
   container
-    .querySelectorAll(
-      ".time-slot"
-    )
+    .querySelectorAll(".time-slot")
     .forEach(button => {
 
       const time =
         button.dataset.time;
 
 
-      if (
-        busy.has(time)
-      ) {
+      if (busy.has(time)) {
 
-        button.disabled =
-          true;
+        button.disabled = true;
 
-        button.classList.add(
-          "busy"
-        );
+        button.classList.add("busy");
 
         return;
 
       }
 
 
-      if (
-        selectedTime === time
-      ) {
+      if (selectedTime === time) {
 
-        button.classList.add(
-          "selected"
-        );
+        button.classList.add("selected");
 
       }
 
@@ -1085,27 +903,19 @@ function setupTimeButtons(
         "click",
         () => {
 
-          selectedTime =
-            time;
-
+          selectedTime = time;
 
           container
-            .querySelectorAll(
-              ".time-slot"
-            )
+            .querySelectorAll(".time-slot")
             .forEach(slot => {
-
               slot.classList.remove(
                 "selected"
               );
-
             });
-
 
           button.classList.add(
             "selected"
           );
-
 
           updateSummary();
 
@@ -1168,8 +978,7 @@ function updateSummary() {
   if (timeElement) {
 
     timeElement.textContent =
-      selectedTime ||
-      "-";
+      selectedTime || "-";
 
   }
 
@@ -1190,6 +999,86 @@ function updateSummary() {
    ONESIGNAL
 ========================================================= */
 
+/*
+  Aspetta che l'SDK OneSignal abbia completato init.
+
+  È importante perché chiamare login() prima che
+  OneSignal sia realmente pronto può lasciare l'utente
+  non associato correttamente alla subscription.
+*/
+
+function waitForOneSignal(timeout = 15000) {
+
+  return new Promise(resolve => {
+
+    const start = Date.now();
+
+    const check = () => {
+
+      if (
+        window.oneSignalReady === true
+      ) {
+
+        resolve(true);
+
+        return;
+
+      }
+
+
+      if (
+        window.OneSignalDeferred &&
+        Array.isArray(
+          window.OneSignalDeferred
+        )
+      ) {
+
+        window.OneSignalDeferred.push(
+          function(OneSignal) {
+
+            resolve(
+              Boolean(OneSignal)
+            );
+
+          }
+        );
+
+        return;
+
+      }
+
+
+      if (
+        Date.now() - start >= timeout
+      ) {
+
+        resolve(false);
+
+        return;
+
+      }
+
+
+      setTimeout(
+        check,
+        250
+      );
+
+    };
+
+
+    check();
+
+  });
+
+}
+
+
+/*
+  Associa sempre l'utente loggato al player
+  OneSignal usando l'ID del profilo Supabase.
+*/
+
 async function setupOneSignalUser() {
 
   if (
@@ -1197,162 +1086,321 @@ async function setupOneSignalUser() {
     !currentUser.id
   ) {
 
-    return;
+    return false;
 
   }
 
 
-  window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
+  try {
+
+    const ready =
+      await waitForOneSignal();
 
 
-  window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
+    if (!ready) {
 
-      try {
+      console.warn(
+        "OneSignal non ancora disponibile."
+      );
 
-        await OneSignal.login(
-          String(
-            currentUser.id
-          )
-        );
-
-
-        console.log(
-          "OneSignal collegato:",
-          currentUser.id
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Errore OneSignal:",
-          error
-        );
-
-      }
+      return false;
 
     }
-  );
+
+
+    return await new Promise(resolve => {
+
+      window.OneSignalDeferred.push(
+        async function(OneSignal) {
+
+          try {
+
+            await OneSignal.login(
+              String(currentUser.id)
+            );
+
+
+            console.log(
+              "OneSignal: utente associato",
+              currentUser.id
+            );
+
+
+            resolve(true);
+
+          } catch (error) {
+
+            console.error(
+              "OneSignal login error:",
+              error
+            );
+
+            resolve(false);
+
+          }
+
+        }
+      );
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "OneSignal setup error:",
+      error
+    );
+
+    return false;
+
+  }
 
 }
 
 
-async function logoutOneSignalUser() {
+/*
+  Attivazione notifiche.
 
-  window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
-
-
-  window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
-
-      try {
-
-        await OneSignal.logout();
-
-      } catch (error) {
-
-        console.warn(
-          "Errore logout OneSignal:",
-          error
-        );
-
-      }
-
-    }
-  );
-
-}
-
+  Questa funzione viene chiamata dal pulsante
+  "Attiva notifiche", quindi la richiesta permesso
+  avviene in seguito a una vera azione dell'utente.
+*/
 
 async function requestOneSignalNotifications() {
 
-  window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
+  try {
+
+    const ready =
+      await waitForOneSignal();
 
 
-  window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
+    if (!ready) {
 
-      try {
+      showToast(
+        "OneSignal non è ancora pronto. Riprova tra poco.",
+        "error"
+      );
 
-        await OneSignal.Notifications
-          .requestPermission();
+      return;
 
-
-        const active =
-          Boolean(
-            OneSignal.User &&
-            OneSignal.User.PushSubscription &&
-            OneSignal.User.PushSubscription.optedIn
-          );
+    }
 
 
-        if (active) {
+    await new Promise(resolve => {
 
-          if (
-            currentUser &&
-            currentUser.id
-          ) {
+      window.OneSignalDeferred.push(
+        async function(OneSignal) {
 
-            await OneSignal.login(
-              String(
+          try {
+
+            /*
+              Prima associamo l'utente.
+            */
+
+            if (
+              currentUser &&
+              currentUser.id
+            ) {
+
+              try {
+
+                await OneSignal.login(
+                  String(
+                    currentUser.id
+                  )
+                );
+
+              } catch (error) {
+
+                console.warn(
+                  "OneSignal login:",
+                  error
+                );
+
+              }
+
+            }
+
+
+            /*
+              Richiesta permesso.
+            */
+
+            await OneSignal.Notifications
+              .requestPermission();
+
+
+            /*
+              Aspettiamo brevemente che OneSignal
+              aggiorni lo stato della subscription.
+            */
+
+            await new Promise(
+              resolveWait =>
+                setTimeout(
+                  resolveWait,
+                  800
+                )
+            );
+
+
+            const push =
+              OneSignal.User &&
+              OneSignal.User.PushSubscription
+                ? OneSignal.User.PushSubscription
+                : null;
+
+
+            const optedIn =
+              Boolean(
+                push &&
+                push.optedIn === true
+              );
+
+
+            if (optedIn) {
+
+              console.log(
+                "OneSignal: PUSH ATTIVA",
+                push
+              );
+
+
+              if (
+                currentUser &&
                 currentUser.id
-              )
+              ) {
+
+                try {
+
+                  await OneSignal.login(
+                    String(
+                      currentUser.id
+                    )
+                  );
+
+                } catch (error) {
+
+                  console.warn(
+                    "OneSignal login finale:",
+                    error
+                  );
+
+                }
+
+              }
+
+
+              showToast(
+                "Notifiche attivate con successo",
+                "success"
+              );
+
+            } else {
+
+              console.warn(
+                "OneSignal: permesso presente ma subscription non attiva.",
+                push
+              );
+
+
+              showToast(
+                "Le notifiche non risultano ancora attive. Controlla i permessi del sito.",
+                "error"
+              );
+
+            }
+
+          } catch (error) {
+
+            console.error(
+              "OneSignal notification error:",
+              error
+            );
+
+
+            showToast(
+              "Impossibile attivare le notifiche",
+              "error"
             );
 
           }
 
 
-          showToast(
-            "Notifiche attivate con successo",
-            "success"
-          );
-
-        } else {
-
-          showToast(
-            "Notifiche non attive",
-            "error"
-          );
+          resolve();
 
         }
+      );
 
-      } catch (error) {
+    });
 
-        console.error(
-          "Errore notifiche:",
-          error
-        );
+  } catch (error) {
+
+    console.error(
+      "Errore OneSignal:",
+      error
+    );
 
 
-        showToast(
-          "Impossibile attivare le notifiche",
-          "error"
-        );
+    showToast(
+      "Errore durante l'attivazione delle notifiche",
+      "error"
+    );
 
-      }
-
-    }
-  );
+  }
 
 }
 
 
 function requestNotifications() {
-
   requestOneSignalNotifications();
+}
+
+
+async function logoutOneSignalUser() {
+
+  try {
+
+    const ready =
+      await waitForOneSignal(5000);
+
+
+    if (!ready) return;
+
+
+    await new Promise(resolve => {
+
+      window.OneSignalDeferred.push(
+        async function(OneSignal) {
+
+          try {
+
+            await OneSignal.logout();
+
+          } catch (error) {
+
+            console.warn(
+              "OneSignal logout:",
+              error
+            );
+
+          }
+
+          resolve();
+
+        }
+      );
+
+    });
+
+  } catch (error) {
+
+    console.warn(
+      "Errore logout OneSignal:",
+      error
+    );
+
+  }
 
 }
 
@@ -1427,8 +1475,7 @@ async function createBooking() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
 
       button.textContent =
         "PRENOTAZIONE IN CORSO...";
@@ -1436,20 +1483,13 @@ async function createBooking() {
     }
 
 
-    /*
-      Controllo ulteriore prima dell'inserimento.
-      Impedisce due clienti nello stesso orario.
-    */
-
     const {
       data: existing,
       error: checkError
     } =
       await supabaseClient
         .from("appointments")
-        .select(
-          "id,status"
-        )
+        .select("id,status")
         .eq(
           "appointment_date",
           selectedDate
@@ -1461,9 +1501,7 @@ async function createBooking() {
 
 
     if (checkError) {
-
       throw checkError;
-
     }
 
 
@@ -1532,19 +1570,12 @@ async function createBooking() {
 
           status:
             "confirmed"
-
         })
         .select()
         .single();
 
 
     if (error) {
-
-      /*
-        Se il database ha una protezione
-        contro il doppio slot, mostriamo
-        un messaggio chiaro.
-      */
 
       if (
         error.code ===
@@ -1568,18 +1599,22 @@ async function createBooking() {
     );
 
 
+    /*
+      Manteniamo l'associazione OneSignal
+      con l'utente corrente.
+    */
+
+    setupOneSignalUser();
+
+
     showToast(
       "Prenotazione confermata!",
       "success"
     );
 
 
-    selectedService =
-      null;
-
-    selectedTime =
-      null;
-
+    selectedService = null;
+    selectedTime = null;
 
     renderServices();
 
@@ -1591,7 +1626,9 @@ async function createBooking() {
     setTimeout(() => {
 
       showPage(
-        "appointmentsPage"
+        isAdmin()
+          ? "adminAgendaPage"
+          : "appointmentsPage"
       );
 
     }, 700);
@@ -1619,8 +1656,7 @@ async function createBooking() {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -1642,14 +1678,12 @@ async function loadUserBookings() {
   const container =
     q("bookingsList");
 
-
   if (!container) return;
 
 
   if (!currentUser) {
 
     container.innerHTML = `
-
       <div class="empty-state">
 
         <h3>
@@ -1668,7 +1702,6 @@ async function loadUserBookings() {
         </button>
 
       </div>
-
     `;
 
     return;
@@ -1677,11 +1710,9 @@ async function loadUserBookings() {
 
 
   container.innerHTML = `
-
     <div class="empty-state">
       Caricamento appuntamenti...
     </div>
-
   `;
 
 
@@ -1712,11 +1743,7 @@ async function loadUserBookings() {
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     if (
@@ -1725,7 +1752,6 @@ async function loadUserBookings() {
     ) {
 
       container.innerHTML = `
-
         <div class="empty-state">
 
           <h3>
@@ -1744,7 +1770,6 @@ async function loadUserBookings() {
           </button>
 
         </div>
-
       `;
 
       return;
@@ -1761,24 +1786,18 @@ async function loadUserBookings() {
     const upcoming =
       data.filter(
         appointment =>
-          appointment.appointment_date >=
-            today &&
-          appointment.status !==
-            "cancelled" &&
-          appointment.status !==
-            "cancelled_by_admin"
+          appointment.appointment_date >= today &&
+          appointment.status !== "cancelled" &&
+          appointment.status !== "cancelled_by_admin"
       );
 
 
     const past =
       data.filter(
         appointment =>
-          appointment.appointment_date <
-            today ||
-          appointment.status ===
-            "cancelled" ||
-          appointment.status ===
-            "cancelled_by_admin"
+          appointment.appointment_date < today ||
+          appointment.status === "cancelled" ||
+          appointment.status === "cancelled_by_admin"
       );
 
 
@@ -1790,108 +1809,98 @@ async function loadUserBookings() {
 
     container.innerHTML =
       ordered
-        .map(
-          appointment => {
+        .map(appointment => {
 
-            const dateText =
-              new Date(
-                appointment.appointment_date +
-                "T12:00:00"
-              ).toLocaleDateString(
-                "it-IT",
-                {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long"
-                }
-              );
-
-
-            const time =
-              normalizeTime(
-                appointment.start_time
-              );
+          const dateText =
+            new Date(
+              appointment.appointment_date +
+              "T12:00:00"
+            ).toLocaleDateString(
+              "it-IT",
+              {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+              }
+            );
 
 
-            const cancelled =
-              appointment.status ===
-                "cancelled" ||
-              appointment.status ===
-                "cancelled_by_admin";
+          const time =
+            normalizeTime(
+              appointment.start_time
+            );
 
 
-            return `
-
-              <div class="appointment-card">
-
-                <div class="appointment-date">
-
-                  <span>
-                    ${escapeHtml(
-                      dateText
-                    )}
-                  </span>
-
-                  <strong>
-                    ${time}
-                  </strong>
-
-                </div>
+          const cancelled =
+            appointment.status === "cancelled" ||
+            appointment.status === "cancelled_by_admin";
 
 
-                <div class="appointment-info">
+          return `
+            <div class="appointment-card">
 
-                  <h3>
-                    ${escapeHtml(
-                      appointment.service_name
-                    )}
-                  </h3>
+              <div class="appointment-date">
 
-                  <p>
-                    €${appointment.service_price}
-                  </p>
+                <span>
+                  ${escapeHtml(dateText)}
+                </span>
 
-                  <span
-                    class="appointment-status
-                    ${
-                      cancelled
-                        ? "cancelled"
-                        : "confirmed"
-                    }"
-                  >
-                    ${
-                      cancelled
-                        ? "Annullato"
-                        : "Confermato"
-                    }
-                  </span>
-
-                </div>
-
-
-                ${
-                  !cancelled &&
-                  appointment.appointment_date >=
-                    today
-                    ? `
-
-                      <button
-                        class="danger-button"
-                        onclick="cancelBooking('${appointment.id}')"
-                      >
-                        ANNULLA
-                      </button>
-
-                    `
-                    : ""
-                }
+                <strong>
+                  ${time}
+                </strong>
 
               </div>
 
-            `;
 
-          }
-        )
+              <div class="appointment-info">
+
+                <h3>
+                  ${escapeHtml(
+                    appointment.service_name
+                  )}
+                </h3>
+
+                <p>
+                  €${escapeHtml(
+                    appointment.service_price
+                  )}
+                </p>
+
+                <span
+                  class="appointment-status ${
+                    cancelled
+                      ? "cancelled"
+                      : "confirmed"
+                  }"
+                >
+                  ${
+                    cancelled
+                      ? "Annullato"
+                      : "Confermato"
+                  }
+                </span>
+
+              </div>
+
+
+              ${
+                !cancelled &&
+                appointment.appointment_date >= today
+                  ? `
+                    <button
+                      class="danger-button"
+                      onclick="cancelBooking('${appointment.id}')"
+                    >
+                      ANNULLA
+                    </button>
+                  `
+                  : ""
+              }
+
+            </div>
+          `;
+
+        })
         .join("");
 
 
@@ -1904,7 +1913,6 @@ async function loadUserBookings() {
 
 
     container.innerHTML = `
-
       <div class="empty-state">
 
         <h3>
@@ -1919,7 +1927,6 @@ async function loadUserBookings() {
         </p>
 
       </div>
-
     `;
 
   }
@@ -1931,9 +1938,7 @@ async function loadUserBookings() {
    CANCELLAZIONE CLIENTE
 ========================================================= */
 
-async function cancelBooking(
-  bookingId
-) {
+async function cancelBooking(bookingId) {
 
   if (!currentUser) return;
 
@@ -1943,9 +1948,7 @@ async function cancelBooking(
       "Vuoi davvero annullare questo appuntamento?"
     )
   ) {
-
     return;
-
   }
 
 
@@ -1957,8 +1960,7 @@ async function cancelBooking(
       await supabaseClient
         .from("appointments")
         .update({
-          status:
-            "cancelled"
+          status: "cancelled"
         })
         .eq(
           "id",
@@ -1970,11 +1972,7 @@ async function cancelBooking(
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     showToast(
@@ -1984,7 +1982,6 @@ async function cancelBooking(
 
 
     await loadUserBookings();
-
 
   } catch (error) {
 
@@ -2015,11 +2012,7 @@ function openAuth() {
     q("authModal");
 
   if (modal) {
-
-    modal.classList.remove(
-      "hidden"
-    );
-
+    modal.classList.remove("hidden");
   }
 
 }
@@ -2031,11 +2024,7 @@ function closeAuth() {
     q("authModal");
 
   if (modal) {
-
-    modal.classList.add(
-      "hidden"
-    );
-
+    modal.classList.add("hidden");
   }
 
 }
@@ -2049,22 +2038,17 @@ async function loginUser() {
 
   const phone =
     normalizePhone(
-      q("phoneInput")?.value ||
-      ""
+      q("phoneInput")?.value || ""
     );
 
 
   const pin =
     String(
-      q("pinInput")?.value ||
-      ""
+      q("pinInput")?.value || ""
     ).trim();
 
 
-  if (
-    !phone ||
-    !pin
-  ) {
+  if (!phone || !pin) {
 
     showToast(
       "Inserisci numero e PIN",
@@ -2090,8 +2074,7 @@ async function loginUser() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
 
       button.textContent =
         "ACCESSO IN CORSO...";
@@ -2117,11 +2100,7 @@ async function loginUser() {
         .limit(1);
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     if (
@@ -2149,13 +2128,19 @@ async function loginUser() {
 
     updateUserInterface();
 
-    await setupOneSignalUser();
+    updateAdminAgendaAccess();
+
+    /*
+      OneSignal viene associato all'utente
+      senza bloccare il login.
+    */
+
+    setupOneSignalUser();
 
 
     showToast(
       `Bentornato ${
-        currentUser.customer_name ||
-        ""
+        currentUser.customer_name || ""
       }`,
       "success"
     );
@@ -2180,8 +2165,7 @@ async function loginUser() {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -2202,17 +2186,11 @@ function openRegister() {
 
   closeAuth();
 
-
   const modal =
     q("registerModal");
 
-
   if (modal) {
-
-    modal.classList.remove(
-      "hidden"
-    );
-
+    modal.classList.remove("hidden");
   }
 
 }
@@ -2223,13 +2201,8 @@ function closeRegister() {
   const modal =
     q("registerModal");
 
-
   if (modal) {
-
-    modal.classList.add(
-      "hidden"
-    );
-
+    modal.classList.add("hidden");
   }
 
 }
@@ -2239,36 +2212,31 @@ async function handleRegistration() {
 
   const name =
     String(
-      q("registerName")?.value ||
-      ""
+      q("registerName")?.value || ""
     ).trim();
 
 
   const surname =
     String(
-      q("registerSurname")?.value ||
-      ""
+      q("registerSurname")?.value || ""
     ).trim();
 
 
   const phone =
     normalizePhone(
-      q("registerPhone")?.value ||
-      ""
+      q("registerPhone")?.value || ""
     );
 
 
   const pin =
     String(
-      q("registerPin")?.value ||
-      ""
+      q("registerPin")?.value || ""
     ).trim();
 
 
   const pin2 =
     String(
-      q("registerPin2")?.value ||
-      ""
+      q("registerPin2")?.value || ""
     ).trim();
 
 
@@ -2290,9 +2258,7 @@ async function handleRegistration() {
   }
 
 
-  if (
-    phone.length < 8
-  ) {
+  if (phone.length < 8) {
 
     showToast(
       "Inserisci un numero valido",
@@ -2319,9 +2285,7 @@ async function handleRegistration() {
   }
 
 
-  if (
-    pin !== pin2
-  ) {
+  if (pin !== pin2) {
 
     showToast(
       "I PIN non coincidono",
@@ -2347,8 +2311,7 @@ async function handleRegistration() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
 
       button.textContent =
         "CREAZIONE ACCOUNT...";
@@ -2371,9 +2334,7 @@ async function handleRegistration() {
 
 
     if (existingError) {
-
       throw existingError;
-
     }
 
 
@@ -2410,21 +2371,15 @@ async function handleRegistration() {
 
           is_admin:
             false
-
         })
         .select()
         .single();
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
-    currentUser =
-      data;
+    currentUser = data;
 
 
     saveUserSession(
@@ -2436,7 +2391,9 @@ async function handleRegistration() {
 
     updateUserInterface();
 
-    await setupOneSignalUser();
+    updateAdminAgendaAccess();
+
+    setupOneSignalUser();
 
 
     showToast(
@@ -2464,8 +2421,7 @@ async function handleRegistration() {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -2482,9 +2438,7 @@ async function handleRegistration() {
    SESSIONE
 ========================================================= */
 
-function saveUserSession(
-  user
-) {
+function saveUserSession(user) {
 
   try {
 
@@ -2548,9 +2502,7 @@ async function restoreSession() {
 
 
     const user =
-      JSON.parse(
-        savedUser
-      );
+      JSON.parse(savedUser);
 
 
     if (
@@ -2560,13 +2512,13 @@ async function restoreSession() {
       user.customer_pin
     ) {
 
-      currentUser =
-        user;
-
+      currentUser = user;
 
       updateUserInterface();
 
-      await setupOneSignalUser();
+      updateAdminAgendaAccess();
+
+      setupOneSignalUser();
 
     } else {
 
@@ -2581,7 +2533,6 @@ async function restoreSession() {
       "Errore ripristino sessione:",
       error
     );
-
 
     clearSession();
 
@@ -2608,8 +2559,7 @@ function clearSession() {
     "grimaldiUser"
   );
 
-  currentUser =
-    null;
+  currentUser = null;
 
 }
 
@@ -2620,28 +2570,15 @@ function clearSession() {
 
 async function logoutUser() {
 
-  try {
-
-    await logoutOneSignalUser();
-
-  } catch (error) {
-
-    console.warn(
-      "Errore OneSignal logout:",
-      error
-    );
-
-  }
-
+  await logoutOneSignalUser();
 
   clearSession();
 
   updateUserInterface();
 
-  showPage(
-    "homePage"
-  );
+  updateAdminAgendaAccess();
 
+  showPage("homePage");
 
   showToast(
     "Hai effettuato il logout",
@@ -2676,48 +2613,25 @@ function updateUserInterface() {
   if (!currentUser) {
 
     if (nameElement) {
-
-      nameElement.textContent =
-        "Ospite";
-
+      nameElement.textContent = "Ospite";
     }
-
 
     if (phoneElement) {
-
       phoneElement.textContent =
         "Accedi per gestire il tuo profilo";
-
     }
-
 
     if (initialElement) {
-
-      initialElement.textContent =
-        "G";
-
+      initialElement.textContent = "G";
     }
-
 
     if (loginButton) {
-
-      loginButton.classList.remove(
-        "hidden"
-      );
-
+      loginButton.classList.remove("hidden");
     }
-
 
     if (logoutButton) {
-
-      logoutButton.classList.add(
-        "hidden"
-      );
-
+      logoutButton.classList.add("hidden");
     }
-
-
-    updateAdminAgendaAccess();
 
     return;
 
@@ -2730,51 +2644,30 @@ function updateUserInterface() {
 
 
   if (nameElement) {
-
-    nameElement.textContent =
-      name;
-
+    nameElement.textContent = name;
   }
 
 
   if (phoneElement) {
-
     phoneElement.textContent =
-      currentUser.customer_phone ||
-      "";
-
+      currentUser.customer_phone || "";
   }
 
 
   if (initialElement) {
-
     initialElement.textContent =
-      name
-        .charAt(0)
-        .toUpperCase();
-
+      name.charAt(0).toUpperCase();
   }
 
 
   if (loginButton) {
-
-    loginButton.classList.add(
-      "hidden"
-    );
-
+    loginButton.classList.add("hidden");
   }
 
 
   if (logoutButton) {
-
-    logoutButton.classList.remove(
-      "hidden"
-    );
-
+    logoutButton.classList.remove("hidden");
   }
-
-
-  updateAdminAgendaAccess();
 
 }
 
@@ -2789,11 +2682,7 @@ function showInstall() {
     q("installModal");
 
   if (modal) {
-
-    modal.classList.remove(
-      "hidden"
-    );
-
+    modal.classList.remove("hidden");
   }
 
 }
@@ -2805,11 +2694,7 @@ function closeInstall() {
     q("installModal");
 
   if (modal) {
-
-    modal.classList.add(
-      "hidden"
-    );
-
+    modal.classList.add("hidden");
   }
 
 }
@@ -2822,345 +2707,108 @@ function closeInstall() {
 function isAdmin() {
 
   if (!currentUser) {
-
     return false;
-
   }
 
 
   return (
     String(
-      currentUser.role ||
-      ""
-    ).toLowerCase() ===
-      "admin" ||
-
-    currentUser.is_admin ===
-      true
+      currentUser.role || ""
+    ).toLowerCase() === "admin" ||
+    currentUser.is_admin === true
   );
 
 }
 
 
 /* =========================================================
-   CREA AGENDA ADMIN
-========================================================= */
-
-function createAdminAgendaUI() {
-
-  if (!isAdmin()) return;
-
-
-  if (
-    q("adminAgendaPage")
-  ) {
-
-    return;
-
-  }
-
-
-  const page =
-    document.createElement(
-      "section"
-    );
-
-
-  page.id =
-    "adminAgendaPage";
-
-
-  page.className =
-    "page";
-
-
-  page.innerHTML = `
-
-    <div
-      style="
-        padding:20px;
-        padding-bottom:120px;
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          margin-bottom:20px;
-        "
-      >
-
-        <div>
-
-          <h1
-            style="
-              margin:0;
-              font-size:28px;
-            "
-          >
-            Agenda
-          </h1>
-
-          <p
-            style="
-              margin:5px 0 0;
-              opacity:.7;
-            "
-          >
-            Tutti gli appuntamenti
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          id="adminAddClientButton"
-          class="gold-button"
-        >
-          + AGGIUNGI
-        </button>
-
-      </div>
-
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          margin-bottom:15px;
-        "
-      >
-
-        <button
-          type="button"
-          id="adminPrevMonth"
-          class="gold-button"
-        >
-          ‹
-        </button>
-
-
-        <strong
-          id="adminMonthTitle"
-          style="
-            text-transform:capitalize;
-            font-size:20px;
-            text-align:center;
-          "
-        ></strong>
-
-
-        <button
-          type="button"
-          id="adminNextMonth"
-          class="gold-button"
-        >
-          ›
-        </button>
-
-      </div>
-
-
-      <div
-        id="adminCalendar"
-        style="
-          display:grid;
-          grid-template-columns:repeat(7,1fr);
-          gap:6px;
-          margin-bottom:25px;
-        "
-      ></div>
-
-
-      <div
-        id="adminAgendaDay"
-      ></div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    page
-  );
-
-
-  q("adminPrevMonth")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        adminAgendaDate.setMonth(
-          adminAgendaDate.getMonth() - 1
-        );
-
-        renderAdminAgenda();
-
-      }
-    );
-
-
-  q("adminNextMonth")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        adminAgendaDate.setMonth(
-          adminAgendaDate.getMonth() + 1
-        );
-
-        renderAdminAgenda();
-
-      }
-    );
-
-
-  q("adminAddClientButton")
-    ?.addEventListener(
-      "click",
-      openAdminAddClient
-    );
-
-
-  adminSelectedDate =
-    adminSelectedDate ||
-    localDateString(
-      new Date()
-    );
-
-
-  renderAdminAgenda();
-
-}
-
-
-/* =========================================================
-   ACCESSO AGENDA
+   ACCESSO AGENDA ADMIN
 ========================================================= */
 
 function updateAdminAgendaAccess() {
 
-  const existing =
-    q("adminAgendaPage");
+  const navButton =
+    q("appointmentsNavButton");
+
+  const navLabel =
+    q("appointmentsNavLabel");
+
+  const navIcon =
+    q("appointmentsNavIcon");
 
 
-  if (!isAdmin()) {
+  if (!navButton) return;
 
-    if (existing) {
 
-      existing.remove();
+  if (isAdmin()) {
 
+    /*
+      ADMIN:
+      Appuntamenti -> Agenda
+    */
+
+    navButton.dataset.page =
+      "adminAgendaPage";
+
+    navButton.onclick = () =>
+      showPage("adminAgendaPage");
+
+
+    if (navLabel) {
+      navLabel.textContent = "Agenda";
     }
 
-    const oldButton =
-      q("adminAgendaButton");
 
-    if (oldButton) {
-
-      oldButton.remove();
-
+    if (navIcon) {
+      navIcon.textContent = "▣";
     }
 
-    return;
 
-  }
+    /*
+      Se per errore era aperta la pagina
+      Appuntamenti del cliente, portiamo
+      l'admin sulla sua Agenda.
+    */
 
-
-  createAdminAgendaUI();
-
-  addAdminAgendaButton();
-
-}
-
-
-/* =========================================================
-   PULSANTE ADMIN
-========================================================= */
-
-function addAdminAgendaButton() {
-
-  if (!isAdmin()) return;
-
-
-  if (
-    q("adminAgendaButton")
-  ) {
-
-    return;
-
-  }
-
-
-  const profilePage =
-    q("profilePage");
-
-
-  if (!profilePage) return;
-
-
-  const button =
-    document.createElement(
-      "button"
-    );
-
-
-  button.id =
-    "adminAgendaButton";
-
-
-  button.type =
-    "button";
-
-
-  button.className =
-    "gold-button";
-
-
-  button.textContent =
-    "AGENDA ADMIN";
-
-
-  button.style.marginTop =
-    "15px";
-
-
-  button.style.width =
-    "100%";
-
-
-  button.addEventListener(
-    "click",
-    () => {
-
-      if (!isAdmin()) {
-
-        showToast(
-          "Accesso non autorizzato",
-          "error"
-        );
-
-        return;
-
-      }
-
+    if (
+      q("appointmentsPage")?.classList.contains(
+        "active"
+      )
+    ) {
 
       showPage(
         "adminAgendaPage"
       );
 
     }
-  );
 
 
-  profilePage.appendChild(
-    button
-  );
+    return;
+
+  }
+
+
+  /*
+    CLIENTE:
+    Appuntamenti normale
+  */
+
+  navButton.dataset.page =
+    "appointmentsPage";
+
+  navButton.onclick = () =>
+    showPage("appointmentsPage");
+
+
+  if (navLabel) {
+    navLabel.textContent =
+      "Appuntamenti";
+  }
+
+
+  if (navIcon) {
+    navIcon.textContent = "◷";
+  }
 
 }
 
@@ -3181,10 +2829,7 @@ function renderAdminAgenda() {
     q("adminMonthTitle");
 
 
-  if (
-    !calendar ||
-    !title
-  ) return;
+  if (!calendar || !title) return;
 
 
   const year =
@@ -3215,10 +2860,7 @@ function renderAdminAgenda() {
 
 
   const offset =
-    (
-      firstDay.getDay() +
-      6
-    ) % 7;
+    (firstDay.getDay() + 6) % 7;
 
 
   const days =
@@ -3249,18 +2891,9 @@ function renderAdminAgenda() {
   ].forEach(day => {
 
     html += `
-
-      <div
-        style="
-          text-align:center;
-          font-size:11px;
-          opacity:.6;
-          padding:5px;
-        "
-      >
+      <div class="admin-calendar-weekday">
         ${day}
       </div>
-
     `;
 
   });
@@ -3273,7 +2906,7 @@ function renderAdminAgenda() {
   ) {
 
     html += `
-      <div></div>
+      <div class="admin-calendar-empty"></div>
     `;
 
   }
@@ -3296,8 +2929,7 @@ function renderAdminAgenda() {
 
 
     const selected =
-      date ===
-      adminSelectedDate;
+      date === adminSelectedDate;
 
 
     const isToday =
@@ -3305,39 +2937,22 @@ function renderAdminAgenda() {
 
 
     html += `
-
       <button
         type="button"
-        class="admin-calendar-day"
-        data-admin-date="${date}"
-        style="
-          min-height:42px;
-          border-radius:10px;
-          border:1px solid rgba(255,255,255,.12);
-          background:${
-            selected
-              ? "rgba(212,175,55,.25)"
-              : "rgba(255,255,255,.05)"
-          };
-          color:inherit;
-          cursor:pointer;
-          ${
-            isToday
-              ? "font-weight:bold;"
-              : ""
-          }
+        class="admin-calendar-day
+          ${selected ? "selected" : ""}
+          ${isToday ? "today" : ""}
         "
+        data-admin-date="${date}"
       >
-        ${day}
+        <span>${day}</span>
       </button>
-
     `;
 
   }
 
 
-  calendar.innerHTML =
-    html;
+  calendar.innerHTML = html;
 
 
   calendar
@@ -3392,17 +3007,25 @@ async function renderAdminAgendaDay() {
   }
 
 
+  const title =
+    q("adminSelectedDateTitle");
+
+
+  if (title) {
+
+    title.textContent =
+      formatDate(
+        adminSelectedDate
+      );
+
+  }
+
+
   container.innerHTML = `
-
-    <div
-      style="
-        text-align:center;
-        padding:20px;
-      "
-    >
-      Caricamento agenda...
+    <div class="admin-loading">
+      <div class="admin-spinner"></div>
+      <span>Caricamento agenda...</span>
     </div>
-
   `;
 
 
@@ -3427,11 +3050,7 @@ async function renderAdminAgendaDay() {
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     const {
@@ -3447,11 +3066,7 @@ async function renderAdminAgendaDay() {
         );
 
 
-    if (blocksError) {
-
-      throw blocksError;
-
-    }
+    if (blocksError) throw blocksError;
 
 
     const appointmentList =
@@ -3466,8 +3081,7 @@ async function renderAdminAgendaDay() {
         block =>
           String(
             block.block_time
-          ).toUpperCase() ===
-          "ALL"
+          ).toUpperCase() === "ALL"
       );
 
 
@@ -3478,8 +3092,7 @@ async function renderAdminAgendaDay() {
             block =>
               String(
                 block.block_time
-              ).toUpperCase() !==
-              "ALL"
+              ).toUpperCase() !== "ALL"
           )
           .map(
             block =>
@@ -3490,40 +3103,42 @@ async function renderAdminAgendaDay() {
       );
 
 
+    const activeAppointments =
+      appointmentList.filter(
+        appointment =>
+          appointment.status !== "cancelled" &&
+          appointment.status !== "cancelled_by_admin"
+      );
+
+
+    const countElement =
+      activeAppointments.length;
+
+
     let html = `
 
-      <div
-        style="
-          margin-bottom:15px;
-        "
-      >
+      <div class="admin-agenda-summary">
 
-        <h2
-          style="
-            margin:0;
-            text-transform:capitalize;
-          "
-        >
-          ${escapeHtml(
-            formatDate(
-              adminSelectedDate
-            )
-          )}
-        </h2>
+        <div>
+          <span>APPUNTAMENTI</span>
+          <strong>${countElement}</strong>
+        </div>
 
-        <p
-          style="
-            margin:5px 0 0;
-            opacity:.6;
-          "
-        >
-          ${appointmentList.length}
-          ${
-            appointmentList.length === 1
-              ? "appuntamento"
-              : "appuntamenti"
-          }
-        </p>
+        <div>
+          <span>DATA</span>
+          <strong>
+            ${new Date(
+              adminSelectedDate +
+              "T12:00:00"
+            ).toLocaleDateString(
+              "it-IT",
+              {
+                day: "2-digit",
+                month: "2-digit"
+              }
+            )}
+          </strong>
+        </div>
 
       </div>
 
@@ -3536,127 +3151,89 @@ async function renderAdminAgendaDay() {
 
       const appointment =
         appointmentList.find(
-          item => {
-
-            return (
-              normalizeTime(
-                item.start_time
-              ) === time &&
-              item.status !==
-                "cancelled" &&
-              item.status !==
-                "cancelled_by_admin"
-            );
-
-          }
+          item =>
+            normalizeTime(
+              item.start_time
+            ) === time &&
+            item.status !== "cancelled" &&
+            item.status !== "cancelled_by_admin"
         );
 
 
       const blocked =
         blockedAll ||
-        blockedTimes.has(
-          time
-        );
+        blockedTimes.has(time);
 
 
       if (appointment) {
 
         html += `
 
-          <div
-            style="
-              padding:15px;
-              margin-bottom:8px;
-              border-radius:14px;
-              background:rgba(212,175,55,.12);
-              border:1px solid rgba(212,175,55,.45);
-            "
-          >
+          <div class="admin-slot booked">
 
-            <div
-              style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:10px;
-              "
-            >
+            <div class="admin-slot-top">
 
-              <strong
-                style="
-                  font-size:20px;
-                "
-              >
+              <div class="admin-slot-time">
                 ${time}
-              </strong>
+              </div>
 
-              <span
-                style="
-                  font-size:11px;
-                  opacity:.7;
-                "
-              >
+              <span class="admin-slot-status booked">
                 PRENOTATO
               </span>
 
             </div>
 
 
-            <div
-              style="
-                line-height:1.7;
-              "
-            >
+            <div class="admin-client">
 
-              <strong>
+              <div class="admin-client-avatar">
                 ${escapeHtml(
-                  appointment.customer_name ||
-                  "Cliente"
+                  String(
+                    appointment.customer_name ||
+                    "C"
+                  )
+                    .charAt(0)
+                    .toUpperCase()
                 )}
-              </strong>
+              </div>
 
-              <br>
 
-              <span>
-                📞
-                ${escapeHtml(
-                  appointment.customer_phone ||
-                  ""
-                )}
-              </span>
+              <div class="admin-client-data">
 
-              <br>
+                <strong>
+                  ${escapeHtml(
+                    appointment.customer_name ||
+                    "Cliente"
+                  )}
+                </strong>
 
-              <span>
-                ${escapeHtml(
-                  appointment.service_name ||
-                  "Servizio"
-                )}
-              </span>
+                <span>
+                  ${escapeHtml(
+                    appointment.customer_phone ||
+                    ""
+                  )}
+                </span>
 
-              <br>
+                <span class="admin-service">
+                  ${escapeHtml(
+                    appointment.service_name ||
+                    "Servizio"
+                  )}
+                  ·
+                  €${escapeHtml(
+                    appointment.service_price
+                  )}
+                </span>
 
-              <strong>
-                €${escapeHtml(
-                  appointment.service_price
-                )}
-              </strong>
+              </div>
 
             </div>
 
 
             <button
               type="button"
-              class="danger-button"
-              style="
-                margin-top:12px;
-                width:100%;
-              "
-              onclick="
-                adminCancelBooking(
-                  '${appointment.id}'
-                )
-              "
+              class="admin-action-danger"
+              onclick="adminCancelBooking('${appointment.id}')"
             >
               ANNULLA PRENOTAZIONE
             </button>
@@ -3672,32 +3249,54 @@ async function renderAdminAgendaDay() {
 
       if (blocked) {
 
+        const block =
+          blockList.find(
+            item => {
+
+              const blockTime =
+                String(
+                  item.block_time || ""
+                ).toUpperCase();
+
+              return (
+                blockTime === "ALL" ||
+                normalizeTime(
+                  item.block_time
+                ) === time
+              );
+
+            }
+          );
+
+
         html += `
 
-          <div
-            style="
-              padding:15px;
-              margin-bottom:8px;
-              border-radius:14px;
-              background:rgba(255,255,255,.025);
-              border:1px solid rgba(255,255,255,.06);
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
-            "
-          >
+          <div class="admin-slot blocked">
 
-            <strong>
-              ${time}
-            </strong>
+            <div class="admin-slot-top">
 
-            <span
-              style="
-                opacity:.5;
-              "
+              <div class="admin-slot-time">
+                ${time}
+              </div>
+
+              <span class="admin-slot-status blocked">
+                BLOCCATO
+              </span>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="admin-action-light"
+              onclick="${
+                block
+                  ? `adminUnblockTime('${block.id}')`
+                  : ""
+              }"
             >
-              BLOCCATO
-            </span>
+              SBLOCCA ORARIO
+            </button>
 
           </div>
 
@@ -3710,30 +3309,28 @@ async function renderAdminAgendaDay() {
 
       html += `
 
-        <div
-          style="
-            padding:15px;
-            margin-bottom:8px;
-            border-radius:14px;
-            background:rgba(255,255,255,.04);
-            border:1px solid rgba(255,255,255,.08);
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-          "
-        >
+        <div class="admin-slot free">
 
-          <strong>
-            ${time}
-          </strong>
+          <div class="admin-slot-top">
 
-          <span
-            style="
-              opacity:.5;
-            "
+            <div class="admin-slot-time">
+              ${time}
+            </div>
+
+            <span class="admin-slot-status free">
+              LIBERO
+            </span>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="admin-action-block"
+            onclick="adminBlockTime('${adminSelectedDate}', '${time}')"
           >
-            LIBERO
-          </span>
+            BLOCCA
+          </button>
 
         </div>
 
@@ -3755,7 +3352,6 @@ async function renderAdminAgendaDay() {
 
 
     container.innerHTML = `
-
       <div class="empty-state">
 
         <h3>
@@ -3770,8 +3366,846 @@ async function renderAdminAgendaDay() {
         </p>
 
       </div>
-
     `;
+
+  }
+
+}
+
+
+/* =========================================================
+   MODALE AGGIUNTA CLIENTE ADMIN
+========================================================= */
+
+function createAdminClientModal() {
+
+  if (q("adminClientModal")) {
+    return;
+  }
+
+
+  const modal =
+    document.createElement("div");
+
+
+  modal.id =
+    "adminClientModal";
+
+
+  modal.className =
+    "modal hidden";
+
+
+  modal.innerHTML = `
+
+    <div class="admin-client-modal-box">
+
+      <button
+        type="button"
+        class="close admin-modal-close"
+        id="adminClientModalClose"
+      >
+        ×
+      </button>
+
+
+      <div class="admin-modal-kicker">
+        AREA ADMIN
+      </div>
+
+
+      <h2>
+        Nuovo appuntamento
+      </h2>
+
+
+      <p class="admin-modal-description">
+        Inserisci i dati del cliente e assegna
+        una fascia oraria libera.
+      </p>
+
+
+      <div class="admin-form-grid">
+
+        <div class="admin-field">
+
+          <label for="adminClientName">
+            Nome
+          </label>
+
+          <input
+            id="adminClientName"
+            type="text"
+            placeholder="Nome"
+            autocomplete="given-name"
+          >
+
+        </div>
+
+
+        <div class="admin-field">
+
+          <label for="adminClientSurname">
+            Cognome
+          </label>
+
+          <input
+            id="adminClientSurname"
+            type="text"
+            placeholder="Cognome"
+            autocomplete="family-name"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="admin-field">
+
+        <label for="adminClientPhone">
+          Numero di telefono
+        </label>
+
+        <input
+          id="adminClientPhone"
+          type="tel"
+          placeholder="Numero di telefono"
+          autocomplete="tel"
+        >
+
+      </div>
+
+
+      <div class="admin-field">
+
+        <label for="adminClientService">
+          Servizio
+        </label>
+
+        <select id="adminClientService">
+
+          <option value="">
+            Seleziona servizio
+          </option>
+
+          ${services.map(service => `
+            <option
+              value="${escapeHtml(service.id)}"
+            >
+              ${escapeHtml(service.name)}
+              — €${service.price}
+            </option>
+          `).join("")}
+
+        </select>
+
+      </div>
+
+
+      <div class="admin-form-grid">
+
+        <div class="admin-field">
+
+          <label for="adminClientDate">
+            Data
+          </label>
+
+          <input
+            id="adminClientDate"
+            type="date"
+          >
+
+        </div>
+
+
+        <div class="admin-field">
+
+          <label for="adminClientTime">
+            Orario
+          </label>
+
+          <select id="adminClientTime">
+
+            <option value="">
+              Seleziona orario
+            </option>
+
+            ${TIMES.map(time => `
+              <option value="${time}">
+                ${time}
+              </option>
+            `).join("")}
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="adminSelectedServicePreview"
+        class="admin-service-preview"
+      >
+        Seleziona un servizio
+      </div>
+
+
+      <div class="admin-modal-actions">
+
+        <button
+          type="button"
+          class="admin-cancel-button"
+          id="adminClientCancel"
+        >
+          ANNULLA
+        </button>
+
+        <button
+          type="button"
+          class="gold-button admin-confirm-client"
+          id="adminClientConfirm"
+        >
+          AGGIUNGI CLIENTE
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(modal);
+
+
+  q("adminClientModalClose")
+    ?.addEventListener(
+      "click",
+      closeAdminAddClient
+    );
+
+
+  q("adminClientCancel")
+    ?.addEventListener(
+      "click",
+      closeAdminAddClient
+    );
+
+
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === modal
+      ) {
+
+        closeAdminAddClient();
+
+      }
+
+    }
+  );
+
+
+  q("adminClientService")
+    ?.addEventListener(
+      "change",
+      updateAdminServicePreview
+    );
+
+
+  q("adminClientDate")
+    ?.addEventListener(
+      "change",
+      updateAdminClientTimes
+    );
+
+
+  q("adminClientConfirm")
+    ?.addEventListener(
+      "click",
+      createAdminClient
+    );
+
+}
+
+
+function openAdminAddClient() {
+
+  if (!isAdmin()) {
+
+    showToast(
+      "Accesso non autorizzato",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  createAdminClientModal();
+
+
+  const modal =
+    q("adminClientModal");
+
+
+  const dateInput =
+    q("adminClientDate");
+
+
+  if (dateInput) {
+
+    dateInput.value =
+      adminSelectedDate ||
+      localDateString(
+        new Date()
+      );
+
+  }
+
+
+  if (q("adminClientName")) {
+    q("adminClientName").value = "";
+  }
+
+  if (q("adminClientSurname")) {
+    q("adminClientSurname").value = "";
+  }
+
+  if (q("adminClientPhone")) {
+    q("adminClientPhone").value = "";
+  }
+
+  if (q("adminClientService")) {
+    q("adminClientService").value = "";
+  }
+
+  if (q("adminClientTime")) {
+    q("adminClientTime").value = "";
+  }
+
+
+  updateAdminServicePreview();
+
+  updateAdminClientTimes();
+
+
+  modal.classList.remove("hidden");
+
+}
+
+
+function closeAdminAddClient() {
+
+  const modal =
+    q("adminClientModal");
+
+  if (modal) {
+
+    modal.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+function updateAdminServicePreview() {
+
+  const select =
+    q("adminClientService");
+
+  const preview =
+    q("adminSelectedServicePreview");
+
+
+  if (!select || !preview) return;
+
+
+  const service =
+    services.find(
+      item =>
+        item.id === select.value
+    );
+
+
+  if (!service) {
+
+    preview.textContent =
+      "Seleziona un servizio";
+
+    return;
+
+  }
+
+
+  preview.innerHTML = `
+    <span>
+      ${escapeHtml(service.name)}
+    </span>
+
+    <strong>
+      €${service.price}
+    </strong>
+  `;
+
+}
+
+
+async function updateAdminClientTimes() {
+
+  const dateInput =
+    q("adminClientDate");
+
+  const timeSelect =
+    q("adminClientTime");
+
+
+  if (!dateInput || !timeSelect) return;
+
+
+  const date =
+    dateInput.value;
+
+
+  timeSelect.innerHTML = `
+    <option value="">
+      Caricamento...
+    </option>
+  `;
+
+
+  if (!date) {
+
+    timeSelect.innerHTML = `
+      <option value="">
+        Seleziona orario
+      </option>
+    `;
+
+    return;
+
+  }
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("appointments")
+        .select(
+          "start_time,status"
+        )
+        .eq(
+          "appointment_date",
+          date
+        );
+
+
+    if (error) throw error;
+
+
+    const occupied =
+      new Set(
+        (data || [])
+          .filter(
+            item =>
+              item.status !== "cancelled" &&
+              item.status !== "cancelled_by_admin"
+          )
+          .map(
+            item =>
+              normalizeTime(
+                item.start_time
+              )
+          )
+      );
+
+
+    const {
+      data: blocks,
+      error: blocksError
+    } =
+      await supabaseClient
+        .from("availability_blocks")
+        .select(
+          "block_time"
+        )
+        .eq(
+          "block_date",
+          date
+        );
+
+
+    if (blocksError) {
+      throw blocksError;
+    }
+
+
+    const blockList =
+      blocks || [];
+
+
+    const blockedAll =
+      blockList.some(
+        item =>
+          String(
+            item.block_time
+          ).toUpperCase() === "ALL"
+      );
+
+
+    const blocked =
+      new Set(
+        blockList
+          .map(
+            item =>
+              normalizeTime(
+                item.block_time
+              )
+          )
+      );
+
+
+    timeSelect.innerHTML = `
+      <option value="">
+        Seleziona orario
+      </option>
+
+      ${TIMES.map(time => {
+
+        const busy =
+          occupied.has(time) ||
+          blockedAll ||
+          blocked.has(time);
+
+        return `
+          <option
+            value="${time}"
+            ${busy ? "disabled" : ""}
+          >
+            ${time}${busy ? " — non disponibile" : ""}
+          </option>
+        `;
+
+      }).join("")}
+    `;
+
+
+  } catch (error) {
+
+    console.error(
+      "Errore orari admin:",
+      error
+    );
+
+
+    timeSelect.innerHTML = `
+      <option value="">
+        Errore caricamento
+      </option>
+    `;
+
+  }
+
+}
+
+
+async function createAdminClient() {
+
+  if (!isAdmin()) {
+
+    showToast(
+      "Accesso non autorizzato",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const name =
+    String(
+      q("adminClientName")?.value || ""
+    ).trim();
+
+
+  const surname =
+    String(
+      q("adminClientSurname")?.value || ""
+    ).trim();
+
+
+  const phone =
+    normalizePhone(
+      q("adminClientPhone")?.value || ""
+    );
+
+
+  const serviceId =
+    q("adminClientService")?.value ||
+    "";
+
+
+  const date =
+    q("adminClientDate")?.value ||
+    "";
+
+
+  const time =
+    q("adminClientTime")?.value ||
+    "";
+
+
+  if (
+    !name ||
+    !surname ||
+    !phone ||
+    !serviceId ||
+    !date ||
+    !time
+  ) {
+
+    showToast(
+      "Compila tutti i campi",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (phone.length < 8) {
+
+    showToast(
+      "Numero di telefono non valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (!TIMES.includes(time)) {
+
+    showToast(
+      "Orario non valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const service =
+    services.find(
+      item =>
+        item.id === serviceId
+    );
+
+
+  if (!service) {
+
+    showToast(
+      "Servizio non valido",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const button =
+    q("adminClientConfirm");
+
+
+  const originalText =
+    button
+      ? button.textContent
+      : "";
+
+
+  try {
+
+    if (button) {
+
+      button.disabled = true;
+
+      button.textContent =
+        "SALVATAGGIO...";
+
+    }
+
+
+    const {
+      data: existing,
+      error: checkError
+    } =
+      await supabaseClient
+        .from("appointments")
+        .select(
+          "id,status"
+        )
+        .eq(
+          "appointment_date",
+          date
+        )
+        .eq(
+          "start_time",
+          time + ":00"
+        );
+
+
+    if (checkError) {
+      throw checkError;
+    }
+
+
+    const occupied =
+      (existing || [])
+        .some(
+          appointment =>
+            appointment.status !== "cancelled" &&
+            appointment.status !== "cancelled_by_admin"
+        );
+
+
+    if (occupied) {
+
+      showToast(
+        "Questo orario è già occupato",
+        "error"
+      );
+
+      await updateAdminClientTimes();
+
+      return;
+
+    }
+
+
+    const fullName =
+      `${name} ${surname}`.trim();
+
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("appointments")
+        .insert({
+          customer_id: null,
+
+          customer_name:
+            fullName,
+
+          customer_phone:
+            phone,
+
+          appointment_date:
+            date,
+
+          start_time:
+            time,
+
+          end_time:
+            addMinutesToTime(
+              time,
+              30
+            ),
+
+          service_name:
+            service.name,
+
+          service_price:
+            service.price,
+
+          status:
+            "confirmed"
+        });
+
+
+    if (error) {
+
+      if (
+        error.code ===
+        "23505"
+      ) {
+
+        throw new Error(
+          "Questo orario è già stato prenotato."
+        );
+
+      }
+
+      throw error;
+
+    }
+
+
+    closeAdminAddClient();
+
+
+    adminSelectedDate =
+      date;
+
+
+    adminAgendaDate =
+      new Date(
+        date +
+        "T12:00:00"
+      );
+
+
+    showToast(
+      "Cliente aggiunto all'agenda",
+      "success"
+    );
+
+
+    renderAdminAgenda();
+
+
+  } catch (error) {
+
+    console.error(
+      "Errore aggiunta cliente:",
+      error
+    );
+
+
+    showToast(
+      error.message ||
+      "Errore durante l'aggiunta",
+      "error"
+    );
+
+
+  } finally {
+
+    if (button) {
+
+      button.disabled = false;
+
+      button.textContent =
+        originalText ||
+        "AGGIUNGI CLIENTE";
+
+    }
 
   }
 
@@ -3826,11 +4260,7 @@ async function adminCancelBooking(
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     showToast(
@@ -3862,294 +4292,6 @@ async function adminCancelBooking(
 
 
 /* =========================================================
-   AGGIUNGI CLIENTE ADMIN
-========================================================= */
-
-async function openAdminAddClient() {
-
-  if (!isAdmin()) {
-
-    showToast(
-      "Accesso non autorizzato",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const name =
-    prompt(
-      "Nome e cognome del cliente:"
-    );
-
-
-  if (
-    !name ||
-    !name.trim()
-  ) return;
-
-
-  const phone =
-    prompt(
-      "Numero di telefono:"
-    );
-
-
-  if (
-    !phone ||
-    !phone.trim()
-  ) return;
-
-
-  const phoneClean =
-    normalizePhone(
-      phone
-    );
-
-
-  if (
-    phoneClean.length < 8
-  ) {
-
-    showToast(
-      "Numero di telefono non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const serviceNames =
-    services
-      .map(
-        (service, index) =>
-          `${index + 1}. ${service.name} - €${service.price}`
-      )
-      .join("\n");
-
-
-  const choice =
-    prompt(
-      `Scegli il servizio:\n\n${serviceNames}`
-    );
-
-
-  const serviceIndex =
-    Number(choice) - 1;
-
-
-  if (
-    !Number.isInteger(
-      serviceIndex
-    ) ||
-    !services[serviceIndex]
-  ) {
-
-    showToast(
-      "Servizio non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const service =
-    services[serviceIndex];
-
-
-  const date =
-    prompt(
-      "Data (AAAA-MM-GG):",
-      adminSelectedDate ||
-      localDateString(
-        new Date()
-      )
-    );
-
-
-  if (
-    !date ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(
-      date
-    )
-  ) {
-
-    showToast(
-      "Data non valida",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const time =
-    prompt(
-      `Orario:\n\n${TIMES.join("  ")}`
-    );
-
-
-  if (
-    !TIMES.includes(
-      time
-    )
-  ) {
-
-    showToast(
-      "Orario non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    const {
-      data: existing,
-      error: checkError
-    } =
-      await supabaseClient
-        .from("appointments")
-        .select(
-          "id,status"
-        )
-        .eq(
-          "appointment_date",
-          date
-        )
-        .eq(
-          "start_time",
-          time + ":00"
-        );
-
-
-    if (checkError) {
-
-      throw checkError;
-
-    }
-
-
-    const occupied =
-      (existing || [])
-        .some(
-          appointment =>
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
-        );
-
-
-    if (occupied) {
-
-      showToast(
-        "Questo orario è già occupato",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const {
-      error
-    } =
-      await supabaseClient
-        .from("appointments")
-        .insert({
-
-          customer_id:
-            null,
-
-          customer_name:
-            name.trim(),
-
-          customer_phone:
-            phoneClean,
-
-          appointment_date:
-            date,
-
-          start_time:
-            time,
-
-          end_time:
-            addMinutesToTime(
-              time,
-              30
-            ),
-
-          service_name:
-            service.name,
-
-          service_price:
-            service.price,
-
-          status:
-            "confirmed"
-
-        });
-
-
-    if (error) {
-
-      throw error;
-
-    }
-
-
-    showToast(
-      "Cliente aggiunto all'agenda",
-      "success"
-    );
-
-
-    adminSelectedDate =
-      date;
-
-
-    adminAgendaDate =
-      new Date(
-        date +
-        "T12:00:00"
-      );
-
-
-    renderAdminAgenda();
-
-
-  } catch (error) {
-
-    console.error(
-      "Errore aggiunta cliente:",
-      error
-    );
-
-
-    showToast(
-      error.message ||
-      "Errore durante l'aggiunta",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
    BLOCCO ORARIO ADMIN
 ========================================================= */
 
@@ -4163,27 +4305,74 @@ async function adminBlockTime(
 
   try {
 
+    /*
+      Evita di bloccare una fascia già occupata.
+    */
+
+    if (time !== "ALL") {
+
+      const {
+        data: existing,
+        error: checkError
+      } =
+        await supabaseClient
+          .from("appointments")
+          .select(
+            "id,status"
+          )
+          .eq(
+            "appointment_date",
+            date
+          )
+          .eq(
+            "start_time",
+            time + ":00"
+          );
+
+
+      if (checkError) {
+        throw checkError;
+      }
+
+
+      const occupied =
+        (existing || [])
+          .some(
+            item =>
+              item.status !== "cancelled" &&
+              item.status !== "cancelled_by_admin"
+          );
+
+
+      if (occupied) {
+
+        showToast(
+          "Non puoi bloccare un orario già prenotato",
+          "error"
+        );
+
+        return;
+
+      }
+
+    }
+
+
     const {
       error
     } =
       await supabaseClient
         .from("availability_blocks")
         .insert({
-
           block_date:
             date,
 
           block_time:
             time
-
         });
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     showToast(
@@ -4239,11 +4428,7 @@ async function adminUnblockTime(
         );
 
 
-    if (error) {
-
-      throw error;
-
-    }
+    if (error) throw error;
 
 
     showToast(
@@ -4317,6 +4502,607 @@ function addMinutesToTime(
 
 
 /* =========================================================
+   CSS AGENDA
+========================================================= */
+
+function injectAgendaStyles() {
+
+  if (q("igrimaldiAgendaStyles")) {
+    return;
+  }
+
+
+  const style =
+    document.createElement("style");
+
+
+  style.id =
+    "igrimaldiAgendaStyles";
+
+
+  style.textContent = `
+
+    /* =========================================
+       AGENDA
+    ========================================= */
+
+    #adminAgendaPage {
+      padding-bottom: 110px;
+    }
+
+
+    .admin-agenda-toolbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:18px 0 20px;
+      padding:12px;
+      border:1px solid rgba(212,175,55,.20);
+      border-radius:18px;
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.055),
+          rgba(255,255,255,.018)
+        );
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.20);
+    }
+
+
+    .admin-agenda-toolbar button {
+      width:42px;
+      height:42px;
+      border-radius:13px;
+      border:1px solid rgba(212,175,55,.35);
+      background:rgba(212,175,55,.10);
+      color:#d4af37;
+      font-size:27px;
+      line-height:1;
+      cursor:pointer;
+    }
+
+
+    .admin-agenda-toolbar h3 {
+      margin:0;
+      text-align:center;
+      text-transform:capitalize;
+      font-family:"Playfair Display",serif;
+      font-size:20px;
+      color:#f3ead1;
+    }
+
+
+    .admin-calendar-weekday {
+      text-align:center;
+      font-size:10px;
+      letter-spacing:1px;
+      color:rgba(255,255,255,.45);
+      padding:7px 0;
+      font-weight:700;
+    }
+
+
+    .admin-calendar-empty {
+      min-height:48px;
+    }
+
+
+    .admin-calendar-day {
+      min-height:48px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      color:#fff;
+      cursor:pointer;
+      font-size:14px;
+      transition:.18s ease;
+    }
+
+
+    .admin-calendar-day span {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
+    }
+
+
+    .admin-calendar-day:active {
+      transform:scale(.95);
+    }
+
+
+    .admin-calendar-day.today {
+      border-color:rgba(212,175,55,.55);
+    }
+
+
+    .admin-calendar-day.selected {
+      background:
+        linear-gradient(
+          145deg,
+          rgba(212,175,55,.35),
+          rgba(212,175,55,.12)
+        );
+      border-color:#d4af37;
+      color:#f8e7a8;
+      box-shadow:
+        0 0 18px rgba(212,175,55,.14);
+    }
+
+
+    .admin-day-header {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      margin:26px 0 16px;
+    }
+
+
+    .admin-day-header > div span {
+      display:block;
+      color:#d4af37;
+      font-size:10px;
+      letter-spacing:1.5px;
+      font-weight:700;
+    }
+
+
+    .admin-day-header h3 {
+      margin:5px 0 0;
+      text-transform:capitalize;
+      font-family:"Playfair Display",serif;
+      font-size:20px;
+    }
+
+
+    .admin-day-header .gold-button {
+      white-space:nowrap;
+      padding:12px 15px;
+      font-size:11px;
+    }
+
+
+    .admin-agenda-summary {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+
+    .admin-agenda-summary > div {
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(212,175,55,.18);
+      background:rgba(255,255,255,.035);
+    }
+
+
+    .admin-agenda-summary span {
+      display:block;
+      font-size:9px;
+      letter-spacing:1.3px;
+      color:rgba(255,255,255,.45);
+    }
+
+
+    .admin-agenda-summary strong {
+      display:block;
+      margin-top:4px;
+      font-size:18px;
+      color:#e6c96b;
+    }
+
+
+    .admin-slot {
+      margin-bottom:9px;
+      padding:14px;
+      border-radius:17px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      transition:.18s ease;
+    }
+
+
+    .admin-slot.booked {
+      border-color:rgba(212,175,55,.38);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(212,175,55,.13),
+          rgba(255,255,255,.035)
+        );
+    }
+
+
+    .admin-slot.blocked {
+      opacity:.72;
+      background:rgba(255,255,255,.022);
+    }
+
+
+    .admin-slot.free {
+      background:rgba(255,255,255,.025);
+    }
+
+
+    .admin-slot-top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:11px;
+    }
+
+
+    .admin-slot-time {
+      font-family:"Cinzel",serif;
+      font-size:20px;
+      color:#f4e8c3;
+      font-weight:700;
+    }
+
+
+    .admin-slot-status {
+      font-size:9px;
+      letter-spacing:1.1px;
+      font-weight:800;
+      padding:6px 9px;
+      border-radius:999px;
+    }
+
+
+    .admin-slot-status.booked {
+      color:#e6c96b;
+      background:rgba(212,175,55,.13);
+      border:1px solid rgba(212,175,55,.28);
+    }
+
+
+    .admin-slot-status.blocked {
+      color:rgba(255,255,255,.50);
+      background:rgba(255,255,255,.05);
+    }
+
+
+    .admin-slot-status.free {
+      color:rgba(255,255,255,.45);
+      background:rgba(255,255,255,.035);
+    }
+
+
+    .admin-client {
+      display:flex;
+      align-items:center;
+      gap:11px;
+      margin-bottom:12px;
+    }
+
+
+    .admin-client-avatar {
+      width:44px;
+      height:44px;
+      flex:0 0 44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:14px;
+      color:#0a0a0c;
+      background:
+        linear-gradient(
+          145deg,
+          #ead17a,
+          #b78b21
+        );
+      font-family:"Cinzel",serif;
+      font-weight:800;
+    }
+
+
+    .admin-client-data {
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+
+    .admin-client-data strong {
+      font-size:15px;
+      color:#fff;
+    }
+
+
+    .admin-client-data span {
+      font-size:12px;
+      color:rgba(255,255,255,.58);
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+
+    .admin-client-data .admin-service {
+      color:#e6c96b;
+      font-size:12px;
+    }
+
+
+    .admin-action-danger,
+    .admin-action-block,
+    .admin-action-light {
+      width:100%;
+      border-radius:12px;
+      padding:11px 12px;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.8px;
+      cursor:pointer;
+    }
+
+
+    .admin-action-danger {
+      border:1px solid rgba(190,65,65,.35);
+      background:rgba(190,65,65,.10);
+      color:#e99a9a;
+    }
+
+
+    .admin-action-block {
+      border:1px solid rgba(212,175,55,.20);
+      background:rgba(212,175,55,.07);
+      color:#d9bd63;
+    }
+
+
+    .admin-action-light {
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.62);
+    }
+
+
+    .admin-loading {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:35px 10px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+    }
+
+
+    .admin-spinner {
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.15);
+      border-top-color:#d4af37;
+      animation:igrimaldiSpin .8s linear infinite;
+    }
+
+
+    @keyframes igrimaldiSpin {
+      to {
+        transform:rotate(360deg);
+      }
+    }
+
+
+    /* =========================================
+       MODALE ADMIN
+    ========================================= */
+
+    #adminClientModal {
+      z-index:9999;
+      padding:18px;
+      align-items:center;
+      justify-content:center;
+    }
+
+
+    #adminClientModal:not(.hidden) {
+      display:flex;
+    }
+
+
+    .admin-client-modal-box {
+      width:min(100%, 520px);
+      max-height:90vh;
+      overflow:auto;
+      position:relative;
+      padding:25px 20px 20px;
+      border-radius:24px;
+      border:1px solid rgba(212,175,55,.25);
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(93,47,125,.22),
+          transparent 38%
+        ),
+        linear-gradient(
+          145deg,
+          #111116,
+          #08080b
+        );
+      box-shadow:
+        0 30px 80px rgba(0,0,0,.65);
+    }
+
+
+    .admin-modal-close {
+      position:absolute;
+      top:10px;
+      right:12px;
+    }
+
+
+    .admin-modal-kicker {
+      color:#d4af37;
+      font-size:9px;
+      letter-spacing:1.8px;
+      font-weight:800;
+      margin-bottom:5px;
+    }
+
+
+    .admin-client-modal-box h2 {
+      margin:0;
+      font-family:"Playfair Display",serif;
+      font-size:27px;
+    }
+
+
+    .admin-modal-description {
+      margin:6px 0 20px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+
+    .admin-form-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+
+    .admin-field {
+      margin-bottom:12px;
+    }
+
+
+    .admin-field label {
+      display:block;
+      margin-bottom:6px;
+      font-size:10px;
+      letter-spacing:.8px;
+      color:rgba(255,255,255,.52);
+      text-transform:uppercase;
+      font-weight:700;
+    }
+
+
+    .admin-field input,
+    .admin-field select {
+      width:100%;
+      box-sizing:border-box;
+      min-height:48px;
+      padding:12px 13px;
+      border-radius:13px;
+      border:1px solid rgba(255,255,255,.10);
+      outline:none;
+      background:rgba(255,255,255,.045);
+      color:#fff;
+      font:inherit;
+    }
+
+
+    .admin-field input:focus,
+    .admin-field select:focus {
+      border-color:rgba(212,175,55,.55);
+      box-shadow:
+        0 0 0 3px rgba(212,175,55,.08);
+    }
+
+
+    .admin-field select option {
+      background:#111116;
+      color:#fff;
+    }
+
+
+    .admin-service-preview {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:13px 14px;
+      margin:2px 0 15px;
+      border-radius:14px;
+      border:1px solid rgba(212,175,55,.18);
+      background:rgba(212,175,55,.06);
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+    }
+
+
+    .admin-service-preview span {
+      color:#e8dfc8;
+    }
+
+
+    .admin-service-preview strong {
+      color:#e6c96b;
+      font-size:16px;
+    }
+
+
+    .admin-modal-actions {
+      display:grid;
+      grid-template-columns:1fr 1.4fr;
+      gap:9px;
+    }
+
+
+    .admin-cancel-button {
+      min-height:48px;
+      border-radius:13px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.65);
+      font-size:10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+
+    .admin-confirm-client {
+      min-height:48px;
+      padding:12px;
+      font-size:10px;
+    }
+
+
+    @media (max-width:420px) {
+
+      .admin-form-grid {
+        grid-template-columns:1fr;
+        gap:0;
+      }
+
+      .admin-client-modal-box {
+        padding:23px 16px 16px;
+      }
+
+      .admin-day-header {
+        align-items:stretch;
+        flex-direction:column;
+      }
+
+      .admin-day-header .gold-button {
+        width:100%;
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+}
+
+
+/* =========================================================
    ESPORTA FUNZIONI
 ========================================================= */
 
@@ -4375,6 +5161,9 @@ window.adminCancelBooking =
 
 window.openAdminAddClient =
   openAdminAddClient;
+
+window.closeAdminAddClient =
+  closeAdminAddClient;
 
 window.renderAdminAgenda =
   renderAdminAgenda;
