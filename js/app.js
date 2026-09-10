@@ -999,356 +999,106 @@ function updateSummary() {
    ONESIGNAL
 ========================================================= */
 
-/*
-  Aspetta che l'SDK OneSignal abbia completato init.
+/* =========================================================
+   ONESIGNAL
+========================================================= */
 
-  È importante perché chiamare login() prima che
-  OneSignal sia realmente pronto può lasciare l'utente
-  non associato correttamente alla subscription.
-*/
-
-function waitForOneSignal(timeout = 15000) {
-
+async function withOneSignal(callback) {
   return new Promise(resolve => {
+    window.OneSignalDeferred =
+      window.OneSignalDeferred || [];
 
-    const start = Date.now();
-
-    const check = () => {
-
-      if (
-        window.oneSignalReady === true
-      ) {
-
-        resolve(true);
-
-        return;
-
+    window.OneSignalDeferred.push(
+      async function(OneSignal) {
+        try {
+          resolve(await callback(OneSignal));
+        } catch (error) {
+          console.error("OneSignal:", error);
+          resolve(false);
+        }
       }
-
-
-      if (
-        window.OneSignalDeferred &&
-        Array.isArray(
-          window.OneSignalDeferred
-        )
-      ) {
-
-        window.OneSignalDeferred.push(
-          function(OneSignal) {
-
-            resolve(
-              Boolean(OneSignal)
-            );
-
-          }
-        );
-
-        return;
-
-      }
-
-
-      if (
-        Date.now() - start >= timeout
-      ) {
-
-        resolve(false);
-
-        return;
-
-      }
-
-
-      setTimeout(
-        check,
-        250
-      );
-
-    };
-
-
-    check();
-
+    );
   });
-
 }
 
-
-/*
-  Associa sempre l'utente loggato al player
-  OneSignal usando l'ID del profilo Supabase.
-*/
 
 async function setupOneSignalUser() {
 
-  if (
-    !currentUser ||
-    !currentUser.id
-  ) {
-
+  if (!currentUser || !currentUser.id) {
     return false;
-
   }
 
+  return withOneSignal(async OneSignal => {
 
-  try {
-
-    const ready =
-      await waitForOneSignal();
-
-
-    if (!ready) {
-
-      console.warn(
-        "OneSignal non ancora disponibile."
-      );
-
-      return false;
-
-    }
-
-
-    return await new Promise(resolve => {
-
-      window.OneSignalDeferred.push(
-        async function(OneSignal) {
-
-          try {
-
-            await OneSignal.login(
-              String(currentUser.id)
-            );
-
-
-            console.log(
-              "OneSignal: utente associato",
-              currentUser.id
-            );
-
-
-            resolve(true);
-
-          } catch (error) {
-
-            console.error(
-              "OneSignal login error:",
-              error
-            );
-
-            resolve(false);
-
-          }
-
-        }
-      );
-
-    });
-
-  } catch (error) {
-
-    console.error(
-      "OneSignal setup error:",
-      error
+    await OneSignal.login(
+      String(currentUser.id)
     );
 
-    return false;
+    console.log(
+      "OneSignal: utente associato:",
+      currentUser.id
+    );
 
-  }
-
+    return true;
+  });
 }
 
 
-/*
-  Attivazione notifiche.
-
-  Questa funzione viene chiamata dal pulsante
-  "Attiva notifiche", quindi la richiesta permesso
-  avviene in seguito a una vera azione dell'utente.
-*/
-
 async function requestOneSignalNotifications() {
 
-  try {
+  return withOneSignal(async OneSignal => {
 
-    const ready =
-      await waitForOneSignal();
-
-
-    if (!ready) {
-
-      showToast(
-        "OneSignal non è ancora pronto. Riprova tra poco.",
-        "error"
-      );
-
-      return;
-
+    if (currentUser && currentUser.id) {
+      try {
+        await OneSignal.login(
+          String(currentUser.id)
+        );
+      } catch (error) {
+        console.warn("OneSignal login:", error);
+      }
     }
 
+    await OneSignal.Notifications.requestPermission();
 
-    await new Promise(resolve => {
-
-      window.OneSignalDeferred.push(
-        async function(OneSignal) {
-
-          try {
-
-            /*
-              Prima associamo l'utente.
-            */
-
-            if (
-              currentUser &&
-              currentUser.id
-            ) {
-
-              try {
-
-                await OneSignal.login(
-                  String(
-                    currentUser.id
-                  )
-                );
-
-              } catch (error) {
-
-                console.warn(
-                  "OneSignal login:",
-                  error
-                );
-
-              }
-
-            }
-
-
-            /*
-              Richiesta permesso.
-            */
-
-            await OneSignal.Notifications
-              .requestPermission();
-
-
-            /*
-              Aspettiamo brevemente che OneSignal
-              aggiorni lo stato della subscription.
-            */
-
-            await new Promise(
-              resolveWait =>
-                setTimeout(
-                  resolveWait,
-                  800
-                )
-            );
-
-
-            const push =
-              OneSignal.User &&
-              OneSignal.User.PushSubscription
-                ? OneSignal.User.PushSubscription
-                : null;
-
-
-            const optedIn =
-              Boolean(
-                push &&
-                push.optedIn === true
-              );
-
-
-            if (optedIn) {
-
-              console.log(
-                "OneSignal: PUSH ATTIVA",
-                push
-              );
-
-
-              if (
-                currentUser &&
-                currentUser.id
-              ) {
-
-                try {
-
-                  await OneSignal.login(
-                    String(
-                      currentUser.id
-                    )
-                  );
-
-                } catch (error) {
-
-                  console.warn(
-                    "OneSignal login finale:",
-                    error
-                  );
-
-                }
-
-              }
-
-
-              showToast(
-                "Notifiche attivate con successo",
-                "success"
-              );
-
-            } else {
-
-              console.warn(
-                "OneSignal: permesso presente ma subscription non attiva.",
-                push
-              );
-
-
-              showToast(
-                "Le notifiche non risultano ancora attive. Controlla i permessi del sito.",
-                "error"
-              );
-
-            }
-
-          } catch (error) {
-
-            console.error(
-              "OneSignal notification error:",
-              error
-            );
-
-
-            showToast(
-              "Impossibile attivare le notifiche",
-              "error"
-            );
-
-          }
-
-
-          resolve();
-
-        }
-      );
-
-    });
-
-  } catch (error) {
-
-    console.error(
-      "Errore OneSignal:",
-      error
+    await new Promise(resolve =>
+      setTimeout(resolve, 1500)
     );
 
+    const push =
+      OneSignal.User &&
+      OneSignal.User.PushSubscription
+        ? OneSignal.User.PushSubscription
+        : null;
+
+    console.log(
+      "OneSignal PushSubscription:",
+      push
+    );
+
+    if (push && push.optedIn === true) {
+
+      console.log("✅ ONESIGNAL PUSH ATTIVA");
+
+      showToast(
+        "Notifiche attivate con successo",
+        "success"
+      );
+
+      return true;
+    }
+
+    console.warn(
+      "❌ OneSignal: subscription non attiva",
+      push
+    );
 
     showToast(
-      "Errore durante l'attivazione delle notifiche",
+      "Notifiche non attive. Controlla i permessi.",
       "error"
     );
 
-  }
-
+    return false;
+  });
 }
 
 
@@ -1359,49 +1109,24 @@ function requestNotifications() {
 
 async function logoutOneSignalUser() {
 
-  try {
+  return withOneSignal(async OneSignal => {
 
-    const ready =
-      await waitForOneSignal(5000);
+    try {
+      await OneSignal.logout();
 
-
-    if (!ready) return;
-
-
-    await new Promise(resolve => {
-
-      window.OneSignalDeferred.push(
-        async function(OneSignal) {
-
-          try {
-
-            await OneSignal.logout();
-
-          } catch (error) {
-
-            console.warn(
-              "OneSignal logout:",
-              error
-            );
-
-          }
-
-          resolve();
-
-        }
+      console.log(
+        "OneSignal: logout effettuato"
       );
 
-    });
+    } catch (error) {
+      console.warn(
+        "OneSignal logout:",
+        error
+      );
+    }
 
-  } catch (error) {
-
-    console.warn(
-      "Errore logout OneSignal:",
-      error
-    );
-
-  }
-
+    return true;
+  });
 }
 
 
