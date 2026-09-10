@@ -2799,14 +2799,11 @@ async function restoreSession() {
 
 
     if (!savedUser) {
-
-      currentUser = null;
-
-      updateUserInterface();
-
-      return;
-
-    }
+  currentUser = null;
+  updateUserInterface();
+  openAuth();
+  return;
+}
 
 
     const user =
