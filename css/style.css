@@ -216,6 +216,8 @@ body.session-active #authModal{display:none!important}
 /* Piccolo logo nel menu: elegante ma separato e leggibile */
 .topbar .brand{
   font-family:'Cinzel', Georgia, serif!important;
+ text-align: center !important;
+width: 100% !important;
   font-weight:600!important;
   letter-spacing:.11em!important;
 }
