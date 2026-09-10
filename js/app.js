@@ -2787,88 +2787,166 @@ function saveUserSession(
 
 
 async function restoreSession() {
+
   let savedUser = null;
 
   try {
+
     savedUser =
       localStorage.getItem("grimaldiUser") ||
       localStorage.getItem("igrimaldi_session") ||
       sessionStorage.getItem("grimaldiUser");
 
+
     if (!savedUser) {
+
+      currentUser = null;
+
       updateUserInterface();
+
       return;
+
     }
 
-    const user = JSON.parse(savedUser);
 
-    if (!user || !user.id) {
+    const user =
+      JSON.parse(savedUser);
+
+
+    if (
+      !user ||
+      !user.id
+    ) {
+
+      currentUser = null;
+
       updateUserInterface();
+
       return;
+
     }
 
-    currentUser = user;
 
-    // Mantiene la sessione persistente
-    const userData = JSON.stringify(user);
+    /*
+      RIPRISTINO UTENTE
+    */
 
-    localStorage.setItem("grimaldiUser", userData);
-    localStorage.setItem("igrimaldi_session", userData);
+    currentUser =
+      user;
+
+
+    /*
+      Mantiene la sessione salvata
+    */
+
+    const userData =
+      JSON.stringify(user);
+
+
+    localStorage.setItem(
+      "grimaldiUser",
+      userData
+    );
+
+
+    localStorage.setItem(
+      "igrimaldi_session",
+      userData
+    );
+
+
+    /*
+      AGGIORNA LA GRAFICA DEL PROFILO
+    */
 
     updateUserInterface();
+
+
+    /*
+      IMPORTANTE:
+      se l'utente è già loggato,
+      il popup LOGIN deve rimanere chiuso.
+    */
+
+    closeAuth();
+
+
+    /*
+      Aggiorna anche l'accesso
+      all'Agenda Admin
+    */
+
+    updateAdminAgendaAccess();
+
 
   } catch (error) {
-    console.warn("Errore ripristino sessione:", error);
 
-    // Cancella la sessione SOLO se i dati salvati sono corrotti
+    console.warn(
+      "Errore ripristino sessione:",
+      error
+    );
+
+
+    /*
+      Cancella la sessione SOLO
+      se il contenuto salvato è realmente corrotto.
+    */
+
     try {
+
       if (savedUser) {
+
         JSON.parse(savedUser);
+
       }
+
     } catch (_) {
-      localStorage.removeItem("grimaldiUser");
-      localStorage.removeItem("igrimaldi_session");
-      sessionStorage.removeItem("grimaldiUser");
+
+      localStorage.removeItem(
+        "grimaldiUser"
+      );
+
+      localStorage.removeItem(
+        "igrimaldi_session"
+      );
+
+      sessionStorage.removeItem(
+        "grimaldiUser"
+      );
+
     }
 
+
     currentUser = null;
+
     updateUserInterface();
+
     return;
+
   }
 
-  // OneSignal non deve mai far perdere la sessione
+
+  /*
+    ONESIGNAL NON DEVE MAI
+    FAR PERDERE LA SESSIONE
+  */
+
   if (currentUser) {
+
     try {
+
       await setupOneSignalUser();
+
     } catch (error) {
+
       console.warn(
         "OneSignal non disponibile all'avvio, sessione mantenuta:",
         error
       );
+
     }
+
   }
-}
-
-
-/* =========================================================
-   PULISCI SESSIONE
-========================================================= */
-
-function clearSession() {
-
-  localStorage.removeItem(
-    "grimaldiUser"
-  );
-
-  localStorage.removeItem(
-    "igrimaldi_session"
-  );
-
-  sessionStorage.removeItem(
-    "grimaldiUser"
-  );
-
-  currentUser = null;
 
 }
 
