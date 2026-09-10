@@ -235,3 +235,10 @@ width: 100% !important;
   #homePage .home-logo-sub{font-size:13px!important;letter-spacing:.31em!important;padding-left:.31em!important}
   #homePage .home-champion{font-size:8.5px!important;letter-spacing:.095em!important;margin-top:22px!important;padding:9px 7px!important}
 }
+.topbar .brand-sub {
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important;
+  text-align: center !important;
+}
