@@ -4574,13 +4574,27 @@ function injectAgendaStyles() {
     }
 
 
-    .admin-calendar-weekday {
-      text-align:center;
-      font-size:10px;
-      letter-spacing:1px;
-      color:rgba(255,255,255,.45);
-      padding:7px 0;
-      font-weight:700;
+    .admin-calendar {
+  display:grid;
+  grid-template-columns:repeat(7, minmax(0, 1fr));
+  gap:6px;
+  width:100%;
+}
+      .admin-calendar-weekday {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  width:100%;
+  height:30px;
+  padding:0;
+  white-space:nowrap;
+  text-align:center;
+  font-size:10px;
+  letter-spacing:1px;
+  color:rgba(255,255,255,.45);
+  font-weight:700;
+
     }
 
 
