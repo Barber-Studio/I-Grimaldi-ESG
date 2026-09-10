@@ -1,52 +1,17 @@
-/* =========================================================
-   I GRIMALDI
-   APP.JS DEFINITIVO
-
-   Compatibile con:
-   - profiles
-   - appointments
-   - availability_blocks
-   - notifications
-   - Edge Function: igrimaldi-api
-
-   Login: telefono + PIN
-   ========================================================= */
-
-
-/* =========================================================
-   SUPABASE
-========================================================= */
-
-const SUPABASE_URL =
-  "https://wxcdmtajcasnlohqkgmk.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
-
-const IGRIMALDI_API =
-  `${SUPABASE_URL}/functions/v1/igrimaldi-api`;
+const SUPABASE_URL = "https://wxcdmtajcasnlohqkgmk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bwjP-ihASijevvu7d6r5Ew_6JaWKSDP";
 
 let supabaseClient = null;
 
 try {
-
   if (window.supabase) {
-
-    supabaseClient =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
-
+    supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
   }
-
 } catch (error) {
-
-  console.error(
-    "Errore inizializzazione Supabase:",
-    error
-  );
-
+  console.error("Errore Supabase:", error);
 }
 
 
@@ -55,56 +20,42 @@ try {
 ========================================================= */
 
 const services = [
-
   {
     id: "shampoo_taglio",
     name: "Shampoo + Taglio",
     price: 20,
     duration: 30
   },
-
-  {
-    id: "shampoo",
-    name: "Shampoo",
-    price: 10,
-    duration: 30
-  },
-
   {
     id: "barba_5",
     name: "Barba 5€",
     price: 5,
     duration: 30
   },
-
   {
     id: "barba_10",
     name: "Barba 10€",
     price: 10,
     duration: 30
   },
-
   {
     id: "colore",
     name: "Colore",
     price: 20,
     duration: 30
   },
-
   {
     id: "colore_barba",
     name: "Colore Barba",
     price: 10,
     duration: 30
   },
-
   {
     id: "fiala",
     name: "Fiala",
     price: 5,
     duration: 30
   }
-
 ];
 
 
@@ -113,283 +64,75 @@ const services = [
 ========================================================= */
 
 const TIMES = [
-
   "09:00",
   "09:30",
-
   "10:00",
   "10:30",
-
   "11:00",
   "11:30",
-
   "12:00",
   "12:30",
-
   "15:00",
   "15:30",
-
   "16:00",
   "16:30",
-
   "17:00",
   "17:30",
-
   "18:00",
   "18:30",
-
-  "19:00",
-  "19:30",
-
-  "20:00",
-  "20:30",
-
-  "21:00"
-
+  "19:00"
 ];
 
 
 /* =========================================================
-   STATO APP
+   VARIABILI
 ========================================================= */
 
 let currentUser = null;
-
 let selectedService = null;
-
 let selectedDate = null;
-
 let selectedTime = null;
-
 let bookingViewDate = new Date();
-
-let adminAgendaDate = new Date();
-
-let adminSelectedDate = null;
-
 let toastTimer = null;
 
 
 /* =========================================================
-   AVVIO
+   AVVIO APP
 ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-    renderServices();
+  renderServices();
+  setupBookingCalendar();
+  setupEvents();
 
-    setupBookingCalendar();
+  await restoreSession();
 
-    setupEvents();
+  setTimeout(() => {
 
-    await restoreSession();
+    const loading = document.getElementById("loadingScreen");
 
-    setTimeout(() => {
+    if (loading) {
+      loading.style.opacity = "0";
 
-      const loading =
-        q("loadingScreen");
+      setTimeout(() => {
+        loading.remove();
+      }, 350);
+    }
 
-      if (loading) {
+  }, 1000);
 
-        loading.style.opacity = "0";
-
-        setTimeout(() => {
-
-          loading.remove();
-
-        }, 350);
-
-      }
-
-    }, 1000);
-
-  }
-);
+});
 
 
 /* =========================================================
-   UTILITÀ DOM
+   UTILITA
 ========================================================= */
 
 function q(id) {
-
   return document.getElementById(id);
-
 }
 
-
-/* =========================================================
-   API EDGE FUNCTION
-========================================================= */
-
-async function igrimaldiAPI(
-  action,
-  payload = {}
-) {
-
-  const controller =
-    new AbortController();
-
-  const timeout =
-    setTimeout(
-      () => controller.abort(),
-      15000
-    );
-
-  try {
-
-    console.log(
-      "I GRIMALDI API →",
-      action
-    );
-
-
-    const response =
-      await fetch(
-        IGRIMALDI_API,
-        {
-          method: "POST",
-
-          signal:
-            controller.signal,
-
-          headers: {
-            "Content-Type": "application/json",
-
-            "apikey":
-              SUPABASE_KEY,
-
-            "Authorization":
-              `Bearer ${SUPABASE_KEY}`
-          },
-
-          body:
-            JSON.stringify({
-              action,
-              ...payload
-            })
-        }
-      );
-
-
-    const responseText =
-      await response.text();
-
-
-    console.log(
-      "I GRIMALDI API ←",
-      action,
-      response.status,
-      responseText
-    );
-
-
-    let result = null;
-
-
-    if (responseText) {
-
-      try {
-
-        result =
-          JSON.parse(
-            responseText
-          );
-
-      } catch {
-
-        throw new Error(
-          `Risposta server non valida (${response.status}).`
-        );
-
-      }
-
-    }
-
-
-    if (!response.ok) {
-
-      const serverError =
-        result?.error ||
-        result?.message ||
-        responseText ||
-        `Errore server (${response.status})`;
-
-
-      throw new Error(
-        serverError
-      );
-
-    }
-
-
-    if (
-      result &&
-      result.ok === false
-    ) {
-
-      throw new Error(
-        result.error ||
-        result.message ||
-        "Operazione non riuscita."
-      );
-
-    }
-
-
-    return result || {};
-
-
-  } catch (error) {
-
-    console.error(
-      "I GRIMALDI API ERRORE:",
-      action,
-      error
-    );
-
-
-    if (
-      error?.name ===
-      "AbortError"
-    ) {
-
-      throw new Error(
-        "Il server non ha risposto. Controlla che la Edge Function igrimaldi-api sia attiva."
-      );
-
-    }
-
-
-    if (
-      error instanceof TypeError
-    ) {
-
-      throw new Error(
-        "Impossibile raggiungere il server. Controlla URL della Edge Function, CORS e pubblicazione della funzione."
-      );
-
-    }
-
-
-    throw error;
-
-  } finally {
-
-    clearTimeout(
-      timeout
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   TELEFONO
-========================================================= */
 
 function normalizePhone(phone) {
 
@@ -399,33 +142,22 @@ function normalizePhone(phone) {
 }
 
 
-/* =========================================================
-   DATA
-========================================================= */
-
 function localDateString(date) {
 
-  const year =
-    date.getFullYear();
+  const year = date.getFullYear();
 
-  const month =
-    String(
-      date.getMonth() + 1
-    ).padStart(2, "0");
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, "0");
 
-  const day =
-    String(
-      date.getDate()
-    ).padStart(2, "0");
+  const day = String(
+    date.getDate()
+  ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 
 }
 
-
-/* =========================================================
-   FORMATTA DATA
-========================================================= */
 
 function formatDate(date) {
 
@@ -446,34 +178,17 @@ function formatDate(date) {
 }
 
 
-/* =========================================================
-   AGGIUNGI MINUTI
-========================================================= */
+function addMinutesToTime(time, minutes = 30) {
 
-function addMinutesToTime(
-  time,
-  minutes = 30
-) {
+  const parts = String(time).split(":");
 
-  const parts =
-    String(time).split(":");
+  const hours = Number(parts[0]);
+  const mins = Number(parts[1]);
 
-  const hours =
-    Number(parts[0]);
+  const total = hours * 60 + mins + minutes;
 
-  const mins =
-    Number(parts[1]);
-
-  const total =
-    hours * 60 +
-    mins +
-    minutes;
-
-  const newHours =
-    Math.floor(total / 60) % 24;
-
-  const newMinutes =
-    total % 60;
+  const newHours = Math.floor(total / 60) % 24;
+  const newMinutes = total % 60;
 
   return (
     String(newHours).padStart(2, "0") +
@@ -484,13 +199,9 @@ function addMinutesToTime(
 }
 
 
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
 function escapeHtml(value) {
 
-  return String(value ?? "")
+  return String(value || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -504,60 +215,34 @@ function escapeHtml(value) {
    TOAST
 ========================================================= */
 
-function showToast(
-  message,
-  type = "default"
-) {
+function showToast(message, type = "default") {
 
-  const toast =
-    q("toast");
+  const toast = q("toast");
 
   if (!toast) {
-
     alert(message);
-
     return;
-
   }
 
-
-  toast.textContent =
-    message;
+  toast.textContent = message;
 
   toast.className = "";
 
-
   if (type) {
-
-    toast.classList.add(
-      type
-    );
-
+    toast.classList.add(type);
   }
 
-
   requestAnimationFrame(() => {
-
-    toast.classList.add(
-      "show"
-    );
-
+    toast.classList.add("show");
   });
 
+  clearTimeout(toastTimer);
 
-  clearTimeout(
-    toastTimer
-  );
+  toastTimer = setTimeout(() => {
 
+    toast.classList.remove("show");
 
-  toastTimer =
-    setTimeout(() => {
-
-      toast.classList.remove(
-        "show"
-      );
-
-    }, 3500);
+  }, 3500);
 
 }
 
@@ -581,9 +266,7 @@ function showPage(pageId) {
 
 
   document
-    .querySelectorAll(
-      ".bottom-nav button"
-    )
+    .querySelectorAll(".bottom-nav button")
     .forEach(button => {
 
       button.classList.toggle(
@@ -600,60 +283,20 @@ function showPage(pageId) {
   });
 
 
-  if (
-    pageId ===
-    "appointmentsPage"
-  ) {
-
+  if (pageId === "appointmentsPage") {
     loadUserBookings();
-
   }
 
 
-  if (
-    pageId ===
-    "profilePage"
-  ) {
-
+  if (pageId === "profilePage") {
     updateUserInterface();
-
   }
 
 
-  if (
-    pageId ===
-    "bookingPage"
-  ) {
+  if (pageId === "bookingPage") {
 
     renderBookingCalendar();
-
     loadAvailableTimes();
-
-  }
-
-
-  if (
-    pageId ===
-    "adminAgendaPage"
-  ) {
-
-    if (!isAdmin()) {
-
-      showToast(
-        "Accesso non autorizzato",
-        "error"
-      );
-
-      showPage(
-        "homePage"
-      );
-
-      return;
-
-    }
-
-
-    renderAdminAgenda();
 
   }
 
@@ -666,76 +309,56 @@ function showPage(pageId) {
 
 function renderServices() {
 
-  const container =
-    q("services");
+  const container = q("services");
 
   if (!container) return;
 
 
-  container.innerHTML =
-    services
-      .map(service => {
+  container.innerHTML = services
+    .map(service => {
 
-        const selected =
-          selectedService &&
-          selectedService.id ===
-            service.id;
+      return `
+        <button
+          type="button"
+          class="service-card ${
+            selectedService &&
+            selectedService.id === service.id
+              ? "selected"
+              : ""
+          }"
+          data-service="${service.id}"
+        >
 
+          <span class="service-name">
+            ${service.name}
+          </span>
 
-        return `
+          <strong class="service-price">
+            €${service.price}
+          </strong>
 
-          <button
-            type="button"
-            class="service-card ${
-              selected
-                ? "selected"
-                : ""
-            }"
-            data-service="${service.id}"
-          >
+        </button>
+      `;
 
-            <span class="service-name">
-              ${escapeHtml(
-                service.name
-              )}
-            </span>
-
-            <strong class="service-price">
-              €${service.price}
-            </strong>
-
-          </button>
-
-        `;
-
-      })
-      .join("");
+    })
+    .join("");
 
 
   container
-    .querySelectorAll(
-      ".service-card"
-    )
+    .querySelectorAll(".service-card")
     .forEach(button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+      button.addEventListener("click", () => {
 
-          selectedService =
-            services.find(
-              service =>
-                service.id ===
-                button.dataset.service
-            ) || null;
+        selectedService = services.find(
+          service =>
+            service.id === button.dataset.service
+        );
 
+        renderServices();
+        updateSummary();
 
-          renderServices();
-
-          updateSummary();
-
-        }
-      );
+      });
 
     });
 
@@ -748,47 +371,37 @@ function renderServices() {
 
 function setupEvents() {
 
-  const confirmButton =
-    q("confirmBooking");
+  const confirmButton = q("confirmBooking");
 
   if (confirmButton) {
-
     confirmButton.addEventListener(
       "click",
       createBooking
     );
-
   }
 
 
-  const loginButton =
-    q("loginButton");
+  const loginButton = q("loginButton");
 
   if (loginButton) {
-
     loginButton.addEventListener(
       "click",
       loginUser
     );
-
   }
 
 
-  const registerButton =
-    q("registerButton");
+  const registerButton = q("registerButton");
 
   if (registerButton) {
-
     registerButton.addEventListener(
       "click",
       handleRegistration
     );
-
   }
 
 
-  const prevMonth =
-    q("prevBookingMonth");
+  const prevMonth = q("prevBookingMonth");
 
   if (prevMonth) {
 
@@ -796,28 +409,21 @@ function setupEvents() {
       "click",
       () => {
 
-        const today =
-          new Date();
+        const today = new Date();
 
-        const currentMonth =
-          new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            1
-          );
+        const currentMonth = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          1
+        );
 
-        const previousMonth =
-          new Date(
-            bookingViewDate.getFullYear(),
-            bookingViewDate.getMonth() - 1,
-            1
-          );
+        const previousMonth = new Date(
+          bookingViewDate.getFullYear(),
+          bookingViewDate.getMonth() - 1,
+          1
+        );
 
-
-        if (
-          previousMonth >=
-          currentMonth
-        ) {
+        if (previousMonth >= currentMonth) {
 
           bookingViewDate.setMonth(
             bookingViewDate.getMonth() - 1
@@ -833,8 +439,7 @@ function setupEvents() {
   }
 
 
-  const nextMonth =
-    q("nextBookingMonth");
+  const nextMonth = q("nextBookingMonth");
 
   if (nextMonth) {
 
@@ -857,65 +462,40 @@ function setupEvents() {
 
 
 /* =========================================================
-   CALENDARIO CLIENTE
+   CALENDARIO
 ========================================================= */
 
 function setupBookingCalendar() {
 
-  const today =
-    new Date();
+  const today = new Date();
 
-  today.setHours(
-    0,
-    0,
-    0,
-    0
+  today.setHours(0, 0, 0, 0);
+
+  selectedDate = localDateString(today);
+
+  bookingViewDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
   );
 
-
-  selectedDate =
-    localDateString(today);
-
-
-  bookingViewDate =
-    new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
-
-
   renderBookingCalendar();
-
+  loadAvailableTimes();
   updateSummary();
 
 }
 
 
-/* =========================================================
-   RENDER CALENDARIO CLIENTE
-========================================================= */
-
 function renderBookingCalendar() {
 
-  const calendar =
-    q("bookingCalendar");
+  const calendar = q("bookingCalendar");
+  const title = q("bookingMonthTitle");
 
-  const title =
-    q("bookingMonthTitle");
-
-
-  if (
-    !calendar ||
-    !title
-  ) return;
+  if (!calendar || !title) return;
 
 
-  const year =
-    bookingViewDate.getFullYear();
-
-  const month =
-    bookingViewDate.getMonth();
+  const year = bookingViewDate.getFullYear();
+  const month = bookingViewDate.getMonth();
 
 
   title.textContent =
@@ -925,38 +505,29 @@ function renderBookingCalendar() {
         month: "long",
         year: "numeric"
       }
-    ).format(
-      bookingViewDate
-    );
+    ).format(bookingViewDate);
 
 
-  const firstDay =
-    new Date(
-      year,
-      month,
-      1
-    );
+  const firstDay = new Date(
+    year,
+    month,
+    1
+  );
 
 
   const startOffset =
-    (
-      firstDay.getDay() +
-      6
-    ) % 7;
+    (firstDay.getDay() + 6) % 7;
 
 
-  const daysInMonth =
-    new Date(
-      year,
-      month + 1,
-      0
-    ).getDate();
+  const daysInMonth = new Date(
+    year,
+    month + 1,
+    0
+  ).getDate();
 
 
   const todayString =
-    localDateString(
-      new Date()
-    );
+    localDateString(new Date());
 
 
   let html = "";
@@ -981,28 +552,23 @@ function renderBookingCalendar() {
     day++
   ) {
 
-    const date =
-      localDateString(
-        new Date(
-          year,
-          month,
-          day
-        )
-      );
-
+    const date = localDateString(
+      new Date(year, month, day)
+    );
 
     const isPast =
       date < todayString;
 
+
     const isSelected =
       date === selectedDate;
+
 
     const isToday =
       date === todayString;
 
 
     html += `
-
       <button
         type="button"
         class="calendar-day
@@ -1015,14 +581,12 @@ function renderBookingCalendar() {
       >
         ${day}
       </button>
-
     `;
 
   }
 
 
-  calendar.innerHTML =
-    html;
+  calendar.innerHTML = html;
 
 
   calendar
@@ -1038,9 +602,7 @@ function renderBookingCalendar() {
           selectedDate =
             button.dataset.date;
 
-          selectedTime =
-            null;
-
+          selectedTime = null;
 
           renderBookingCalendar();
 
@@ -1057,41 +619,35 @@ function renderBookingCalendar() {
 
 
 /* =========================================================
-   DISPONIBILITÀ ORARI
+   CARICA ORARI DISPONIBILI
 ========================================================= */
 
 async function loadAvailableTimes() {
 
-  const container =
-    q("timeSlots");
+  const container = q("timeSlots");
 
   if (!container) return;
 
 
-  container.innerHTML =
-    TIMES
-      .map(time => {
+  container.innerHTML = TIMES
+    .map(time => {
 
-        return `
+      return `
+        <button
+          type="button"
+          class="time-slot"
+          data-time="${time}"
+        >
+          ${time}
+        </button>
+      `;
 
-          <button
-            type="button"
-            class="time-slot"
-            data-time="${time}"
-          >
-            ${time}
-          </button>
-
-        `;
-
-      })
-      .join("");
+    })
+    .join("");
 
 
   const dateLabel =
-    q(
-      "selectedBookingDateLabel"
-    );
+    q("selectedBookingDateLabel");
 
 
   if (dateLabel) {
@@ -1104,7 +660,7 @@ async function loadAvailableTimes() {
   }
 
 
-  if (!selectedDate) {
+  if (!selectedDate || !supabaseClient) {
 
     setupTimeButtons([]);
 
@@ -1113,116 +669,131 @@ async function loadAvailableTimes() {
   }
 
 
+  let busyTimes = [];
+
+
   try {
 
-    const result =
-      await igrimaldiAPI(
-        "availability",
-        {
-          date:
-            selectedDate
-        }
+    const {
+      data: appointments,
+      error: appointmentsError
+    } = await supabaseClient
+      .from("appointments")
+      .select("start_time,status")
+      .eq(
+        "appointment_date",
+        selectedDate
       );
 
 
-    const occupied =
-      Array.isArray(
-        result.occupied
-      )
-        ? result.occupied.map(
-            normalizeTime
-          )
-        : [];
+    if (appointmentsError) {
+
+      console.error(
+        "Errore appuntamenti:",
+        appointmentsError
+      );
+
+    }
 
 
-    const blocked =
-      Array.isArray(
-        result.blocked
-      )
-        ? result.blocked.map(
-            normalizeTime
-          )
-        : [];
+    if (appointments) {
+
+      appointments
+        .filter(appointment => {
+
+          return (
+            appointment.status !== "cancelled" &&
+            appointment.status !== "cancelled_by_admin"
+          );
+
+        })
+        .forEach(appointment => {
+
+          const time = String(
+            appointment.start_time || ""
+          ).slice(0, 5);
+
+          if (time) {
+            busyTimes.push(time);
+          }
+
+        });
+
+    }
 
 
-    const busyTimes = [
-      ...new Set([
-        ...occupied,
-        ...blocked
-      ])
-    ];
+    const {
+      data: blocks,
+      error: blocksError
+    } = await supabaseClient
+      .from("availability_blocks")
+      .select("*")
+      .eq(
+        "block_date",
+        selectedDate
+      );
 
 
-    setupTimeButtons(
-      busyTimes
-    );
+    if (
+      !blocksError &&
+      blocks
+    ) {
+
+      blocks.forEach(block => {
+
+        const blockTime =
+          String(
+            block.block_time || ""
+          ).slice(0, 5);
+
+
+        if (
+          block.block_time === "ALL" ||
+          block.block_time === "all"
+        ) {
+
+          busyTimes = [...TIMES];
+
+        } else if (blockTime) {
+
+          busyTimes.push(blockTime);
+
+        }
+
+      });
+
+    }
 
 
   } catch (error) {
 
     console.error(
-      "Errore disponibilità:",
+      "Errore caricamento orari:",
       error
-    );
-
-
-    setupTimeButtons([]);
-
-
-    showToast(
-      error.message ||
-      "Impossibile caricare gli orari",
-      "error"
     );
 
   }
 
-}
+
+  busyTimes = [
+    ...new Set(busyTimes)
+  ];
 
 
-/* =========================================================
-   NORMALIZZA ORARIO
-========================================================= */
-
-function normalizeTime(time) {
-
-  const value =
-    String(time || "");
-
-
-  if (!value) return "";
-
-
-  return value
-    .slice(0, 5);
+  setupTimeButtons(busyTimes);
 
 }
 
 
-/* =========================================================
-   PULSANTI ORARI
-========================================================= */
+function setupTimeButtons(busyTimes) {
 
-function setupTimeButtons(
-  busyTimes
-) {
-
-  const container =
-    q("timeSlots");
+  const container = q("timeSlots");
 
   if (!container) return;
 
 
-  const busy =
-    new Set(
-      busyTimes
-    );
-
-
   container
-    .querySelectorAll(
-      ".time-slot"
-    )
+    .querySelectorAll(".time-slot")
     .forEach(button => {
 
       const time =
@@ -1230,15 +801,12 @@ function setupTimeButtons(
 
 
       if (
-        busy.has(time)
+        busyTimes.includes(time)
       ) {
 
-        button.disabled =
-          true;
+        button.disabled = true;
 
-        button.classList.add(
-          "busy"
-        );
+        button.classList.add("busy");
 
         return;
 
@@ -1249,9 +817,7 @@ function setupTimeButtons(
         selectedTime === time
       ) {
 
-        button.classList.add(
-          "selected"
-        );
+        button.classList.add("selected");
 
       }
 
@@ -1260,14 +826,11 @@ function setupTimeButtons(
         "click",
         () => {
 
-          selectedTime =
-            time;
+          selectedTime = time;
 
 
           container
-            .querySelectorAll(
-              ".time-slot"
-            )
+            .querySelectorAll(".time-slot")
             .forEach(slot => {
 
               slot.classList.remove(
@@ -1326,8 +889,7 @@ function updateSummary() {
     dateElement.textContent =
       selectedDate
         ? new Date(
-            selectedDate +
-            "T12:00:00"
+            selectedDate + "T12:00:00"
           ).toLocaleDateString(
             "it-IT",
             {
@@ -1343,8 +905,7 @@ function updateSummary() {
   if (timeElement) {
 
     timeElement.textContent =
-      selectedTime ||
-      "-";
+      selectedTime || "-";
 
   }
 
@@ -1362,7 +923,7 @@ function updateSummary() {
 
 
 /* =========================================================
-   ONESIGNAL
+   NOTIFICHE ONESIGNAL
 ========================================================= */
 
 async function setupOneSignalUser() {
@@ -1371,41 +932,32 @@ async function setupOneSignalUser() {
     !currentUser ||
     !currentUser.id
   ) {
-
     return;
-
   }
 
 
   window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
+    window.OneSignalDeferred || [];
 
 
   window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
+    async function (OneSignal) {
 
       try {
 
         await OneSignal.login(
-          String(
-            currentUser.id
-          )
+          String(currentUser.id)
         );
-
 
         console.log(
           "OneSignal collegato:",
           currentUser.id
         );
 
-
       } catch (error) {
 
         console.error(
-          "Errore OneSignal:",
+          "Errore collegamento OneSignal:",
           error
         );
 
@@ -1420,14 +972,11 @@ async function setupOneSignalUser() {
 async function logoutOneSignalUser() {
 
   window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
+    window.OneSignalDeferred || [];
 
 
   window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
+    async function (OneSignal) {
 
       try {
 
@@ -1449,50 +998,49 @@ async function logoutOneSignalUser() {
 
 
 /* =========================================================
-   RICHIESTA NOTIFICHE
+   CONTROLLO NOTIFICHE CORRETTO
 ========================================================= */
 
 async function requestOneSignalNotifications() {
 
   window.OneSignalDeferred =
-    window.OneSignalDeferred ||
-    [];
-
+    window.OneSignalDeferred || [];
 
   window.OneSignalDeferred.push(
-    async function (
-      OneSignal
-    ) {
+    async function (OneSignal) {
 
       try {
 
-        await OneSignal.Notifications
-          .requestPermission();
+        const isActive = Boolean(
+          OneSignal.User &&
+          OneSignal.User.PushSubscription &&
+          OneSignal.User.PushSubscription.optedIn
+        );
 
+        if (isActive) {
 
-        const active =
-          Boolean(
-            OneSignal.User &&
-            OneSignal.User.PushSubscription &&
-            OneSignal.User.PushSubscription.optedIn
-          );
-
-
-        if (active) {
-
-          if (
-            currentUser &&
-            currentUser.id
-          ) {
-
-            await OneSignal.login(
-              String(
-                currentUser.id
-              )
-            );
-
+          if (currentUser && currentUser.id) {
+            await OneSignal.login(String(currentUser.id));
           }
 
+          showToast("Notifiche già attive", "success");
+          return;
+
+        }
+
+        await OneSignal.Notifications.requestPermission();
+
+        const nowActive = Boolean(
+          OneSignal.User &&
+          OneSignal.User.PushSubscription &&
+          OneSignal.User.PushSubscription.optedIn
+        );
+
+        if (nowActive) {
+
+          if (currentUser && currentUser.id) {
+            await OneSignal.login(String(currentUser.id));
+          }
 
           showToast(
             "Notifiche attivate con successo",
@@ -1501,13 +1049,26 @@ async function requestOneSignalNotifications() {
 
         } else {
 
-          showToast(
-            "Notifiche non attive",
-            "error"
-          );
+          const permission =
+            OneSignal.Notifications.permission;
+
+          if (permission === "denied") {
+
+            showToast(
+              "Notifiche non consentite sul dispositivo",
+              "error"
+            );
+
+          } else {
+
+            showToast(
+              "Attivazione notifiche in attesa",
+              "default"
+            );
+
+          }
 
         }
-
 
       } catch (error) {
 
@@ -1516,9 +1077,8 @@ async function requestOneSignalNotifications() {
           error
         );
 
-
         showToast(
-          "Impossibile attivare le notifiche",
+          "Impossibile verificare le notifiche",
           "error"
         );
 
@@ -1531,12 +1091,272 @@ async function requestOneSignalNotifications() {
 
 
 /* =========================================================
-   COMPATIBILITÀ
+   NOTIFICA ADMIN NUOVA PRENOTAZIONE
 ========================================================= */
 
-function requestNotifications() {
+async function sendAdminBookingNotifications(booking) {
 
-  requestOneSignalNotifications();
+  try {
+
+    if (!supabaseClient || !booking) return;
+
+    const { data: admins, error } = await supabaseClient
+      .from("profiles")
+      .select("id,customer_phone,role")
+      .eq("role", "admin");
+
+    if (error) {
+      console.error(
+        "Errore ricerca admin:",
+        error
+      );
+      return;
+    }
+
+    if (!admins || admins.length === 0) {
+      console.warn(
+        "Nessun admin trovato nella tabella profiles"
+      );
+      return;
+    }
+
+    const dateText = new Date(
+      booking.appointment_date + "T12:00:00"
+    ).toLocaleDateString("it-IT");
+
+    const timeText = String(
+      booking.start_time || ""
+    ).slice(0, 5);
+
+    const title = "Nuova prenotazione ✂️";
+
+    const message =
+      `${booking.customer_name || "Un cliente"} ha prenotato ${booking.service_name || "un servizio"} per il giorno ${dateText} alle ore ${timeText}.`;
+
+    for (const admin of admins) {
+
+      await sendBookingNotification(
+        admin.id,
+        admin.customer_phone || "",
+        title,
+        message,
+        "admin_new_booking"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   NOTIFICA ADMIN ANNULLAMENTO PRENOTAZIONE
+========================================================= */
+
+async function sendAdminCancellationNotifications(booking) {
+
+  try {
+
+    if (!supabaseClient || !booking) return;
+
+    const { data: admins, error } = await supabaseClient
+      .from("profiles")
+      .select("id,customer_phone,role")
+      .eq("role", "admin");
+
+    if (error) {
+
+      console.error(
+        "Errore ricerca admin per annullamento:",
+        error
+      );
+
+      return;
+
+    }
+
+    if (!admins || admins.length === 0) {
+
+      console.warn(
+        "Nessun admin trovato nella tabella profiles"
+      );
+
+      return;
+
+    }
+
+    const dateText = new Date(
+      booking.appointment_date + "T12:00:00"
+    ).toLocaleDateString("it-IT");
+
+    const timeText = String(
+      booking.start_time || ""
+    ).slice(0, 5);
+
+    const customerName =
+      booking.customer_name ||
+      "Un cliente";
+
+    const title = "Appuntamento annullato ❌";
+
+    const message =
+      `${customerName} ha annullato l'appuntamento del giorno ${dateText} alle ore ${timeText}.`;
+
+    for (const admin of admins) {
+
+      await sendBookingNotification(
+        admin.id,
+        admin.customer_phone || "",
+        title,
+        message,
+        "admin_booking_cancelled"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Errore notifica admin annullamento:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   INVIO NOTIFICA PRENOTAZIONE
+========================================================= */
+
+async function sendBookingNotification(
+  userId,
+  phone,
+  title,
+  message,
+  type
+) {
+
+  try {
+
+    if (!supabaseClient) {
+      return false;
+    }
+
+
+    const cleanPhone =
+      normalizePhone(phone);
+
+
+    try {
+
+      const {
+        error: notificationError
+      } = await supabaseClient
+        .from("notifications")
+        .insert([
+          {
+            customer_phone: cleanPhone,
+            title: String(title || ""),
+            message: String(message || ""),
+            type: String(type || "general"),
+            read: false
+          }
+        ]);
+
+
+      if (notificationError) {
+
+        console.warn(
+          "Errore salvataggio notifica:",
+          notificationError
+        );
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Errore tabella notifiche:",
+        error
+      );
+
+    }
+
+
+    if (!userId) {
+
+      console.warn(
+        "Utente non disponibile per la push"
+      );
+
+      return false;
+
+    }
+
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .functions
+      .invoke(
+        "send-notification",
+        {
+          body: {
+            user_ids: [
+              String(userId)
+            ],
+            external_id: String(userId),
+            customer_phone: cleanPhone,
+            title: String(title),
+            message: String(message),
+            type: String(type)
+          }
+        }
+      );
+
+
+    if (error) {
+
+      console.error(
+        "Errore Edge Function:",
+        error
+      );
+
+      return false;
+
+    }
+
+
+    console.log(
+      "Notifica inviata:",
+      data
+    );
+
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(
+      "Errore invio notifica:",
+      error
+    );
+
+    return false;
+
+  }
 
 }
 
@@ -1597,6 +1417,18 @@ async function createBooking() {
   }
 
 
+  if (!supabaseClient) {
+
+    showToast(
+      "Connessione Supabase non disponibile",
+      "error"
+    );
+
+    return;
+
+  }
+
+
   const button =
     q("confirmBooking");
 
@@ -1611,8 +1443,69 @@ async function createBooking() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
+
+      button.textContent =
+        "CONTROLLO DISPONIBILITÀ...";
+
+    }
+
+
+    const {
+      data: existingAppointments,
+      error: checkError
+    } = await supabaseClient
+      .from("appointments")
+      .select("id,status")
+      .eq(
+        "appointment_date",
+        selectedDate
+      )
+      .eq(
+        "start_time",
+        selectedTime
+      );
+
+
+    if (checkError) {
+
+      throw checkError;
+
+    }
+
+
+    const alreadyBooked =
+      (existingAppointments || [])
+        .some(appointment => {
+
+          return (
+            appointment.status !== "cancelled" &&
+            appointment.status !== "cancelled_by_admin"
+          );
+
+        });
+
+
+    if (alreadyBooked) {
+
+      showToast(
+        "Questo orario è stato appena prenotato",
+        "error"
+      );
+
+
+      selectedTime = null;
+
+      await loadAvailableTimes();
+
+      updateSummary();
+
+      return;
+
+    }
+
+
+    if (button) {
 
       button.textContent =
         "PRENOTAZIONE IN CORSO...";
@@ -1620,32 +1513,86 @@ async function createBooking() {
     }
 
 
-    const result =
-      await igrimaldiAPI(
-        "create_booking",
-        {
+    const bookingPayload = {      customer_id:
+        currentUser.id,
 
-          phone:
-            currentUser.customer_phone,
+      customer_name:
+        currentUser.customer_name,
 
-          pin:
-            currentUser.customer_pin,
+      customer_phone:
+        normalizePhone(
+          currentUser.customer_phone
+        ),
 
-          date:
-            selectedDate,
+      appointment_date:
+        selectedDate,
 
-          start_time:
-            selectedTime,
+      start_time:
+        selectedTime,
 
-          service_name:
-            selectedService.name
+      end_time:
+        addMinutesToTime(
+          selectedTime,
+          selectedService.duration || 30
+        ),
 
-        }
-      );
+      service_name:
+        selectedService.name,
+
+      service_price:
+        selectedService.price,
+
+      status:
+        "confirmed"
+
+    };
 
 
-    const booking =
-      result.appointment;
+    const {
+      data: booking,
+      error: bookingError
+    } = await supabaseClient
+      .from("appointments")
+      .insert([
+        bookingPayload
+      ])
+      .select()
+      .single();
+
+
+    if (bookingError) {
+
+      throw bookingError;
+
+    }
+
+
+    const notificationTitle =
+      "Prenotazione confermata ✂️";
+
+
+    const notificationMessage =
+      `Il tuo appuntamento per ${selectedService.name} è confermato per ${formatDate(selectedDate)} alle ${selectedTime}.`;
+
+
+    await sendBookingNotification(
+
+      currentUser.id,
+
+      currentUser.customer_phone,
+
+      notificationTitle,
+
+      notificationMessage,
+
+      "booking_confirmed"
+
+    );
+
+
+    /* NOTIFICA AUTOMATICA A TUTTI GLI ADMIN */
+
+    await sendAdminBookingNotifications(booking);
 
 
     showToast(
@@ -1654,11 +1601,8 @@ async function createBooking() {
     );
 
 
-    selectedService =
-      null;
-
-    selectedTime =
-      null;
+    selectedService = null;
+    selectedTime = null;
 
 
     renderServices();
@@ -1677,9 +1621,6 @@ async function createBooking() {
     }, 700);
 
 
-    return booking;
-
-
   } catch (error) {
 
     console.error(
@@ -1688,22 +1629,34 @@ async function createBooking() {
     );
 
 
+    let message =
+      "Errore durante la prenotazione";
+
+
+    if (error.code === "23505") {
+
+      message =
+        "Questo orario è già occupato";
+
+    } else if (error.message) {
+
+      message =
+        error.message;
+
+    }
+
+
     showToast(
-      error.message ||
-      "Errore durante la prenotazione",
+      message,
       "error"
     );
-
-
-    await loadAvailableTimes();
 
 
   } finally {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -1717,7 +1670,7 @@ async function createBooking() {
 
 
 /* =========================================================
-   MIE PRENOTAZIONI
+   APPUNTAMENTI UTENTE
 ========================================================= */
 
 async function loadUserBookings() {
@@ -1732,7 +1685,6 @@ async function loadUserBookings() {
   if (!currentUser) {
 
     container.innerHTML = `
-
       <div class="empty-state">
 
         <h3>
@@ -1751,7 +1703,6 @@ async function loadUserBookings() {
         </button>
 
       </div>
-
     `;
 
     return;
@@ -1760,45 +1711,90 @@ async function loadUserBookings() {
 
 
   container.innerHTML = `
-
     <div class="empty-state">
       Caricamento appuntamenti...
     </div>
-
   `;
 
 
   try {
 
-    const result =
-      await igrimaldiAPI(
-        "my_appointments",
+    let {
+      data,
+      error
+    } = await supabaseClient
+      .from("appointments")
+      .select("*")
+      .eq(
+        "customer_id",
+        currentUser.id
+      )
+      .order(
+        "appointment_date",
         {
-
-          phone:
-            currentUser.customer_phone,
-
-          pin:
-            currentUser.customer_pin
-
+          ascending: true
+        }
+      )
+      .order(
+        "start_time",
+        {
+          ascending: true
         }
       );
 
 
-    const data =
-      Array.isArray(
-        result.appointments
-      )
-        ? result.appointments
-        : [];
+    if (error) {
+
+      console.warn(
+        "Ricerca customer_id:",
+        error
+      );
 
 
-    if (
-      data.length === 0
-    ) {
+      const phone =
+        normalizePhone(
+          currentUser.customer_phone
+        );
+
+
+      const fallback =
+        await supabaseClient
+          .from("appointments")
+          .select("*")
+          .eq(
+            "customer_phone",
+            phone
+          )
+          .order(
+            "appointment_date",
+            {
+              ascending: true
+            }
+          )
+          .order(
+            "start_time",
+            {
+              ascending: true
+            }
+          );
+
+
+      data = fallback.data;
+      error = fallback.error;
+
+    }
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    if (!data || data.length === 0) {
 
       container.innerHTML = `
-
         <div class="empty-state">
 
           <h3>
@@ -1817,7 +1813,6 @@ async function loadUserBookings() {
           </button>
 
         </div>
-
       `;
 
       return;
@@ -1832,37 +1827,27 @@ async function loadUserBookings() {
 
 
     const upcoming =
-      data.filter(
-        appointment => {
+      data.filter(appointment => {
 
-          return (
-            appointment.appointment_date >=
-              today &&
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
-          );
+        return (
+          appointment.appointment_date >= today &&
+          appointment.status !== "cancelled" &&
+          appointment.status !== "cancelled_by_admin"
+        );
 
-        }
-      );
+      });
 
 
     const past =
-      data.filter(
-        appointment => {
+      data.filter(appointment => {
 
-          return (
-            appointment.appointment_date <
-              today ||
-            appointment.status ===
-              "cancelled" ||
-            appointment.status ===
-              "cancelled_by_admin"
-          );
+        return (
+          appointment.appointment_date < today ||
+          appointment.status === "cancelled" ||
+          appointment.status === "cancelled_by_admin"
+        );
 
-        }
-      );
+      });
 
 
     const ordered = [
@@ -1873,108 +1858,101 @@ async function loadUserBookings() {
 
     container.innerHTML =
       ordered
-        .map(
-          appointment => {
+        .map(appointment => {
 
-            const dateText =
-              new Date(
-                appointment.appointment_date +
-                "T12:00:00"
-              ).toLocaleDateString(
-                "it-IT",
-                {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long"
-                }
-              );
+          const date =
+            new Date(
+              appointment.appointment_date +
+              "T12:00:00"
+            );
 
 
-            const time =
-              normalizeTime(
-                appointment.start_time
-              );
+          const dateText =
+            date.toLocaleDateString(
+              "it-IT",
+              {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+              }
+            );
 
 
-            const cancelled =
-              appointment.status ===
-                "cancelled" ||
-              appointment.status ===
-                "cancelled_by_admin";
+          const time =
+            String(
+              appointment.start_time || ""
+            ).slice(0, 5);
 
 
-            return `
-
-              <div class="appointment-card">
-
-                <div class="appointment-date">
-
-                  <span>
-                    ${escapeHtml(
-                      dateText
-                    )}
-                  </span>
-
-                  <strong>
-                    ${time}
-                  </strong>
-
-                </div>
+          const isCancelled =
+            appointment.status === "cancelled" ||
+            appointment.status === "cancelled_by_admin";
 
 
-                <div class="appointment-info">
+          return `
 
-                  <h3>
-                    ${escapeHtml(
-                      appointment.service_name
-                    )}
-                  </h3>
+            <div class="appointment-card">
 
-                  <p>
-                    €${appointment.service_price}
-                  </p>
+              <div class="appointment-date">
 
-                  <span
-                    class="appointment-status
-                    ${
-                      cancelled
-                        ? "cancelled"
-                        : "confirmed"
-                    }"
-                  >
-                    ${
-                      cancelled
-                        ? "Annullato"
-                        : "Confermato"
-                    }
-                  </span>
+                <span>
+                  ${dateText}
+                </span>
 
-                </div>
-
-
-                ${
-                  !cancelled &&
-                  appointment.appointment_date >=
-                    today
-                    ? `
-
-                      <button
-                        class="danger-button"
-                        onclick="cancelBooking('${appointment.id}')"
-                      >
-                        ANNULLA
-                      </button>
-
-                    `
-                    : ""
-                }
+                <strong>
+                  ${time}
+                </strong>
 
               </div>
 
-            `;
 
-          }
-        )
+              <div class="appointment-info">
+
+                <h3>
+                  ${escapeHtml(
+                    appointment.service_name
+                  )}
+                </h3>
+
+                <p>
+                  €${appointment.service_price}
+                </p>
+
+
+                <span class="appointment-status
+                  ${isCancelled ? "cancelled" : "confirmed"}
+                ">
+
+                  ${
+                    isCancelled
+                      ? "Annullato"
+                      : "Confermato"
+                  }
+
+                </span>
+
+              </div>
+
+
+              ${
+                !isCancelled &&
+                appointment.appointment_date >= today
+                  ? `
+                    <button
+                      class="danger-button"
+                      onclick="cancelBooking('${appointment.id}')"
+                    >
+                      ANNULLA
+                    </button>
+                  `
+                  : ""
+              }
+
+            </div>
+
+          `;
+
+        })
         .join("");
 
 
@@ -1987,7 +1965,6 @@ async function loadUserBookings() {
 
 
     container.innerHTML = `
-
       <div class="empty-state">
 
         <h3>
@@ -2002,7 +1979,6 @@ async function loadUserBookings() {
         </p>
 
       </div>
-
     `;
 
   }
@@ -2011,44 +1987,77 @@ async function loadUserBookings() {
 
 
 /* =========================================================
-   ANNULLA PRENOTAZIONE CLIENTE
+   ANNULLA PRENOTAZIONE
 ========================================================= */
 
-async function cancelBooking(
-  bookingId
-) {
+async function cancelBooking(bookingId) {
 
   if (!currentUser) return;
 
 
-  if (
-    !confirm(
+  const confirmed =
+    confirm(
       "Vuoi davvero annullare questo appuntamento?"
-    )
-  ) {
+    );
 
-    return;
 
-  }
+  if (!confirmed) return;
 
 
   try {
 
-    await igrimaldiAPI(
-      "cancel_my_appointment",
-      {
+    const {
+      data: booking,
+      error: bookingError
+    } = await supabaseClient
+      .from("appointments")
+      .select("*")
+      .eq("id", bookingId)
+      .single();
 
-        phone:
-          currentUser.customer_phone,
 
-        pin:
-          currentUser.customer_pin,
+    if (bookingError) {
 
-        id:
-          Number(bookingId)
+      throw bookingError;
 
-      }
+    }
+
+
+    const {
+      error
+    } = await supabaseClient
+      .from("appointments")
+      .update({
+        status: "cancelled"
+      })
+      .eq("id", bookingId);
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    await sendBookingNotification(
+
+      currentUser.id,
+
+      currentUser.customer_phone,
+
+      "Appuntamento annullato",
+
+      `Il tuo appuntamento del ${formatDate(booking.appointment_date)} alle ${String(booking.start_time).slice(0, 5)} è stato annullato.`,
+
+      "booking_cancelled"
+
     );
+
+
+    /* NOTIFICA AUTOMATICA A TUTTI GLI ADMIN PER ANNULLAMENTO */
+
+    await sendAdminCancellationNotifications(booking);
 
 
     showToast(
@@ -2069,7 +2078,6 @@ async function cancelBooking(
 
 
     showToast(
-      error.message ||
       "Errore durante l'annullamento",
       "error"
     );
@@ -2115,71 +2123,36 @@ function closeAuth() {
 }
 
 
-/* =========================================================
-   LOGIN CORRETTO
-========================================================= */
-
 async function loginUser() {
 
-  const phoneInput =
-    q("phoneInput");
+  if (!supabaseClient) {
 
-  const pinInput =
-    q("pinInput");
+    showToast(
+      "Supabase non disponibile",
+      "error"
+    );
+
+    return;
+
+  }
 
 
   const phone =
     normalizePhone(
-      phoneInput
-        ? phoneInput.value
-        : ""
+      q("phoneInput").value
     );
 
 
   const pin =
     String(
-      pinInput
-        ? pinInput.value
-        : ""
+      q("pinInput").value || ""
     ).trim();
 
 
-  if (
-    !phone ||
-    !pin
-  ) {
+  if (!phone || !pin) {
 
     showToast(
       "Inserisci numero e PIN",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    phone.length < 8
-  ) {
-
-    showToast(
-      "Numero di telefono non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !/^[0-9]+$/.test(pin) ||
-    pin.length < 4
-  ) {
-
-    showToast(
-      "PIN non valido",
       "error"
     );
 
@@ -2202,8 +2175,7 @@ async function loginUser() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
 
       button.textContent =
         "ACCESSO IN CORSO...";
@@ -2211,66 +2183,46 @@ async function loginUser() {
     }
 
 
-    console.log(
-      "I GRIMALDI: avvio login",
-      {
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq(
+        "customer_phone",
         phone
-      }
-    );
+      )
+      .eq(
+        "customer_pin",
+        pin
+      )
+      .maybeSingle();
 
 
-    /*
-      Il login passa dalla Edge Function.
+    if (error) {
 
-      Il database è stato protetto con RLS,
-      quindi NON facciamo più una SELECT
-      diretta su profiles dal browser.
-    */
-
-    const result =
-      await igrimaldiAPI(
-        "login",
-        {
-          phone,
-          pin
-        }
-      );
-
-
-    console.log(
-      "I GRIMALDI: risposta login",
-      result
-    );
-
-
-    if (
-      !result ||
-      !result.user
-    ) {
-
-      throw new Error(
-        "Il server non ha restituito i dati dell'utente."
-      );
+      throw error;
 
     }
 
 
-    currentUser = {
-      ...result.user,
+    if (!data) {
 
-      /*
-        Il sistema personalizzato usa
-        telefono + PIN per le chiamate successive.
-      */
+      showToast(
+        "Numero o PIN non corretto",
+        "error"
+      );
 
-      customer_pin:
-        pin
-    };
+      return;
+
+    }
 
 
-    saveUserSession(
-      currentUser
-    );
+    currentUser = data;
+
+
+    saveUserSession(data);
 
 
     closeAuth();
@@ -2282,10 +2234,7 @@ async function loginUser() {
 
 
     showToast(
-      `Bentornato ${
-        result.user.customer_name ||
-        ""
-      }`,
+      `Bentornato ${data.customer_name || ""}`,
       "success"
     );
 
@@ -2293,34 +2242,21 @@ async function loginUser() {
   } catch (error) {
 
     console.error(
-      "ERRORE LOGIN COMPLETO:",
+      "Errore login:",
       error
     );
 
 
-    const message =
-      error?.message ||
-      "Errore durante il login";
-
-
-    /*
-      Mostriamo l'errore reale.
-      Non nascondiamo più eventuali errori
-      della Edge Function.
-    */
-
     showToast(
-      message,
+      "Errore durante il login",
       "error"
     );
-
 
   } finally {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -2341,10 +2277,8 @@ function openRegister() {
 
   closeAuth();
 
-
   const modal =
     q("registerModal");
-
 
   if (modal) {
 
@@ -2362,7 +2296,6 @@ function closeRegister() {
   const modal =
     q("registerModal");
 
-
   if (modal) {
 
     modal.classList.add(
@@ -2376,38 +2309,45 @@ function closeRegister() {
 
 async function handleRegistration() {
 
+  if (!supabaseClient) {
+
+    showToast(
+      "Supabase non disponibile",
+      "error"
+    );
+
+    return;
+
+  }
+
+
   const name =
     String(
-      q("registerName")?.value ||
-      ""
+      q("registerName").value || ""
     ).trim();
 
 
   const surname =
     String(
-      q("registerSurname")?.value ||
-      ""
+      q("registerSurname").value || ""
     ).trim();
 
 
   const phone =
     normalizePhone(
-      q("registerPhone")?.value ||
-      ""
+      q("registerPhone").value
     );
 
 
   const pin =
     String(
-      q("registerPin")?.value ||
-      ""
+      q("registerPin").value || ""
     ).trim();
 
 
   const pin2 =
     String(
-      q("registerPin2")?.value ||
-      ""
+      q("registerPin2").value || ""
     ).trim();
 
 
@@ -2429,9 +2369,7 @@ async function handleRegistration() {
   }
 
 
-  if (
-    phone.length < 8
-  ) {
+  if (phone.length < 8) {
 
     showToast(
       "Inserisci un numero valido",
@@ -2458,9 +2396,7 @@ async function handleRegistration() {
   }
 
 
-  if (
-    pin !== pin2
-  ) {
+  if (pin !== pin2) {
 
     showToast(
       "I PIN non coincidono",
@@ -2486,8 +2422,7 @@ async function handleRegistration() {
 
     if (button) {
 
-      button.disabled =
-        true;
+      button.disabled = true;
 
       button.textContent =
         "CREAZIONE ACCOUNT...";
@@ -2495,46 +2430,70 @@ async function handleRegistration() {
     }
 
 
-    const result =
-      await igrimaldiAPI(
-        "register",
-        {
-
-          customer_name:
-            `${name} ${surname}`,
-
-          customer_phone:
-            phone,
-
-          customer_pin:
-            pin
-
-        }
-      );
+    const fullName =
+      `${name} ${surname}`;
 
 
-    if (
-      !result ||
-      !result.user
-    ) {
+    const {
+      data: existingUser,
+      error: existingError
+    } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq(
+        "customer_phone",
+        phone
+      )
+      .maybeSingle();
 
-      throw new Error(
-        "Registrazione non completata."
-      );
+
+    if (existingError) {
+
+      throw existingError;
 
     }
 
 
-    currentUser = {
-      ...result.user,
-      customer_pin:
-        pin
-    };
+    if (existingUser) {
+
+      showToast(
+        "Questo numero è già registrato",
+        "error"
+      );
+
+      return;
+
+    }
 
 
-    saveUserSession(
-      currentUser
-    );
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("profiles")
+      .insert([
+        {
+          customer_name: fullName,
+          customer_phone: phone,
+          customer_pin: pin,
+          role: "customer"
+        }
+      ])
+      .select()
+      .single();
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    currentUser = data;
+
+
+    saveUserSession(data);
 
 
     closeRegister();
@@ -2559,9 +2518,25 @@ async function handleRegistration() {
     );
 
 
+    let message =
+      "Errore durante la registrazione";
+
+
+    if (error.code === "23505") {
+
+      message =
+        "Questo numero è già registrato";
+
+    } else if (error.message) {
+
+      message =
+        error.message;
+
+    }
+
+
     showToast(
-      error.message ||
-      "Errore durante la registrazione",
+      message,
       "error"
     );
 
@@ -2570,8 +2545,7 @@ async function handleRegistration() {
 
     if (button) {
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
       button.textContent =
         originalText ||
@@ -2588,9 +2562,7 @@ async function handleRegistration() {
    SESSIONE
 ========================================================= */
 
-function saveUserSession(
-  user
-) {
+function saveUserSession(user) {
 
   try {
 
@@ -2654,47 +2626,19 @@ async function restoreSession() {
 
 
     const user =
-      JSON.parse(
-        savedUser
-      );
+      JSON.parse(savedUser);
 
 
     if (
       user &&
-      user.id &&
-      user.customer_pin
+      user.id
     ) {
 
-      currentUser =
-        user;
-
+      currentUser = user;
 
       updateUserInterface();
-
 
       await setupOneSignalUser();
-
-
-    } else {
-
-      localStorage.removeItem(
-        "grimaldiUser"
-      );
-
-      localStorage.removeItem(
-        "igrimaldi_session"
-      );
-
-      sessionStorage.removeItem(
-        "grimaldiUser"
-      );
-
-
-      currentUser =
-        null;
-
-
-      updateUserInterface();
 
     }
 
@@ -2715,17 +2659,6 @@ async function restoreSession() {
       "igrimaldi_session"
     );
 
-    sessionStorage.removeItem(
-      "grimaldiUser"
-    );
-
-
-    currentUser =
-      null;
-
-
-    updateUserInterface();
-
   }
 
 }
@@ -2742,17 +2675,18 @@ async function logoutUser() {
     await logoutOneSignalUser();
 
 
-    currentUser =
-      null;
+    currentUser = null;
 
 
     localStorage.removeItem(
       "grimaldiUser"
     );
 
+
     localStorage.removeItem(
       "igrimaldi_session"
     );
+
 
     sessionStorage.removeItem(
       "grimaldiUser"
@@ -2762,9 +2696,7 @@ async function logoutUser() {
     updateUserInterface();
 
 
-    showPage(
-      "homePage"
-    );
+    showPage("homePage");
 
 
     showToast(
@@ -2851,9 +2783,6 @@ function updateUserInterface() {
     }
 
 
-    updateAdminAgendaAccess();
-
-
     return;
 
   }
@@ -2871,16 +2800,14 @@ function updateUserInterface() {
 
   if (nameElement) {
 
-    nameElement.textContent =
-      name;
+    nameElement.textContent = name;
 
   }
 
 
   if (phoneElement) {
 
-    phoneElement.textContent =
-      phone;
+    phoneElement.textContent = phone;
 
   }
 
@@ -2888,8 +2815,7 @@ function updateUserInterface() {
   if (initialElement) {
 
     initialElement.textContent =
-      name
-        .charAt(0)
+      name.charAt(0)
         .toUpperCase();
 
   }
@@ -2912,9 +2838,6 @@ function updateUserInterface() {
 
   }
 
-
-  updateAdminAgendaAccess();
-
 }
 
 
@@ -2926,7 +2849,6 @@ function showInstall() {
 
   const modal =
     q("installModal");
-
 
   if (modal) {
 
@@ -2944,7 +2866,6 @@ function closeInstall() {
   const modal =
     q("installModal");
 
-
   if (modal) {
 
     modal.classList.add(
@@ -2957,1365 +2878,12 @@ function closeInstall() {
 
 
 /* =========================================================
-   ADMIN
+   FUNZIONE NOTIFICHE VECCHIA COMPATIBILITÀ
 ========================================================= */
 
-function isAdmin() {
+function requestNotifications() {
 
-  return Boolean(
-    currentUser &&
-    (
-      String(
-        currentUser.role ||
-        ""
-      ).toLowerCase() ===
-      "admin" ||
-
-      currentUser.is_admin ===
-        true
-    )
-  );
-
-}
-
-
-/* =========================================================
-   CREA PAGINA AGENDA
-========================================================= */
-
-function createAdminAgendaUI() {
-
-  if (!isAdmin()) return;
-
-
-  if (
-    q("adminAgendaPage")
-  ) {
-
-    return;
-
-  }
-
-
-  const page =
-    document.createElement(
-      "section"
-    );
-
-
-  page.id =
-    "adminAgendaPage";
-
-
-  page.className =
-    "page";
-
-
-  page.innerHTML = `
-
-    <div
-      style="
-        padding:20px;
-        padding-bottom:120px;
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          margin-bottom:20px;
-        "
-      >
-
-        <div>
-
-          <h1
-            style="
-              margin:0;
-              font-size:28px;
-            "
-          >
-            Agenda
-          </h1>
-
-          <p
-            style="
-              margin:5px 0 0;
-              opacity:.7;
-            "
-          >
-            Gestione appuntamenti
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          id="adminAddClientButton"
-          class="gold-button"
-        >
-          + AGGIUNGI CLIENTE
-        </button>
-
-      </div>
-
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          margin-bottom:15px;
-        "
-      >
-
-        <button
-          type="button"
-          id="adminPrevMonth"
-          class="gold-button"
-        >
-          ‹
-        </button>
-
-
-        <strong
-          id="adminMonthTitle"
-          style="
-            text-transform:capitalize;
-            font-size:20px;
-            text-align:center;
-          "
-        ></strong>
-
-
-        <button
-          type="button"
-          id="adminNextMonth"
-          class="gold-button"
-        >
-          ›
-        </button>
-
-      </div>
-
-
-      <div
-        id="adminCalendar"
-        style="
-          display:grid;
-          grid-template-columns:repeat(7,1fr);
-          gap:6px;
-          margin-bottom:25px;
-        "
-      ></div>
-
-
-      <div
-        id="adminAgendaDay"
-      ></div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    page
-  );
-
-
-  const prev =
-    q("adminPrevMonth");
-
-
-  if (prev) {
-
-    prev.addEventListener(
-      "click",
-      () => {
-
-        adminAgendaDate.setMonth(
-          adminAgendaDate.getMonth() - 1
-        );
-
-        renderAdminAgenda();
-
-      }
-    );
-
-  }
-
-
-  const next =
-    q("adminNextMonth");
-
-
-  if (next) {
-
-    next.addEventListener(
-      "click",
-      () => {
-
-        adminAgendaDate.setMonth(
-          adminAgendaDate.getMonth() + 1
-        );
-
-        renderAdminAgenda();
-
-      }
-    );
-
-  }
-
-
-  const add =
-    q("adminAddClientButton");
-
-
-  if (add) {
-
-    add.addEventListener(
-      "click",
-      openAdminAddClient
-    );
-
-  }
-
-
-  adminSelectedDate =
-    adminSelectedDate ||
-    localDateString(
-      new Date()
-    );
-
-
-  renderAdminAgenda();
-
-}
-
-
-/* =========================================================
-   ACCESSO AGENDA
-========================================================= */
-
-function updateAdminAgendaAccess() {
-
-  const existing =
-    q("adminAgendaPage");
-
-
-  if (!isAdmin()) {
-
-    if (existing) {
-
-      existing.remove();
-
-    }
-
-
-    return;
-
-  }
-
-
-  createAdminAgendaUI();
-
-  addAdminAgendaButton();
-
-}
-
-
-/* =========================================================
-   PULSANTE AGENDA
-========================================================= */
-
-function addAdminAgendaButton() {
-
-  if (!isAdmin()) return;
-
-
-  if (
-    q("adminAgendaButton")
-  ) {
-
-    return;
-
-  }
-
-
-  const profilePage =
-    q("profilePage");
-
-
-  if (!profilePage) return;
-
-
-  const button =
-    document.createElement(
-      "button"
-    );
-
-
-  button.id =
-    "adminAgendaButton";
-
-
-  button.type =
-    "button";
-
-
-  button.className =
-    "gold-button";
-
-
-  button.textContent =
-    "AGENDA ADMIN";
-
-
-  button.style.marginTop =
-    "15px";
-
-
-  button.style.width =
-    "100%";
-
-
-  button.addEventListener(
-    "click",
-    () => {
-
-      if (!isAdmin()) {
-
-        showToast(
-          "Accesso non autorizzato",
-          "error"
-        );
-
-        return;
-
-      }
-
-
-      showPage(
-        "adminAgendaPage"
-      );
-
-    }
-  );
-
-
-  profilePage.appendChild(
-    button
-  );
-
-}
-
-
-/* =========================================================
-   CALENDARIO ADMIN
-========================================================= */
-
-function renderAdminAgenda() {
-
-  if (!isAdmin()) return;
-
-
-  const calendar =
-    q("adminCalendar");
-
-  const title =
-    q("adminMonthTitle");
-
-
-  if (
-    !calendar ||
-    !title
-  ) {
-
-    return;
-
-  }
-
-
-  const year =
-    adminAgendaDate
-      .getFullYear();
-
-  const month =
-    adminAgendaDate
-      .getMonth();
-
-
-  title.textContent =
-    new Intl.DateTimeFormat(
-      "it-IT",
-      {
-        month: "long",
-        year: "numeric"
-      }
-    ).format(
-      adminAgendaDate
-    );
-
-
-  const firstDay =
-    new Date(
-      year,
-      month,
-      1
-    );
-
-
-  const offset =
-    (
-      firstDay.getDay() +
-      6
-    ) % 7;
-
-
-  const days =
-    new Date(
-      year,
-      month + 1,
-      0
-    ).getDate();
-
-
-  const today =
-    localDateString(
-      new Date()
-    );
-
-
-  let html = "";
-
-
-  [
-    "L",
-    "M",
-    "M",
-    "G",
-    "V",
-    "S",
-    "D"
-  ].forEach(day => {
-
-    html += `
-
-      <div
-        style="
-          text-align:center;
-          font-size:11px;
-          opacity:.6;
-          padding:5px;
-        "
-      >
-        ${day}
-      </div>
-
-    `;
-
-  });
-
-
-  for (
-    let i = 0;
-    i < offset;
-    i++
-  ) {
-
-    html += `
-      <div></div>
-    `;
-
-  }
-
-
-  for (
-    let day = 1;
-    day <= days;
-    day++
-  ) {
-
-    const date =
-      localDateString(
-        new Date(
-          year,
-          month,
-          day
-        )
-      );
-
-
-    const selected =
-      date ===
-      adminSelectedDate;
-
-
-    const isToday =
-      date === today;
-
-
-    html += `
-
-      <button
-        type="button"
-        class="admin-calendar-day"
-        data-admin-date="${date}"
-        style="
-          min-height:42px;
-          border-radius:10px;
-          border:1px solid rgba(255,255,255,.12);
-          background:${
-            selected
-              ? "rgba(212,175,55,.25)"
-              : "rgba(255,255,255,.05)"
-          };
-          color:inherit;
-          cursor:pointer;
-          ${
-            isToday
-              ? "font-weight:bold;"
-              : ""
-          }
-        "
-      >
-        ${day}
-      </button>
-
-    `;
-
-  }
-
-
-  calendar.innerHTML =
-    html;
-
-
-  calendar
-    .querySelectorAll(
-      "[data-admin-date]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        async () => {
-
-          adminSelectedDate =
-            button.dataset.adminDate;
-
-
-          renderAdminAgenda();
-
-          await renderAdminAgendaDay();
-
-        }
-      );
-
-    });
-
-
-  renderAdminAgendaDay();
-
-}
-
-
-/* =========================================================
-   AGENDA DEL GIORNO
-========================================================= */
-
-async function renderAdminAgendaDay() {
-
-  if (!isAdmin()) return;
-
-
-  const container =
-    q("adminAgendaDay");
-
-
-  if (!container) return;
-
-
-  if (!adminSelectedDate) {
-
-    adminSelectedDate =
-      localDateString(
-        new Date()
-      );
-
-  }
-
-
-  container.innerHTML = `
-
-    <div
-      style="
-        text-align:center;
-        padding:20px;
-      "
-    >
-      Caricamento agenda...
-    </div>
-
-  `;
-
-
-  try {
-
-    const result =
-      await igrimaldiAPI(
-        "admin_agenda",
-        {
-
-          phone:
-            currentUser.customer_phone,
-
-          pin:
-            currentUser.customer_pin,
-
-          date:
-            adminSelectedDate
-
-        }
-      );
-
-
-    const appointments =
-      Array.isArray(
-        result.appointments
-      )
-        ? result.appointments
-        : [];
-
-
-    const blocks =
-      Array.isArray(
-        result.blocks
-      )
-        ? result.blocks
-        : [];
-
-
-    const blockedAll =
-      blocks.some(
-        block =>
-          String(
-            block.block_time
-          ).toUpperCase() ===
-          "ALL"
-      );
-
-
-    const blockedTimes =
-      new Set(
-        blocks
-          .filter(
-            block =>
-              String(
-                block.block_time
-              ).toUpperCase() !==
-              "ALL"
-          )
-          .map(
-            block =>
-              normalizeTime(
-                block.block_time
-              )
-          )
-      );
-
-
-    let html = `
-
-      <div
-        style="
-          margin-bottom:15px;
-        "
-      >
-
-        <h2
-          style="
-            margin:0;
-            text-transform:capitalize;
-          "
-        >
-          ${escapeHtml(
-            formatDate(
-              adminSelectedDate
-            )
-          )}
-        </h2>
-
-      </div>
-
-    `;
-
-
-    for (
-      const time of TIMES
-    ) {
-
-      const appointment =
-        appointments.find(
-          item => {
-
-            const itemTime =
-              normalizeTime(
-                item.start_time
-              );
-
-
-            const active =
-              item.status !==
-                "cancelled" &&
-              item.status !==
-                "cancelled_by_admin";
-
-
-            return (
-              itemTime === time &&
-              active
-            );
-
-          }
-        );
-
-
-      const blocked =
-        blockedAll ||
-        blockedTimes.has(
-          time
-        );
-
-
-      if (appointment) {
-
-        html += `
-
-          <div
-            style="
-              padding:15px;
-              margin-bottom:8px;
-              border-radius:12px;
-              background:rgba(212,175,55,.12);
-              border:1px solid rgba(212,175,55,.4);
-            "
-          >
-
-            <div
-              style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                margin-bottom:8px;
-              "
-            >
-
-              <strong>
-                ${time}
-              </strong>
-
-              <span>
-                CONFERMATO
-              </span>
-
-            </div>
-
-
-            <div>
-
-              <strong>
-                ${escapeHtml(
-                  appointment.customer_name ||
-                  "Cliente"
-                )}
-              </strong>
-
-              <br>
-
-              <span>
-                ${escapeHtml(
-                  appointment.customer_phone ||
-                  ""
-                )}
-              </span>
-
-              <br>
-
-              <span>
-                ${escapeHtml(
-                  appointment.service_name ||
-                  "Servizio"
-                )}
-              </span>
-
-              <br>
-
-              <span>
-                €${appointment.service_price}
-              </span>
-
-            </div>
-
-
-            <button
-              type="button"
-              class="danger-button"
-              style="
-                margin-top:12px;
-                width:100%;
-              "
-              onclick="
-                adminCancelBooking(
-                  '${appointment.id}'
-                )
-              "
-            >
-              ANNULLA
-            </button>
-
-          </div>
-
-        `;
-
-
-        continue;
-
-      }
-
-
-      if (blocked) {
-
-        html += `
-
-          <div
-            style="
-              padding:15px;
-              margin-bottom:8px;
-              border-radius:12px;
-              background:rgba(255,255,255,.025);
-              border:1px solid rgba(255,255,255,.06);
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
-            "
-          >
-
-            <strong>
-              ${time}
-            </strong>
-
-            <span
-              style="
-                opacity:.5;
-              "
-            >
-              BLOCCATO
-            </span>
-
-          </div>
-
-        `;
-
-
-        continue;
-
-      }
-
-
-      html += `
-
-        <div
-          style="
-            padding:15px;
-            margin-bottom:8px;
-            border-radius:12px;
-            background:rgba(255,255,255,.04);
-            border:1px solid rgba(255,255,255,.08);
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-          "
-        >
-
-          <strong>
-            ${time}
-          </strong>
-
-          <span
-            style="
-              opacity:.55;
-            "
-          >
-            LIBERO
-          </span>
-
-        </div>
-
-      `;
-
-    }
-
-
-    container.innerHTML =
-      html;
-
-
-  } catch (error) {
-
-    console.error(
-      "Errore agenda admin:",
-      error
-    );
-
-
-    container.innerHTML = `
-
-      <div class="empty-state">
-
-        <h3>
-          Errore caricamento agenda
-        </h3>
-
-        <p>
-          ${escapeHtml(
-            error.message ||
-            "Errore"
-          )}
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-}
-
-
-/* =========================================================
-   ANNULLAMENTO ADMIN
-========================================================= */
-
-async function adminCancelBooking(
-  bookingId
-) {
-
-  if (!isAdmin()) {
-
-    showToast(
-      "Accesso non autorizzato",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !confirm(
-      "Vuoi davvero annullare questa prenotazione?"
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    await igrimaldiAPI(
-      "admin_cancel",
-      {
-
-        phone:
-          currentUser.customer_phone,
-
-        pin:
-          currentUser.customer_pin,
-
-        id:
-          Number(bookingId)
-
-      }
-    );
-
-
-    showToast(
-      "Prenotazione annullata",
-      "success"
-    );
-
-
-    await renderAdminAgendaDay();
-
-
-  } catch (error) {
-
-    console.error(
-      "Errore annullamento admin:",
-      error
-    );
-
-
-    showToast(
-      error.message ||
-      "Errore durante l'annullamento",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   AGGIUNGI CLIENTE MANUALMENTE
-========================================================= */
-
-async function openAdminAddClient() {
-
-  if (!isAdmin()) {
-
-    showToast(
-      "Accesso non autorizzato",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const name =
-    prompt(
-      "Nome e cognome del cliente:"
-    );
-
-
-  if (
-    !name ||
-    !name.trim()
-  ) {
-
-    return;
-
-  }
-
-
-  const phone =
-    prompt(
-      "Numero di telefono:"
-    );
-
-
-  if (
-    !phone ||
-    !phone.trim()
-  ) {
-
-    return;
-
-  }
-
-
-  const phoneClean =
-    normalizePhone(
-      phone
-    );
-
-
-  if (
-    phoneClean.length < 8
-  ) {
-
-    showToast(
-      "Numero di telefono non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const serviceNames =
-    services
-      .map(
-        (service, index) =>
-          `${index + 1}. ${service.name} - €${service.price}`
-      )
-      .join("\n");
-
-
-  const serviceChoice =
-    prompt(
-      `Scegli il servizio:\n\n${serviceNames}`
-    );
-
-
-  const serviceIndex =
-    Number(
-      serviceChoice
-    ) - 1;
-
-
-  if (
-    !Number.isInteger(
-      serviceIndex
-    ) ||
-    !services[
-      serviceIndex
-    ]
-  ) {
-
-    showToast(
-      "Servizio non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const service =
-    services[
-      serviceIndex
-    ];
-
-
-  const date =
-    prompt(
-      "Data appuntamento (AAAA-MM-GG):",
-      adminSelectedDate ||
-      localDateString(
-        new Date()
-      )
-    );
-
-
-  if (
-    !date ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(
-      date
-    )
-  ) {
-
-    showToast(
-      "Data non valida",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const time =
-    prompt(
-      `Inserisci l'orario:\n\n${TIMES.join("  ")}`
-    );
-
-
-  if (
-    !TIMES.includes(
-      time
-    )
-  ) {
-
-    showToast(
-      "Orario non valido",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    await igrimaldiAPI(
-      "admin_create",
-      {
-
-        phone:
-          currentUser.customer_phone,
-
-        pin:
-          currentUser.customer_pin,
-
-        customer_name:
-          name.trim(),
-
-        customer_phone:
-          phoneClean,
-
-        date:
-          date,
-
-        start_time:
-          time,
-
-        service_name:
-          service.name
-
-      }
-    );
-
-
-    showToast(
-      "Cliente aggiunto all'agenda",
-      "success"
-    );
-
-
-    adminSelectedDate =
-      date;
-
-
-    adminAgendaDate =
-      new Date(
-        date +
-        "T12:00:00"
-      );
-
-
-    renderAdminAgenda();
-
-    await renderAdminAgendaDay();
-
-
-  } catch (error) {
-
-    console.error(
-      "Errore aggiunta cliente:",
-      error
-    );
-
-
-    showToast(
-      error.message ||
-      "Errore durante l'aggiunta",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   BLOCCO ORARIO ADMIN
-========================================================= */
-
-async function adminBlockTime(
-  date,
-  time = "ALL"
-) {
-
-  if (!isAdmin()) return;
-
-
-  try {
-
-    await igrimaldiAPI(
-      "admin_block",
-      {
-
-        phone:
-          currentUser.customer_phone,
-
-        pin:
-          currentUser.customer_pin,
-
-        date,
-
-        block_time:
-          time
-
-      }
-    );
-
-
-    showToast(
-      "Orario bloccato",
-      "success"
-    );
-
-
-    await renderAdminAgendaDay();
-
-
-  } catch (error) {
-
-    showToast(
-      error.message ||
-      "Errore blocco orario",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SBLOCCO ORARIO ADMIN
-========================================================= */
-
-async function adminUnblockTime(
-  blockId
-) {
-
-  if (!isAdmin()) return;
-
-
-  try {
-
-    await igrimaldiAPI(
-      "admin_unblock",
-      {
-
-        phone:
-          currentUser.customer_phone,
-
-        pin:
-          currentUser.customer_pin,
-
-        id:
-          blockId
-
-      }
-    );
-
-
-    showToast(
-      "Orario sbloccato",
-      "success"
-    );
-
-
-    await renderAdminAgendaDay();
-
-
-  } catch (error) {
-
-    showToast(
-      error.message ||
-      "Errore sblocco orario",
-      "error"
-    );
-
-  }
+  requestOneSignalNotifications();
 
 }
 
@@ -4324,65 +2892,30 @@ async function adminUnblockTime(
    ESPOSIZIONE FUNZIONI HTML
 ========================================================= */
 
-window.showPage =
-  showPage;
+window.showPage = showPage;
 
-window.openAuth =
-  openAuth;
+window.openAuth = openAuth;
+window.closeAuth = closeAuth;
 
-window.closeAuth =
-  closeAuth;
+window.openRegister = openRegister;
+window.closeRegister = closeRegister;
 
-window.openRegister =
-  openRegister;
+window.loginUser = loginUser;
+window.handleRegistration = handleRegistration;
 
-window.closeRegister =
-  closeRegister;
+window.createBooking = createBooking;
 
-window.loginUser =
-  loginUser;
+window.loadUserBookings = loadUserBookings;
 
-window.handleRegistration =
-  handleRegistration;
+window.cancelBooking = cancelBooking;
 
-window.createBooking =
-  createBooking;
+window.logoutUser = logoutUser;
 
-window.loadUserBookings =
-  loadUserBookings;
-
-window.cancelBooking =
-  cancelBooking;
-
-window.logoutUser =
-  logoutUser;
-
-window.showInstall =
-  showInstall;
-
-window.closeInstall =
-  closeInstall;
+window.showInstall = showInstall;
+window.closeInstall = closeInstall;
 
 window.requestNotifications =
   requestNotifications;
 
 window.enableGrimaldiPush =
   requestOneSignalNotifications;
-
-
-/* ADMIN */
-
-window.adminCancelBooking =
-  adminCancelBooking;
-
-window.openAdminAddClient =
-  openAdminAddClient;
-
-window.renderAdminAgenda =
-  renderAdminAgenda;
-
-window.adminBlockTime =
-  adminBlockTime;
-
-window.adminUnblockTime =
-  adminUnblockTime;
