@@ -1680,7 +1680,7 @@ async function createBooking() {
 
 
   if (!isOpenDay(selectedDate)) {
-    showToast("Prenotazioni disponibili dal lunedì al venerdì", "error");
+    showToast("Prenotazioni disponibili dal lunedì al sabato", "error");
     return;
   }
   if (!TIMES.includes(selectedTime) || isSlotPast(selectedDate, selectedTime)) {
@@ -4436,7 +4436,7 @@ async function createAdminClient() {
 
 
   if (!isOpenDay(date)) {
-    showToast("Giorno di chiusura: prenotazioni dal lunedì al venerdì", "error");
+    showToast("Giorno di chiusura: prenotazioni dal lunedì al sabato", "error");
     return;
   }
   const service = services.find(item => item.id === serviceId);
