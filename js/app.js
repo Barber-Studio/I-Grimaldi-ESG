@@ -120,7 +120,7 @@ const services = [
 ========================================================= */
 
 /* Giorni e orari di apertura: modifica solo queste costanti */
-const OPEN_DAYS = [1, 2, 3, 4, 5]; // 1 = lunedì ... 5 = venerdì
+const OPEN_DAYS = [1, 2, 3, 4, 5,6]; // 1 = lunedì ... 6 = sabato
 const OPEN_FROM = "09:00";
 const OPEN_TO = "21:00"; // ultimo orario prenotabile
 const SLOT_MINUTES = 30;
