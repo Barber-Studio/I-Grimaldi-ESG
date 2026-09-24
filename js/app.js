@@ -901,7 +901,7 @@ async function loadAvailableTimes() {
 
   if (!isOpenDay(selectedDate)) {
     container.innerHTML =
-      '<div class="closed-note">Il salone è aperto dal lunedì al venerdì, dalle 09:00 alle 21:00.</div>';
+      '<div class="closed-note">Il salone è aperto dal lunedì al sabato, dalle 09:00 alle 21:00.</div>';
     return;
   }
 
