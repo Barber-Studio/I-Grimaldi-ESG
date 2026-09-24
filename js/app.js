@@ -119,32 +119,77 @@ const services = [
    ORARI
 ========================================================= */
 
-const TIMES = [
+/* Giorni e orari di apertura: modifica solo queste costanti */
+const OPEN_DAYS = [1, 2, 3, 4, 5]; // 1 = lunedì ... 5 = venerdì
+const OPEN_FROM = "09:00";
+const OPEN_TO = "21:00"; // ultimo orario prenotabile
+const SLOT_MINUTES = 30;
 
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
+const TIMES = (() => {
+  const toMin = t => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const list = [];
+  for (let m = toMin(OPEN_FROM); m <= toMin(OPEN_TO); m += SLOT_MINUTES) {
+    list.push(
+      String(Math.floor(m / 60)).padStart(2, "0") + ":" +
+      String(m % 60).padStart(2, "0")
+    );
+  }
+  return list;
+})();
 
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-  "19:30",
-  "20:00",
-  "20:30",
-  "21:00"
+function isOpenDay(dateStr) {
+  return OPEN_DAYS.includes(new Date(dateStr + "T12:00:00").getDay());
+}
 
-];
+function isSlotPast(dateStr, time) {
+  const now = new Date();
+  const today = localDateString(now);
+  if (dateStr < today) return true;
+  if (dateStr > today) return false;
+  const hhmm =
+    String(now.getHours()).padStart(2, "0") + ":" +
+    String(now.getMinutes()).padStart(2, "0");
+  return time <= hhmm;
+}
+
+function firstOpenDate(from = new Date()) {
+  const d = new Date(from);
+  d.setHours(12, 0, 0, 0);
+  const todayStr = localDateString(new Date());
+  for (let i = 0; i < 10; i++) {
+    const ds = localDateString(d);
+    const dayOver = ds === todayStr && isSlotPast(ds, TIMES[TIMES.length - 1]);
+    if (OPEN_DAYS.includes(d.getDay()) && !dayOver) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return localDateString(d);
+}
+
+/* Salva una prenotazione riusando lo slot se era stato annullato
+   (evita l'errore "orario già prenotato" su slot liberi) */
+async function saveAppointmentRow(payload) {
+  const { data: rows, error: findError } = await supabaseClient
+    .from("appointments")
+    .select("id,status")
+    .eq("appointment_date", payload.appointment_date)
+    .eq("start_time", payload.start_time + ":00");
+  if (findError) return { data: null, error: findError };
+  const isDead = r => r.status === "cancelled" || r.status === "cancelled_by_admin";
+  if ((rows || []).some(r => !isDead(r))) {
+    return { data: null, error: { code: "23505", message: "Questo orario è già stato prenotato." } };
+  }
+  const reusable = (rows || []).find(isDead);
+  if (reusable) {
+    return await supabaseClient
+      .from("appointments").update(payload).eq("id", reusable.id).select().single();
+  }
+  return await supabaseClient
+    .from("appointments").insert(payload).select().single();
+}
+
 
 
 /* =========================================================
@@ -642,15 +687,10 @@ function setupBookingCalendar() {
     0
   );
 
-  selectedDate =
-    localDateString(today);
+  selectedDate = firstOpenDate(today);
 
-  bookingViewDate =
-    new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
+  const sd = new Date(selectedDate + "T12:00:00");
+  bookingViewDate = new Date(sd.getFullYear(), sd.getMonth(), 1);
 
   renderBookingCalendar();
 
@@ -749,8 +789,7 @@ function renderBookingCalendar() {
       );
 
 
-    const isPast =
-      date < todayString;
+    const isPast = date < todayString || !isOpenDay(date);
 
 
     const isSelected =
@@ -860,6 +899,12 @@ async function loadAvailableTimes() {
 
   }
 
+  if (!isOpenDay(selectedDate)) {
+    container.innerHTML =
+      '<div class="closed-note">Il salone è aperto dal lunedì al venerdì, dalle 09:00 alle 21:00.</div>';
+    return;
+  }
+
 
   try {
 
@@ -949,9 +994,7 @@ async function loadAvailableTimes() {
           ];
 
 
-    setupTimeButtons(
-      busyTimes
-    );
+    setupTimeButtons([...busyTimes, ...TIMES.filter(t => isSlotPast(selectedDate, t))]);
 
 
   } catch (error) {
@@ -1636,8 +1679,16 @@ async function createBooking() {
   }
 
 
-  const button =
-    q("confirmBooking");
+  if (!isOpenDay(selectedDate)) {
+    showToast("Prenotazioni disponibili dal lunedì al venerdì", "error");
+    return;
+  }
+  if (!TIMES.includes(selectedTime) || isSlotPast(selectedDate, selectedTime)) {
+    showToast("Questo orario non è più disponibile", "error");
+    await loadAvailableTimes();
+    return;
+  }
+  const button = q("confirmBooking");
 
 
   const originalText =
@@ -1718,9 +1769,7 @@ async function createBooking() {
       data,
       error
     } =
-      await supabaseClient
-        .from("appointments")
-        .insert({
+      await saveAppointmentRow({
 
           customer_id:
             currentUser.id,
@@ -1749,9 +1798,7 @@ async function createBooking() {
           status:
             "confirmed"
 
-        })
-        .select()
-        .single();
+        });
 
 
     if (error) {
@@ -3189,8 +3236,7 @@ function updateAdminAgendaAccess() {
 
     if (navLabel) {
 
-      navLabel.textContent =
-        "Agenda";
+      navLabel.textContent = "Gestionale";
 
     }
 
@@ -3255,168 +3301,60 @@ function updateAdminAgendaAccess() {
 ========================================================= */
 
 function renderAdminAgenda() {
-
   if (!isAdmin()) return;
 
-
-  const calendar =
-    q("adminCalendar");
-
-  const title =
-    q("adminMonthTitle");
-
-
+  const calendar = q("adminCalendar");
+  const title = q("adminMonthTitle");
   if (!calendar || !title) return;
 
-
-  const year =
-    adminAgendaDate.getFullYear();
-
-  const month =
-    adminAgendaDate.getMonth();
-
-
-  title.textContent =
-    new Intl.DateTimeFormat(
-      "it-IT",
-      {
-        month: "long",
-        year: "numeric"
-      }
-    ).format(
-      adminAgendaDate
-    );
-
-
-  const firstDay =
-    new Date(
-      year,
-      month,
-      1
-    );
-
-
-  const offset =
-    (firstDay.getDay() + 6) % 7;
-
-
-  const days =
-    new Date(
-      year,
-      month + 1,
-      0
-    ).getDate();
-
-
-  const today =
-    localDateString(
-      new Date()
-    );
-
-
-  let html = "";
-
-
-  [
-    "L",
-    "M",
-    "M",
-    "G",
-    "V",
-    "S",
-    "D"
-  ].forEach(day => {
-
-    html += `
-      <div class="admin-calendar-weekday">
-        ${day}
-      </div>
-    `;
-
-  });
-
-
-  for (
-    let i = 0;
-    i < offset;
-    i++
-  ) {
-
-    html += `
-      <div class="admin-calendar-empty"></div>
-    `;
-
+  if (!adminSelectedDate) {
+    adminSelectedDate = localDateString(new Date());
   }
 
+  const year = adminAgendaDate.getFullYear();
+  const month = adminAgendaDate.getMonth();
 
-  for (
-    let day = 1;
-    day <= days;
-    day++
-  ) {
+  title.textContent = new Intl.DateTimeFormat(
+    "it-IT", { month: "long", year: "numeric" }
+  ).format(adminAgendaDate);
 
-    const date =
-      localDateString(
-        new Date(
-          year,
-          month,
-          day
-        )
-      );
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const today = localDateString(new Date());
 
+  let html = ["L", "M", "M", "G", "V", "S", "D"]
+    .map(d => `<div class="admin-calendar-weekday">${d}</div>`)
+    .join("");
 
-    const selected =
-      date ===
-      adminSelectedDate;
+  html += '<div class="admin-calendar-empty"></div>'.repeat(offset);
 
-
-    const isToday =
-      date === today;
-
-
+  for (let day = 1; day <= days; day++) {
+    const date = localDateString(new Date(year, month, day));
     html += `
-      <button
-        type="button"
-        class="admin-calendar-day
-          ${selected ? "selected" : ""}
-          ${isToday ? "today" : ""}
-        "
-        data-admin-date="${date}"
-      >
+      <button type="button"
+        class="admin-calendar-day ${date === adminSelectedDate ? "selected" : ""} ${date === today ? "today" : ""} ${isOpenDay(date) ? "" : "closed"}"
+        data-admin-date="${date}">
         <span>${day}</span>
-      </button>
-    `;
-
+      </button>`;
   }
 
+  calendar.innerHTML = html;
 
-  calendar.innerHTML =
-    html;
-
-
-  calendar
-    .querySelectorAll(
-      "[data-admin-date]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        async () => {
-
-          adminSelectedDate =
-            button.dataset.adminDate;
-
-          await renderAdminAgenda();
-
-        }
-      );
-
+  calendar.querySelectorAll("[data-admin-date]").forEach(button => {
+    button.addEventListener("click", () => {
+      adminSelectedDate = button.dataset.adminDate;
+      renderAdminAgenda();
     });
-
+  });
 
   renderAdminAgendaDay();
 
+  if (window.adminPaintMonthBadges) {
+    adminPaintMonthBadges(year, month);
+  }
+  if (window.adminRefreshActiveTab) {
+    adminRefreshActiveTab();
+  }
 }
 
 
@@ -3560,34 +3498,16 @@ async function renderAdminAgendaDay() {
       activeAppointments.length;
 
 
-    let html = `
-
-      <div class="admin-agenda-summary">
-
-        <div>
-          <span>APPUNTAMENTI</span>
-          <strong>${countElement}</strong>
-        </div>
-
-        <div>
-          <span>DATA</span>
-          <strong>
-            ${new Date(
-              adminSelectedDate +
-              "T12:00:00"
-            ).toLocaleDateString(
-              "it-IT",
-              {
-                day: "2-digit",
-                month: "2-digit"
-              }
-            )}
-          </strong>
-        </div>
-
-      </div>
-
-    `;
+    let html = adminDayHeaderHtml(
+      activeAppointments,
+      adminSelectedDate,
+      blockedAll
+        ? 0
+        : TIMES.filter(t =>
+            !blockedTimes.has(t) &&
+            !activeAppointments.some(a => normalizeTime(a.start_time) === t)
+          ).length
+    );
 
 
     for (
@@ -3677,6 +3597,7 @@ async function renderAdminAgendaDay() {
             </div>
 
 
+            ${adminContactButtons(appointment)}
             <button
               type="button"
               class="admin-action-danger"
@@ -4514,12 +4435,11 @@ async function createAdminClient() {
   }
 
 
-  const service =
-    services.find(
-      item =>
-        item.id ===
-        serviceId
-    );
+  if (!isOpenDay(date)) {
+    showToast("Giorno di chiusura: prenotazioni dal lunedì al venerdì", "error");
+    return;
+  }
+  const service = services.find(item => item.id === serviceId);
 
 
   if (!service) {
@@ -4664,9 +4584,7 @@ async function createAdminClient() {
       data: createdAppointment,
       error
     } =
-      await supabaseClient
-        .from("appointments")
-        .insert({
+      await saveAppointmentRow({
 
           customer_id:
             customerProfile
@@ -4700,9 +4618,7 @@ async function createAdminClient() {
           status:
             "confirmed"
 
-        })
-        .select()
-        .single();
+        });
 
 
     if (error) {

@@ -242,3 +242,51 @@ width: 100% !important;
   width: max-content !important;
   text-align: center !important;
 }
+
+/* ===== Prenotazioni: giorni chiusi / avviso ===== */
+.calendar-day.past.closed{opacity:.25}
+.closed-note{grid-column:1/-1;text-align:center;padding:22px 14px;color:var(--muted);font-size:13px;line-height:1.5;border:1px dashed var(--line);border-radius:14px}
+
+/* ===== Gestionale admin ===== */
+#adminAgendaPage .admin-calendar-day{position:relative}
+#adminAgendaPage .admin-calendar-day.closed{opacity:.38}
+#adminAgendaPage .admin-calendar-day em{position:absolute;right:4px;top:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#c5a45b;color:#111;font-size:9px;font-style:normal;font-weight:800;display:grid;place-items:center}
+.adm-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px;margin:6px 0 4px;border:1px solid rgba(212,175,55,.2);border-radius:16px;background:rgba(255,255,255,.03)}
+.adm-tabs button{border:0;background:transparent;color:rgba(255,255,255,.55);font-size:10px;font-weight:800;letter-spacing:1.1px;padding:12px 4px;border-radius:12px;cursor:pointer;touch-action:manipulation}
+.adm-tabs button.active{background:linear-gradient(145deg,rgba(212,175,55,.32),rgba(212,175,55,.12));color:#f8e7a8}
+.adm-month-strip{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 14px;padding:11px 14px;border-radius:14px;border:1px solid rgba(212,175,55,.18);background:rgba(212,175,55,.06);font-size:12px;color:rgba(255,255,255,.65)}
+.adm-month-strip b{color:#e6c96b;font-size:12px}
+.adm-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.adm-kpi{padding:14px;border-radius:16px;border:1px solid rgba(212,175,55,.18);background:rgba(255,255,255,.035);min-width:0}
+.adm-kpi.accent{grid-column:1/-1;background:linear-gradient(145deg,rgba(212,175,55,.2),rgba(212,175,55,.05));border-color:rgba(212,175,55,.45)}
+.adm-kpi span{display:block;font-size:9px;letter-spacing:1.3px;color:rgba(255,255,255,.5)}
+.adm-kpi strong{display:block;margin-top:5px;font-size:20px;color:#e6c96b;font-family:"Playfair Display",serif}
+.adm-kpi.accent strong{font-size:30px;color:#f8e7a8}
+.adm-kpi strong.small{font-size:14px;line-height:1.3}
+.adm-note{margin-bottom:12px;padding:11px 14px;border-radius:12px;border:1px dashed rgba(255,255,255,.18);color:rgba(255,255,255,.6);font-size:12px;text-align:center}
+.adm-card{margin-top:14px;padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--card)}
+.adm-card h4{margin:0 0 14px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#d4af37}
+.adm-bars{display:flex;align-items:flex-end;gap:2px;height:110px}
+.adm-bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.adm-bar i{display:block;width:100%;min-height:2px;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#e6c96b,#a98543)}
+.adm-bar.off i{background:rgba(255,255,255,.12)}
+.adm-bar small{font-size:7px;color:rgba(255,255,255,.35);line-height:1}
+.adm-service-row{margin-bottom:13px}
+.adm-service-top{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
+.adm-service-top small{color:var(--muted)}
+.adm-service-top b{color:#e6c96b}
+.adm-progress{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.adm-progress i{display:block;height:100%;background:linear-gradient(90deg,#a98543,#e6c96b)}
+.adm-empty{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;margin:0}
+.adm-contact{display:flex;gap:8px;margin:0 0 10px}
+.adm-contact a,.adm-contact button{flex:1;text-align:center;text-decoration:none;padding:10px 6px;border-radius:11px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.07);color:#d9bd63;font-size:10px;font-weight:800;letter-spacing:.8px;cursor:pointer;touch-action:manipulation}
+.adm-clients-tools{display:grid;grid-template-columns:1.5fr 1fr;gap:8px;margin:14px 0 8px}
+.adm-clients-tools input,.adm-clients-tools select{padding:13px;font-size:14px}
+.adm-clients-count{font-size:11px;color:var(--muted);margin:0 2px 10px}
+.adm-client{margin-bottom:10px;padding:14px;border-radius:17px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035)}
+.adm-client-head{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.adm-client-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.adm-client-id strong{font-size:15px}
+.adm-client-id span{font-size:12px;color:rgba(255,255,255,.55)}
+.adm-client-spent{color:#e6c96b;font-size:16px}
+.adm-client-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:12px;font-size:11px;color:rgba(255,255,255,.55)}
