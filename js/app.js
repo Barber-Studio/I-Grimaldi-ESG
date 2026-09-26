@@ -110,6 +110,13 @@ const services = [
     name: "Fiala",
     price: 5,
     duration: 30
+  },
+
+  {
+    id: "taglio_bambino",
+    name: "Taglio bambino",
+    price: 15,
+    duration: 30
   }
 
 ];
@@ -120,7 +127,7 @@ const services = [
 ========================================================= */
 
 /* Giorni e orari di apertura: modifica solo queste costanti */
-const OPEN_DAYS = [1, 2, 3, 4, 5,6]; // 1 = lunedì ... 6 = sabato
+const OPEN_DAYS = [1, 2, 3, 4, 5]; // 1 = lunedì ... 5 = venerdì
 const OPEN_FROM = "09:00";
 const OPEN_TO = "21:00"; // ultimo orario prenotabile
 const SLOT_MINUTES = 30;
@@ -901,7 +908,7 @@ async function loadAvailableTimes() {
 
   if (!isOpenDay(selectedDate)) {
     container.innerHTML =
-      '<div class="closed-note">Il salone è aperto dal lunedì al sabato, dalle 09:00 alle 21:00.</div>';
+      '<div class="closed-note">Il salone è aperto dal lunedì al venerdì, dalle 09:00 alle 21:00.</div>';
     return;
   }
 
@@ -1680,7 +1687,7 @@ async function createBooking() {
 
 
   if (!isOpenDay(selectedDate)) {
-    showToast("Prenotazioni disponibili dal lunedì al sabato", "error");
+    showToast("Prenotazioni disponibili dal lunedì al venerdì", "error");
     return;
   }
   if (!TIMES.includes(selectedTime) || isSlotPast(selectedDate, selectedTime)) {
@@ -4436,7 +4443,7 @@ async function createAdminClient() {
 
 
   if (!isOpenDay(date)) {
-    showToast("Giorno di chiusura: prenotazioni dal lunedì al sabato", "error");
+    showToast("Giorno di chiusura: prenotazioni dal lunedì al venerdì", "error");
     return;
   }
   const service = services.find(item => item.id === serviceId);
