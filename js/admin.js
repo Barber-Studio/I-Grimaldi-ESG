@@ -58,7 +58,7 @@ function adminDayHeaderHtml(active, date, freeSlots) {
   const earned = active.filter(admIsDone).reduce((sum, a) => sum + admPrice(a), 0);
   const closedNote = isOpenDay(date)
     ? ""
-    : '<div class="adm-note">Giorno di chiusura (weekend)</div>';
+    : '<div class="adm-note">Giorno di chiusura </div>';
 
   return `
     ${closedNote}
