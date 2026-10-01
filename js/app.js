@@ -127,7 +127,7 @@ const services = [
 ========================================================= */
 
 /* Giorni e orari di apertura: modifica solo queste costanti */
-const OPEN_DAYS = [2, 3, 4, 5, 6]; // 1 = lunedì ... 5 = venerdì
+const OPEN_DAYS = [2, 3, 4, 5, 6]; // 2 = martedì ... 6 = sabato (lunedì e domenica chiusi)
 const OPEN_FROM = "09:00";
 const OPEN_TO = "21:00"; // ultimo orario prenotabile
 const SLOT_MINUTES = 30;
@@ -908,7 +908,7 @@ async function loadAvailableTimes() {
 
   if (!isOpenDay(selectedDate)) {
     container.innerHTML =
-      '<div class="closed-note">Il salone è aperto dal lunedì al venerdì, dalle 09:00 alle 21:00.</div>';
+      '<div class="closed-note">Il salone è aperto dal martedì al sabato, dalle 09:00 alle 21:00.</div>';
     return;
   }
 
@@ -1687,7 +1687,7 @@ async function createBooking() {
 
 
   if (!isOpenDay(selectedDate)) {
-    showToast("Prenotazioni disponibili dal lunedì al venerdì", "error");
+    showToast("Prenotazioni disponibili dal martedì al sabato", "error");
     return;
   }
   if (!TIMES.includes(selectedTime) || isSlotPast(selectedDate, selectedTime)) {
@@ -4443,7 +4443,7 @@ async function createAdminClient() {
 
 
   if (!isOpenDay(date)) {
-    showToast("Giorno di chiusura: prenotazioni dal lunedì al venerdì", "error");
+    showToast("Giorno di chiusura: prenotazioni dal martedì al sabato", "error");
     return;
   }
   const service = services.find(item => item.id === serviceId);
