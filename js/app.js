@@ -132,6 +132,27 @@ const OPEN_FROM = "09:00";
 const OPEN_TO = "21:00"; // ultimo orario prenotabile
 const SLOT_MINUTES = 30;
 
+/* Posti per fascia oraria: titolare + collaboratore.
+   La stessa fascia si può prenotare una volta per ciascuno. */
+const STAFF = ["titolare", "collaboratore"];
+const STAFF_LABELS = { titolare: "Titolare", collaboratore: "Collaboratore" };
+const SLOT_CAPACITY = STAFF.length;
+
+const isActiveAppt = a =>
+  a.status !== "cancelled" && a.status !== "cancelled_by_admin";
+
+const apptStaff = a => STAFF.includes(a.staff) ? a.staff : STAFF[0];
+
+/* Orari in cui TUTTI i posti sono occupati */
+function fullyBookedTimes(rows) {
+  const count = {};
+  (rows || []).filter(isActiveAppt).forEach(a => {
+    const t = normalizeTime(a.start_time);
+    count[t] = (count[t] || 0) + 1;
+  });
+  return Object.keys(count).filter(t => count[t] >= SLOT_CAPACITY);
+}
+
 const TIMES = (() => {
   const toMin = t => {
     const [h, m] = t.split(":").map(Number);
@@ -178,23 +199,35 @@ function firstOpenDate(from = new Date()) {
 /* Salva una prenotazione riusando lo slot se era stato annullato
    (evita l'errore "orario già prenotato" su slot liberi) */
 async function saveAppointmentRow(payload) {
-  const { data: rows, error: findError } = await supabaseClient
-    .from("appointments")
-    .select("id,status")
-    .eq("appointment_date", payload.appointment_date)
-    .eq("start_time", payload.start_time + ":00");
-  if (findError) return { data: null, error: findError };
-  const isDead = r => r.status === "cancelled" || r.status === "cancelled_by_admin";
-  if ((rows || []).some(r => !isDead(r))) {
-    return { data: null, error: { code: "23505", message: "Questo orario è già stato prenotato." } };
+  const fullError = {
+    code: "23505",
+    message: "Questo orario è già stato prenotato."
+  };
+  /* Più tentativi: se due clienti prendono lo stesso posto insieme,
+     il secondo viene assegnato all'altro posto libero */
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data: rows, error: findError } = await supabaseClient
+      .from("appointments")
+      .select("id,status,staff")
+      .eq("appointment_date", payload.appointment_date)
+      .eq("start_time", payload.start_time + ":00");
+    if (findError) return { data: null, error: findError };
+
+    const active = (rows || []).filter(isActiveAppt);
+    const freeStaff = STAFF.find(s => !active.some(r => apptStaff(r) === s));
+    if (!freeStaff) return { data: null, error: fullError };
+
+    const row = { ...payload, staff: freeStaff };
+    const reusable = (rows || []).find(r => !isActiveAppt(r));
+    const result = reusable
+      ? await supabaseClient
+          .from("appointments").update(row).eq("id", reusable.id).select().single()
+      : await supabaseClient
+          .from("appointments").insert(row).select().single();
+
+    if (!result.error || result.error.code !== "23505") return result;
   }
-  const reusable = (rows || []).find(isDead);
-  if (reusable) {
-    return await supabaseClient
-      .from("appointments").update(payload).eq("id", reusable.id).select().single();
-  }
-  return await supabaseClient
-    .from("appointments").insert(payload).select().single();
+  return { data: null, error: fullError };
 }
 
 
@@ -935,21 +968,7 @@ async function loadAvailableTimes() {
     }
 
 
-    const occupied =
-      (data || [])
-        .filter(
-          appointment =>
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
-        )
-        .map(
-          appointment =>
-            normalizeTime(
-              appointment.start_time
-            )
-        );
+    const occupied = fullyBookedTimes(data);
 
 
     const {
@@ -1740,15 +1759,7 @@ async function createBooking() {
     }
 
 
-    const alreadyBooked =
-      (existing || [])
-        .some(
-          appointment =>
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
-        );
+    const alreadyBooked = (existing || []).filter(isActiveAppt).length >= SLOT_CAPACITY;
 
 
     if (alreadyBooked) {
@@ -3512,7 +3523,7 @@ async function renderAdminAgendaDay() {
         ? 0
         : TIMES.filter(t =>
             !blockedTimes.has(t) &&
-            !activeAppointments.some(a => normalizeTime(a.start_time) === t)
+            activeAppointments.filter(a => normalizeTime(a.start_time) === t).length < SLOT_CAPACITY
           ).length
     );
 
@@ -3521,17 +3532,7 @@ async function renderAdminAgendaDay() {
       const time of TIMES
     ) {
 
-      const appointment =
-        appointmentList.find(
-          item =>
-            normalizeTime(
-              item.start_time
-            ) === time &&
-            item.status !==
-              "cancelled" &&
-            item.status !==
-              "cancelled_by_admin"
-        );
+      const slotAppointments = appointmentList.filter(item => normalizeTime(item.start_time) === time && isActiveAppt(item));
 
 
       const blocked =
@@ -3539,9 +3540,7 @@ async function renderAdminAgendaDay() {
         blockedTimes.has(time);
 
 
-      if (appointment) {
-
-        html += `
+      for (const appointment of slotAppointments) { html += `
 
           <div class="admin-slot booked">
 
@@ -3594,17 +3593,7 @@ async function renderAdminAgendaDay() {
                     "Servizio"
                   )}
                   ·
-                  €${escapeHtml(
-                    appointment.service_price
-                  )}
-                </span>
-
-              </div>
-
-            </div>
-
-
-            ${adminContactButtons(appointment)}
+                  €${escapeHtml(appointment.service_price)} </span>  </div> </div> ${adminContactButtons(appointment)}
             <button
               type="button"
               class="admin-action-danger"
@@ -3615,16 +3604,10 @@ async function renderAdminAgendaDay() {
 
           </div>
 
-        `;
-
-        continue;
-
-      }
-
-
-      if (blocked) {
-
-        const block =
+        `; }
+      /* un blocco per ogni posto: prenotato, bloccato o libero */
+      for (let seat = slotAppointments.length; seat < SLOT_CAPACITY; seat++) {
+      if (blocked) { const block =
           blockList.find(
             item => {
 
@@ -3699,17 +3682,19 @@ async function renderAdminAgendaDay() {
           </div>
 
 
-          <button
+          ${slotAppointments.length ? "" : `<button
             type="button"
             class="admin-action-block"
             onclick="adminBlockTime('${adminSelectedDate}', '${time}')"
           >
             BLOCCA
-          </button>
+          </button>`}
 
         </div>
 
       `;
+
+      }
 
     }
 
@@ -4230,23 +4215,7 @@ async function updateAdminClientTimes() {
     if (error) throw error;
 
 
-    const occupied =
-      new Set(
-        (data || [])
-          .filter(
-            item =>
-              item.status !==
-                "cancelled" &&
-              item.status !==
-                "cancelled_by_admin"
-          )
-          .map(
-            item =>
-              normalizeTime(
-                item.start_time
-              )
-          )
-      );
+    const occupied = new Set(fullyBookedTimes(data));
 
 
     const {
@@ -4507,15 +4476,7 @@ async function createAdminClient() {
     }
 
 
-    const occupied =
-      (existing || [])
-        .some(
-          appointment =>
-            appointment.status !==
-              "cancelled" &&
-            appointment.status !==
-              "cancelled_by_admin"
-        );
+    const occupied = (existing || []).filter(isActiveAppt).length >= SLOT_CAPACITY;
 
 
     if (occupied) {

@@ -238,7 +238,7 @@ async function adminRenderReport() {
     for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
       if (isOpenDay(localDateString(new Date(y, m, d)))) openDays++;
     }
-    const capacity = openDays * TIMES.length;
+    const capacity = openDays * TIMES.length * SLOT_CAPACITY;
     const occupancy = capacity ? Math.round((active.length / capacity) * 100) : 0;
 
     const perDay = {};
