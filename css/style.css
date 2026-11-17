@@ -290,3 +290,8 @@ width: 100% !important;
 .adm-client-id span{font-size:12px;color:rgba(255,255,255,.55)}
 .adm-client-spent{color:#e6c96b;font-size:16px}
 .adm-client-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-bottom:12px;font-size:11px;color:rgba(255,255,255,.55)}
+
+/* Scelta operatore (Emanuele / Collaboratore) */
+.operator-picker{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 0 14px}
+.operator-btn{background:#0d0d0f;color:#ddd;border:1px solid #302f34;border-radius:12px;padding:13px 8px;font-size:13px;font-weight:700;letter-spacing:.04em;font-family:inherit;cursor:pointer;touch-action:manipulation}
+.operator-btn.selected{background:var(--gold);color:#17130c;border-color:var(--gold)}
