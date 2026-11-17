@@ -132,25 +132,33 @@ const OPEN_FROM = "09:00";
 const OPEN_TO = "21:00"; // ultimo orario prenotabile
 const SLOT_MINUTES = 30;
 
-/* Posti per fascia oraria: titolare + collaboratore.
-   La stessa fascia si può prenotare una volta per ciascuno. */
-const STAFF = ["titolare", "collaboratore"];
-const STAFF_LABELS = { titolare: "Titolare", collaboratore: "Collaboratore" };
-const SLOT_CAPACITY = STAFF.length;
+/* Operatori prenotabili: ognuno ha il proprio calendario/disponibilità */
+const OPERATORS = [
+  { id: "emanuele", name: "Emanuele" },
+  { id: "collaboratore", name: "Collaboratore" }
+];
+const DEFAULT_OPERATOR = "emanuele";
 
-const isActiveAppt = a =>
-  a.status !== "cancelled" && a.status !== "cancelled_by_admin";
+function operatorName(id) {
+  const o = OPERATORS.find(x => x.id === id);
+  return o ? o.name : OPERATORS[0].name;
+}
 
-const apptStaff = a => STAFF.includes(a.staff) ? a.staff : STAFF[0];
-
-/* Orari in cui TUTTI i posti sono occupati */
-function fullyBookedTimes(rows) {
-  const count = {};
-  (rows || []).filter(isActiveAppt).forEach(a => {
-    const t = normalizeTime(a.start_time);
-    count[t] = (count[t] || 0) + 1;
+/* Selettore a due pulsanti (cliente e admin) */
+function renderOperatorPicker(containerId, current, onChange) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  box.innerHTML = OPERATORS.map(o => `
+    <button type="button"
+      class="operator-btn ${o.id === current ? "selected" : ""}"
+      data-operator="${o.id}">${o.name}</button>
+  `).join("");
+  box.querySelectorAll("[data-operator]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.operator === current) return;
+      onChange(btn.dataset.operator);
+    });
   });
-  return Object.keys(count).filter(t => count[t] >= SLOT_CAPACITY);
 }
 
 const TIMES = (() => {
@@ -199,35 +207,24 @@ function firstOpenDate(from = new Date()) {
 /* Salva una prenotazione riusando lo slot se era stato annullato
    (evita l'errore "orario già prenotato" su slot liberi) */
 async function saveAppointmentRow(payload) {
-  const fullError = {
-    code: "23505",
-    message: "Questo orario è già stato prenotato."
-  };
-  /* Più tentativi: se due clienti prendono lo stesso posto insieme,
-     il secondo viene assegnato all'altro posto libero */
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const { data: rows, error: findError } = await supabaseClient
-      .from("appointments")
-      .select("id,status,staff")
-      .eq("appointment_date", payload.appointment_date)
-      .eq("start_time", payload.start_time + ":00");
-    if (findError) return { data: null, error: findError };
-
-    const active = (rows || []).filter(isActiveAppt);
-    const freeStaff = STAFF.find(s => !active.some(r => apptStaff(r) === s));
-    if (!freeStaff) return { data: null, error: fullError };
-
-    const row = { ...payload, staff: freeStaff };
-    const reusable = (rows || []).find(r => !isActiveAppt(r));
-    const result = reusable
-      ? await supabaseClient
-          .from("appointments").update(row).eq("id", reusable.id).select().single()
-      : await supabaseClient
-          .from("appointments").insert(row).select().single();
-
-    if (!result.error || result.error.code !== "23505") return result;
+  const { data: rows, error: findError } = await supabaseClient
+    .from("appointments")
+    .select("id,status")
+    .eq("appointment_date", payload.appointment_date)
+    .eq("operator", payload.operator || DEFAULT_OPERATOR)
+    .eq("start_time", payload.start_time + ":00");
+  if (findError) return { data: null, error: findError };
+  const isDead = r => r.status === "cancelled" || r.status === "cancelled_by_admin";
+  if ((rows || []).some(r => !isDead(r))) {
+    return { data: null, error: { code: "23505", message: "Questo orario è già stato prenotato." } };
   }
-  return { data: null, error: fullError };
+  const reusable = (rows || []).find(isDead);
+  if (reusable) {
+    return await supabaseClient
+      .from("appointments").update(payload).eq("id", reusable.id).select().single();
+  }
+  return await supabaseClient
+    .from("appointments").insert(payload).select().single();
 }
 
 
@@ -241,6 +238,8 @@ let currentUser = null;
 let selectedService = null;
 let selectedDate = null;
 let selectedTime = null;
+let selectedOperator = DEFAULT_OPERATOR;
+let adminOperator = DEFAULT_OPERATOR;
 
 let bookingViewDate = new Date();
 
@@ -925,10 +924,17 @@ async function loadAvailableTimes() {
 
     dateLabel.textContent =
       selectedDate
-        ? formatDate(selectedDate)
+        ? formatDate(selectedDate) + " · con " + operatorName(selectedOperator)
         : "Seleziona un giorno";
 
   }
+
+  renderOperatorPicker("operatorPicker", selectedOperator, id => {
+    selectedOperator = id;
+    selectedTime = null;
+    updateSummary();
+    loadAvailableTimes();
+  });
 
 
   if (!selectedDate) {
@@ -960,6 +966,10 @@ async function loadAvailableTimes() {
         .eq(
           "appointment_date",
           selectedDate
+        )
+        .eq(
+          "operator",
+          selectedOperator
         );
 
 
@@ -968,7 +978,21 @@ async function loadAvailableTimes() {
     }
 
 
-    const occupied = fullyBookedTimes(data);
+    const occupied =
+      (data || [])
+        .filter(
+          appointment =>
+            appointment.status !==
+              "cancelled" &&
+            appointment.status !==
+              "cancelled_by_admin"
+        )
+        .map(
+          appointment =>
+            normalizeTime(
+              appointment.start_time
+            )
+        );
 
 
     const {
@@ -983,6 +1007,10 @@ async function loadAvailableTimes() {
         .eq(
           "block_date",
           selectedDate
+        )
+        .eq(
+          "operator",
+          selectedOperator
         );
 
 
@@ -1749,6 +1777,10 @@ async function createBooking() {
           selectedDate
         )
         .eq(
+          "operator",
+          selectedOperator
+        )
+        .eq(
           "start_time",
           selectedTime + ":00"
         );
@@ -1759,7 +1791,15 @@ async function createBooking() {
     }
 
 
-    const alreadyBooked = (existing || []).filter(isActiveAppt).length >= SLOT_CAPACITY;
+    const alreadyBooked =
+      (existing || [])
+        .some(
+          appointment =>
+            appointment.status !==
+              "cancelled" &&
+            appointment.status !==
+              "cancelled_by_admin"
+        );
 
 
     if (alreadyBooked) {
@@ -1800,6 +1840,9 @@ async function createBooking() {
 
           appointment_date:
             selectedDate,
+
+          operator:
+            selectedOperator,
 
           start_time:
             selectedTime,
@@ -1874,7 +1917,7 @@ async function createBooking() {
         "Nuova prenotazione",
 
       message:
-        `${currentUser.customer_name} ha prenotato ${selectedService.name} per ${bookingDateText} alle ${selectedTime}.`,
+        `${currentUser.customer_name} ha prenotato ${selectedService.name} per ${bookingDateText} alle ${selectedTime} con ${operatorName(selectedOperator)}.`,
 
       type:
         "booking"
@@ -2142,6 +2185,7 @@ async function loadUserBookings() {
                   €${escapeHtml(
                     appointment.service_price
                   )}
+                  · con ${escapeHtml(operatorName(appointment.operator))}
                 </p>
 
                 <span
@@ -3325,6 +3369,11 @@ function renderAdminAgenda() {
   const title = q("adminMonthTitle");
   if (!calendar || !title) return;
 
+  renderOperatorPicker("adminOperatorTabs", adminOperator, id => {
+    adminOperator = id;
+    renderAdminAgenda();
+  });
+
   if (!adminSelectedDate) {
     adminSelectedDate = localDateString(new Date());
   }
@@ -3437,6 +3486,10 @@ async function renderAdminAgendaDay() {
           "appointment_date",
           adminSelectedDate
         )
+        .eq(
+          "operator",
+          adminOperator
+        )
         .order(
           "start_time",
           {
@@ -3458,6 +3511,10 @@ async function renderAdminAgendaDay() {
         .eq(
           "block_date",
           adminSelectedDate
+        )
+        .eq(
+          "operator",
+          adminOperator
         );
 
 
@@ -3523,7 +3580,7 @@ async function renderAdminAgendaDay() {
         ? 0
         : TIMES.filter(t =>
             !blockedTimes.has(t) &&
-            activeAppointments.filter(a => normalizeTime(a.start_time) === t).length < SLOT_CAPACITY
+            !activeAppointments.some(a => normalizeTime(a.start_time) === t)
           ).length
     );
 
@@ -3532,7 +3589,17 @@ async function renderAdminAgendaDay() {
       const time of TIMES
     ) {
 
-      const slotAppointments = appointmentList.filter(item => normalizeTime(item.start_time) === time && isActiveAppt(item));
+      const appointment =
+        appointmentList.find(
+          item =>
+            normalizeTime(
+              item.start_time
+            ) === time &&
+            item.status !==
+              "cancelled" &&
+            item.status !==
+              "cancelled_by_admin"
+        );
 
 
       const blocked =
@@ -3540,7 +3607,9 @@ async function renderAdminAgendaDay() {
         blockedTimes.has(time);
 
 
-      for (const appointment of slotAppointments) { html += `
+      if (appointment) {
+
+        html += `
 
           <div class="admin-slot booked">
 
@@ -3593,7 +3662,17 @@ async function renderAdminAgendaDay() {
                     "Servizio"
                   )}
                   ·
-                  €${escapeHtml(appointment.service_price)} </span>  </div> </div> ${adminContactButtons(appointment)}
+                  €${escapeHtml(
+                    appointment.service_price
+                  )}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            ${adminContactButtons(appointment)}
             <button
               type="button"
               class="admin-action-danger"
@@ -3604,10 +3683,16 @@ async function renderAdminAgendaDay() {
 
           </div>
 
-        `; }
-      /* un blocco per ogni posto: prenotato, bloccato o libero */
-      for (let seat = slotAppointments.length; seat < SLOT_CAPACITY; seat++) {
-      if (blocked) { const block =
+        `;
+
+        continue;
+
+      }
+
+
+      if (blocked) {
+
+        const block =
           blockList.find(
             item => {
 
@@ -3682,19 +3767,17 @@ async function renderAdminAgendaDay() {
           </div>
 
 
-          ${slotAppointments.length ? "" : `<button
+          <button
             type="button"
             class="admin-action-block"
             onclick="adminBlockTime('${adminSelectedDate}', '${time}')"
           >
             BLOCCA
-          </button>`}
+          </button>
 
         </div>
 
       `;
-
-      }
 
     }
 
@@ -3873,6 +3956,21 @@ function createAdminClientModal() {
       </div>
 
 
+      <div class="admin-field">
+
+        <label for="adminClientOperator">
+          Con chi
+        </label>
+
+        <select id="adminClientOperator">
+          ${OPERATORS.map(o => `
+            <option value="${o.id}">${o.name}</option>
+          `).join("")}
+        </select>
+
+      </div>
+
+
       <div class="admin-form-grid">
 
         <div class="admin-field">
@@ -3995,6 +4093,12 @@ function createAdminClientModal() {
       updateAdminClientTimes
     );
 
+  q("adminClientOperator")
+    ?.addEventListener(
+      "change",
+      updateAdminClientTimes
+    );
+
 
   q("adminClientConfirm")
     ?.addEventListener(
@@ -4029,6 +4133,10 @@ function openAdminAddClient() {
   const dateInput =
     q("adminClientDate");
 
+
+  if (q("adminClientOperator")) {
+    q("adminClientOperator").value = adminOperator;
+  }
 
   if (dateInput) {
 
@@ -4209,13 +4317,33 @@ async function updateAdminClientTimes() {
         .eq(
           "appointment_date",
           date
+        )
+        .eq(
+          "operator",
+          q("adminClientOperator")?.value || adminOperator
         );
 
 
     if (error) throw error;
 
 
-    const occupied = new Set(fullyBookedTimes(data));
+    const occupied =
+      new Set(
+        (data || [])
+          .filter(
+            item =>
+              item.status !==
+                "cancelled" &&
+              item.status !==
+                "cancelled_by_admin"
+          )
+          .map(
+            item =>
+              normalizeTime(
+                item.start_time
+              )
+          )
+      );
 
 
     const {
@@ -4230,6 +4358,10 @@ async function updateAdminClientTimes() {
         .eq(
           "block_date",
           date
+        )
+        .eq(
+          "operator",
+          q("adminClientOperator")?.value || adminOperator
         );
 
 
@@ -4466,6 +4598,10 @@ async function createAdminClient() {
           date
         )
         .eq(
+          "operator",
+          q("adminClientOperator")?.value || adminOperator
+        )
+        .eq(
           "start_time",
           time + ":00"
         );
@@ -4476,7 +4612,15 @@ async function createAdminClient() {
     }
 
 
-    const occupied = (existing || []).filter(isActiveAppt).length >= SLOT_CAPACITY;
+    const occupied =
+      (existing || [])
+        .some(
+          appointment =>
+            appointment.status !==
+              "cancelled" &&
+            appointment.status !==
+              "cancelled_by_admin"
+        );
 
 
     if (occupied) {
@@ -4567,6 +4711,9 @@ async function createAdminClient() {
 
           appointment_date:
             date,
+
+          operator:
+            q("adminClientOperator")?.value || adminOperator,
 
           start_time:
             time,
@@ -4983,6 +5130,10 @@ async function adminBlockTime(
             date
           )
           .eq(
+            "operator",
+            adminOperator
+          )
+          .eq(
             "start_time",
             time + ":00"
           );
@@ -5029,7 +5180,10 @@ async function adminBlockTime(
             date,
 
           block_time:
-            time
+            time,
+
+          operator:
+            adminOperator
 
         });
 
