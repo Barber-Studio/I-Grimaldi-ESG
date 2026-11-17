@@ -107,6 +107,7 @@ async function adminPaintMonthBadges(year, month) {
         .select("appointment_date,status,service_price")
         .gte("appointment_date", from)
         .lte("appointment_date", to)
+        .eq("operator", adminOperator)
     );
 
     const active = rows.filter(admIsActive);
@@ -131,7 +132,7 @@ async function adminPaintMonthBadges(year, month) {
     strip.classList.toggle("hidden", admTab !== "agenda");
     const total = active.reduce((sum, a) => sum + admPrice(a), 0);
     strip.innerHTML = `
-      <span>${active.length} appuntamenti nel mese</span>
+      <span>${active.length} appuntamenti nel mese · ${operatorName(adminOperator)}</span>
       <b>Incasso previsto ${admEuro(total)}</b>`;
   } catch (error) {
     console.warn("Statistiche mese non disponibili:", error);
@@ -238,7 +239,7 @@ async function adminRenderReport() {
     for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
       if (isOpenDay(localDateString(new Date(y, m, d)))) openDays++;
     }
-    const capacity = openDays * TIMES.length * SLOT_CAPACITY;
+    const capacity = openDays * TIMES.length;
     const occupancy = capacity ? Math.round((active.length / capacity) * 100) : 0;
 
     const perDay = {};
